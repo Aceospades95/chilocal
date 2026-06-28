@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+  <title>chilocal — Chicago, mapped</title>
+  <meta name="description" content="Interactive map of Chicago's official community areas and neighborhood boundaries." />
+
+  <!-- Vendored locally so the app is self-contained (no runtime CDN dependency) -->
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar ------------------------------------------------------------ -->
+    <aside id="sidebar">
+      <header class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <!-- Chicago flag inspired stars -->
+          <span class="star"></span><span class="star"></span>
+        </div>
+        <div class="brand-text">
+          <h1 id="app-name">chilocal</h1>
+          <p id="app-tagline">Chicago, mapped</p>
+        </div>
+      </header>
+
+      <!-- Search -->
+      <section class="panel">
+        <label class="field-label" for="search">Search <span id="search-scope" class="muted"></span></label>
+        <div class="search-wrap">
+          <input id="search" type="text" autocomplete="off" placeholder="Find an area…" />
+          <button id="search-clear" class="icon-btn" title="Clear" aria-label="Clear search" hidden>&times;</button>
+          <ul id="search-results" class="search-results" role="listbox" hidden></ul>
+        </div>
+      </section>
+
+      <!-- Layers -->
+      <section class="panel">
+        <h2 class="panel-title">Boundary layers</h2>
+        <div id="layer-list" class="layer-list"><!-- populated by JS --></div>
+        <p class="hint">Tap a layer's name to make it active for search &amp; coloring.</p>
+      </section>
+
+      <!-- Color by (choropleth) -->
+      <section class="panel">
+        <h2 class="panel-title">Color by</h2>
+        <select id="metric-select" class="select"></select>
+        <div id="legend" class="legend" hidden></div>
+        <p class="hint">Drop your own data in via <code>ChiLocal.setData()</code> — see README.</p>
+      </section>
+
+      <!-- Selection info -->
+      <section class="panel info-panel" id="info-panel" hidden>
+        <h2 class="panel-title">Selected</h2>
+        <div id="info-body"></div>
+        <div class="info-actions">
+          <button id="info-zoom" class="btn">Zoom to</button>
+          <button id="info-clear" class="btn btn-ghost">Clear</button>
+        </div>
+      </section>
+
+      <!-- Basemap -->
+      <section class="panel">
+        <h2 class="panel-title">Basemap</h2>
+        <div id="basemap-switch" class="seg"><!-- populated by JS --></div>
+      </section>
+
+      <footer class="sidebar-foot">
+        <p id="data-note" class="muted"></p>
+      </footer>
+    </aside>
+
+    <!-- Map --------------------------------------------------------------- -->
+    <main id="map-wrap">
+      <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle panel">☰</button>
+      <div id="map"></div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </main>
+  </div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

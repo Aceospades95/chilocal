@@ -1,0 +1,8 @@
+# Full-resolution data is fetched on build/run; keep the repo light.
+# (The simplified *.min.geojson samples ARE committed so the app works offline.)
+site/data/*.geojson
+!site/data/*.min.geojson
+
+node_modules/
+*.log
+.DS_Store

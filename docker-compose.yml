@@ -1,0 +1,10 @@
+services:
+  chilocal:
+    build: .
+    image: chilocal:latest
+    container_name: chilocal
+    # Browse at http://<your-server-ip>:8080
+    # Change the left number to use a different host port.
+    ports:
+      - "8080:80"
+    restart: unless-stopped
