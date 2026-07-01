@@ -5,7 +5,8 @@
  "venues": [
   {
    "id": "5-rabanitos",
-   "name": "5 Rabanitos Restaurante and Taqueria",
+   "name": "5 Rabanitos",
+   "nameOsm": "5 Rabanitos Restaurante and Taqueria",
    "hood": "Pilsen",
    "geom": "Lower West Side",
    "cat": "Mexican",
@@ -106,7 +107,8 @@
   },
   {
    "id": "aire-baths",
-   "name": "Aire Ancient Bath",
+   "name": "AIRE Ancient Baths",
+   "nameOsm": "Aire Ancient Bath",
    "hood": "River West",
    "geom": "West Town",
    "cat": "Bathhouse",
@@ -174,7 +176,8 @@
   },
   {
    "id": "all-together-now",
-   "name": "All Together Now!",
+   "name": "All Together Now",
+   "nameOsm": "All Together Now!",
    "hood": "Ukrainian Village",
    "geom": "West Town",
    "cat": "Wine bar & shop",
@@ -241,7 +244,8 @@
   },
   {
    "id": "andys-jazz",
-   "name": "Andy's Jazz Club & Restaurant",
+   "name": "Andy's Jazz Club",
+   "nameOsm": "Andy's Jazz Club & Restaurant",
    "hood": "River North",
    "geom": "River North",
    "cat": "Jazz club",
@@ -274,7 +278,8 @@
   },
   {
    "id": "aragon",
-   "name": "Byline Bank Aragon Ballroom",
+   "name": "Aragon Ballroom",
+   "nameOsm": "Byline Bank Aragon Ballroom",
    "hood": "Uptown",
    "geom": "Uptown",
    "cat": "Ballroom venue",
@@ -306,7 +311,8 @@
   },
   {
    "id": "art-institute",
-   "name": "The Art Institute of Chicago",
+   "name": "Art Institute of Chicago",
+   "nameOsm": "The Art Institute of Chicago",
    "hood": "The Loop",
    "geom": "Grant Park",
    "cat": "Art museum",
@@ -373,7 +379,8 @@
   },
   {
    "id": "avec",
-   "name": "avec",
+   "name": "Avec",
+   "nameOsm": "avec",
    "hood": "West Loop",
    "geom": "West Loop",
    "cat": "Mediterranean",
@@ -914,7 +921,8 @@
   },
   {
    "id": "chicago-diner",
-   "name": "The Chicago Diner",
+   "name": "Chicago Diner",
+   "nameOsm": "The Chicago Diner",
    "hood": "Lakeview",
    "geom": "Boystown",
    "cat": "Vegan diner",
@@ -980,7 +988,8 @@
   },
   {
    "id": "chief-oneills",
-   "name": "Chief O’Neill’s Pub & Restaurant",
+   "name": "Chief O'Neill's",
+   "nameOsm": "Chief O’Neill’s Pub & Restaurant",
    "hood": "Avondale",
    "geom": "Avondale",
    "cat": "Irish pub",
@@ -1047,7 +1056,8 @@
   },
   {
    "id": "cindys",
-   "name": "Cindy’s",
+   "name": "Cindy's",
+   "nameOsm": "Cindy’s",
    "hood": "The Loop",
    "geom": "Loop",
    "cat": "Rooftop bar",
@@ -1082,7 +1092,8 @@
   },
   {
    "id": "clark-street-ale",
-   "name": "Clark Street Ale House - River North",
+   "name": "Clark Street Ale House",
+   "nameOsm": "Clark Street Ale House - River North",
    "hood": "River North",
    "geom": "River North",
    "cat": "Beer tavern",
@@ -1148,7 +1159,8 @@
   },
   {
    "id": "coles",
-   "name": "Cole's Bar",
+   "name": "Cole's",
+   "nameOsm": "Cole's Bar",
    "hood": "Logan Square",
    "geom": "Logan Square",
    "cat": "Bar & venue",
@@ -1182,7 +1194,8 @@
   },
   {
    "id": "constellation",
-   "name": "Constellation Club",
+   "name": "Constellation",
+   "nameOsm": "Constellation Club",
    "hood": "Roscoe Village",
    "geom": "North Center",
    "cat": "Experimental music venue",
@@ -1380,7 +1393,8 @@
   },
   {
    "id": "davenports",
-   "name": "Davenport's",
+   "name": "Davenport's Piano Bar",
+   "nameOsm": "Davenport's",
    "hood": "Wicker Park",
    "geom": "Wicker Park",
    "cat": "Cabaret",
@@ -1450,7 +1464,8 @@
   },
   {
    "id": "demera",
-   "name": "Demera Ethiopian Restaurant",
+   "name": "Demera",
+   "nameOsm": "Demera Ethiopian Restaurant",
    "hood": "Uptown",
    "geom": "Uptown",
    "cat": "Ethiopian",
@@ -1620,7 +1635,8 @@
   },
   {
    "id": "empty-bottle",
-   "name": "The Empty Bottle",
+   "name": "Empty Bottle",
+   "nameOsm": "The Empty Bottle",
    "hood": "Ukrainian Village",
    "geom": "Ukrainian Village",
    "cat": "Rock club",
@@ -1789,7 +1805,8 @@
   },
   {
    "id": "friendship",
-   "name": "Friendship Chinese",
+   "name": "The Friendship",
+   "nameOsm": "Friendship Chinese",
    "hood": "Logan Square",
    "geom": "Avondale",
    "cat": "Supper club & jazz",
@@ -1858,7 +1875,8 @@
   },
   {
    "id": "garfield-conservatory",
-   "name": "Garfield Park",
+   "name": "Garfield Park Conservatory",
+   "nameOsm": "Garfield Park",
    "hood": "East Garfield Park",
    "geom": "Garfield Park",
    "cat": "Glass garden",
@@ -1893,7 +1911,8 @@
   },
   {
    "id": "gejas",
-   "name": "Geja’s Cafe",
+   "name": "Geja's Cafe",
+   "nameOsm": "Geja’s Cafe",
    "hood": "Lincoln Park",
    "geom": "Lincoln Park",
    "cat": "Fondue den",
@@ -2026,7 +2045,8 @@
   },
   {
    "id": "girl-and-the-goat",
-   "name": "Girl & The Goat",
+   "name": "Girl & the Goat",
+   "nameOsm": "Girl & The Goat",
    "hood": "West Loop",
    "geom": "West Loop",
    "cat": "New American",
@@ -2059,7 +2079,8 @@
   },
   {
    "id": "gman-tavern",
-   "name": "The Ginger Man Tavern",
+   "name": "GMan Tavern",
+   "nameOsm": "The Ginger Man Tavern",
    "hood": "Lakeview",
    "geom": "Wrigleyville",
    "cat": "Rock bar",
@@ -2091,7 +2112,8 @@
   },
   {
    "id": "golden-dagger",
-   "name": "The Golden Dagger",
+   "name": "Golden Dagger",
+   "nameOsm": "The Golden Dagger",
    "hood": "Lincoln Park",
    "geom": "Lincoln Park",
    "cat": "Indie venue",
@@ -2125,7 +2147,8 @@
   },
   {
    "id": "green-door",
-   "name": "The Green Door Tavern",
+   "name": "Green Door Tavern",
+   "nameOsm": "The Green Door Tavern",
    "hood": "River North",
    "geom": "River North",
    "cat": "Historic tavern",
@@ -2158,7 +2181,8 @@
   },
   {
    "id": "green-mill",
-   "name": "Green Mill Cocktail Lounge",
+   "name": "Green Mill",
+   "nameOsm": "Green Mill Cocktail Lounge",
    "hood": "Uptown",
    "geom": "Uptown",
    "cat": "Jazz club",
@@ -2195,7 +2219,8 @@
   },
   {
    "id": "haisous",
-   "name": "HaiSous Vietnamese Kitchen",
+   "name": "HaiSous",
+   "nameOsm": "HaiSous Vietnamese Kitchen",
    "hood": "Pilsen",
    "geom": "Lower West Side",
    "cat": "Vietnamese",
@@ -2227,7 +2252,8 @@
   },
   {
    "id": "half-acre",
-   "name": "Half Acre Beer Co. Balmoral Tap Room & Garden",
+   "name": "Half Acre Beer Company",
+   "nameOsm": "Half Acre Beer Co. Balmoral Tap Room & Garden",
    "hood": "Andersonville",
    "geom": "Lincoln Square",
    "cat": "Brewery taproom",
@@ -2335,7 +2361,8 @@
   },
   {
    "id": "hopleaf",
-   "name": "Hopleaf Bar",
+   "name": "Hopleaf",
+   "nameOsm": "Hopleaf Bar",
    "hood": "Andersonville",
    "geom": "Uptown",
    "cat": "Belgian tavern",
@@ -2368,7 +2395,8 @@
   },
   {
    "id": "humboldt-boathouse",
-   "name": "Humboldt Park Boathouse Pavilion",
+   "name": "Humboldt Park Boathouse",
+   "nameOsm": "Humboldt Park Boathouse Pavilion",
    "hood": "Humboldt Park",
    "geom": "Humboldt Park",
    "cat": "Lagoon & boathouse",
@@ -2436,7 +2464,8 @@
   },
   {
    "id": "ina-mae",
-   "name": "Ina Mae Tavern & Packaged Goods",
+   "name": "Ina Mae Tavern",
+   "nameOsm": "Ina Mae Tavern & Packaged Goods",
    "hood": "Wicker Park",
    "geom": "Wicker Park",
    "cat": "New Orleans tavern",
@@ -2471,7 +2500,8 @@
   },
   {
    "id": "italian-village",
-   "name": "Italian VIllage",
+   "name": "Italian Village",
+   "nameOsm": "Italian VIllage",
    "hood": "The Loop",
    "geom": "Loop",
    "cat": "Vintage Italian",
@@ -2706,7 +2736,8 @@
   },
   {
    "id": "kumas-corner",
-   "name": "Kuma’s Corner - Belmont",
+   "name": "Kuma's Corner",
+   "nameOsm": "Kuma’s Corner - Belmont",
    "hood": "Avondale",
    "geom": "Avondale",
    "cat": "Metal burgers",
@@ -2774,7 +2805,8 @@
   },
   {
    "id": "lao-peng-you",
-   "name": "Lao Peng You 老朋友",
+   "name": "Lao Peng You",
+   "nameOsm": "Lao Peng You 老朋友",
    "hood": "West Town",
    "geom": "Ukrainian Village",
    "cat": "Noodle shop",
@@ -3183,7 +3215,8 @@
   },
   {
    "id": "map-room",
-   "name": "The Map Room",
+   "name": "Map Room",
+   "nameOsm": "The Map Room",
    "hood": "Bucktown",
    "geom": "Bucktown",
    "cat": "Beer bar",
@@ -3489,7 +3522,8 @@
   },
   {
    "id": "millers-pub",
-   "name": "Miller’s Pub",
+   "name": "Miller's Pub",
+   "nameOsm": "Miller’s Pub",
    "hood": "The Loop",
    "geom": "Loop",
    "cat": "Late-night tavern",
@@ -3554,7 +3588,8 @@
   },
   {
    "id": "monteverde",
-   "name": "Monteverde Restaurant & Pastificio",
+   "name": "Monteverde",
+   "nameOsm": "Monteverde Restaurant & Pastificio",
    "hood": "West Loop",
    "geom": "West Loop",
    "cat": "Pasta",
@@ -3624,7 +3659,8 @@
   },
   {
    "id": "moody-tongue",
-   "name": "Moody Tongue Brewing Company",
+   "name": "Moody Tongue",
+   "nameOsm": "Moody Tongue Brewing Company",
    "hood": "South Loop",
    "geom": "Lower West Side",
    "cat": "Brewery & tasting room",
@@ -3762,7 +3798,8 @@
   },
   {
    "id": "neo-futurists",
-   "name": "Neofuturists",
+   "name": "The Neo-Futurists",
+   "nameOsm": "Neofuturists",
    "hood": "Andersonville",
    "geom": "Uptown",
    "cat": "Experimental theater",
@@ -4066,7 +4103,8 @@
   },
   {
    "id": "palmisano-park",
-   "name": "Palmisano (Henry) Park",
+   "name": "Palmisano Park",
+   "nameOsm": "Palmisano (Henry) Park",
    "hood": "Bridgeport",
    "geom": "Bridgeport",
    "cat": "Quarry park",
@@ -4102,7 +4140,8 @@
   },
   {
    "id": "pequods",
-   "name": "Pequod’s Pizzeria",
+   "name": "Pequod's Pizza",
+   "nameOsm": "Pequod’s Pizzeria",
    "hood": "Lincoln Park",
    "geom": "Lincoln Park",
    "cat": "Pan pizza",
@@ -4347,7 +4386,8 @@
   },
   {
    "id": "pops-for-champagne",
-   "name": "Pops For Champagne",
+   "name": "Pops for Champagne",
+   "nameOsm": "Pops For Champagne",
    "hood": "River North",
    "geom": "River North",
    "cat": "Champagne bar",
@@ -4483,7 +4523,8 @@
   },
   {
    "id": "qxy-dumplings",
-   "name": "Qing Xiang Yuan Dumplings",
+   "name": "Qing Xiang Yuan Dumpling",
+   "nameOsm": "Qing Xiang Yuan Dumplings",
    "hood": "Chinatown",
    "geom": "Chinatown",
    "cat": "Dumpling house",
@@ -4585,7 +4626,8 @@
   },
   {
    "id": "reggies",
-   "name": "Reggies Music Joint",
+   "name": "Reggies",
+   "nameOsm": "Reggies Music Joint",
    "hood": "South Loop",
    "geom": "Near South Side",
    "cat": "Rock club & grill",
@@ -4618,7 +4660,8 @@
   },
   {
    "id": "richard-driehaus",
-   "name": "Richard H. Driehaus Museum",
+   "name": "Driehaus Museum",
+   "nameOsm": "Richard H. Driehaus Museum",
    "hood": "River North",
    "geom": "River North",
    "cat": "Gilded Age mansion",
@@ -4822,7 +4865,8 @@
   },
   {
    "id": "rootstock",
-   "name": "Rootstock Wine & Beer Bar",
+   "name": "Rootstock",
+   "nameOsm": "Rootstock Wine & Beer Bar",
    "hood": "Humboldt Park",
    "geom": "Humboldt Park",
    "cat": "Wine bar",
@@ -5274,7 +5318,8 @@
   },
   {
    "id": "slippery-slope",
-   "name": "Slippery Slope",
+   "name": "The Slippery Slope",
+   "nameOsm": "Slippery Slope",
    "hood": "Logan Square",
    "geom": "Logan Square",
    "cat": "Dance bar",
@@ -5307,7 +5352,8 @@
   },
   {
    "id": "smartbar",
-   "name": "Smart Bar",
+   "name": "Smartbar",
+   "nameOsm": "Smart Bar",
    "hood": "Lakeview",
    "geom": "Wrigleyville",
    "cat": "Dance club",
@@ -5375,7 +5421,8 @@
   },
   {
    "id": "sound-bar",
-   "name": "Sound Bar",
+   "name": "Sound-Bar",
+   "nameOsm": "Sound Bar",
    "hood": "River North",
    "geom": "River North",
    "cat": "Nightclub",
@@ -5571,7 +5618,8 @@
   },
   {
    "id": "sun-wah",
-   "name": "Sun Wah Bar-B-Que",
+   "name": "Sun Wah BBQ",
+   "nameOsm": "Sun Wah Bar-B-Que",
    "hood": "Uptown",
    "geom": "Uptown",
    "cat": "Hong Kong BBQ",
@@ -5673,7 +5721,8 @@
   },
   {
    "id": "the-606",
-   "name": "Bloomingdale Trail Park",
+   "name": "Bloomingdale Trail",
+   "nameOsm": "Bloomingdale Trail Park",
    "hood": "Wicker Park",
    "geom": "Logan Square",
    "cat": "Elevated trail",
@@ -5846,7 +5895,8 @@
   },
   {
    "id": "twin-anchors",
-   "name": "Twin Anchors Restaurant & Tavern",
+   "name": "Twin Anchors",
+   "nameOsm": "Twin Anchors Restaurant & Tavern",
    "hood": "Old Town",
    "geom": "Old Town",
    "cat": "Rib tavern",
@@ -6012,7 +6062,8 @@
   },
   {
    "id": "zanies",
-   "name": "Zanies",
+   "name": "Zanies Comedy Club",
+   "nameOsm": "Zanies",
    "hood": "Old Town",
    "geom": "Old Town",
    "cat": "Comedy club",

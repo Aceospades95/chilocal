@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ChiLocal — Chicago, from someone who actually lives here</title>
+<style>
+  :root{
+    --bg:#f3ede1; --surface:#fffdf8; --ink:#211f1b; --muted:#756f63; --line:#e4dccc;
+    --accent:#c8102e; --accent-soft:rgba(200,16,46,.10); --gem:#9a6a00; --gem-soft:#f6ead0;
+    --plain:#e8e1d2; --plain-stroke:#d6ccb8; --pin:#c8102e;
+  }
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;height:100vh}
+  .serif{font-family:Georgia,"Times New Roman",serif}
+  header{display:flex;align-items:center;gap:14px;padding:13px 20px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+  .wordmark{font-family:Georgia,serif;font-size:23px;font-weight:700;letter-spacing:.3px}
+  .wordmark .dot{color:var(--accent)}
+  header .tag{font-size:13px;color:var(--muted);font-style:italic;border-left:1px solid var(--line);padding-left:14px}
+  .search{margin-left:auto;position:relative}
+  header input{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-size:14px;width:250px;color:var(--ink)}
+  header input:focus{outline:none;border-color:var(--accent)}
+  .results{position:absolute;top:42px;right:0;left:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.14);overflow:hidden;z-index:40;max-height:340px;overflow-y:auto}
+  .results li{list-style:none;padding:9px 14px;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .results li:hover{background:var(--accent-soft)} .results .r-sub{color:var(--muted);font-size:12px}
+  main{flex:1;display:flex;min-height:0}
+  .mapwrap{flex:1.15;position:relative;background:radial-gradient(circle at 30% 18%, #f7f2e8, #efe7d8);border-right:1px solid var(--line);min-width:0}
+  svg{width:100%;height:100%;display:block}
+  path.hood{stroke:var(--plain-stroke);stroke-width:.5;fill:var(--plain);vector-effect:non-scaling-stroke;transition:fill .12s}
+  path.hood.curated{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1;cursor:pointer}
+  path.hood.curated:hover{fill:rgba(200,16,46,.22)}
+  path.hood.plain:hover{fill:#ded5c2;cursor:pointer}
+  path.hood.active{fill:rgba(200,16,46,.30);stroke:var(--accent);stroke-width:1.6}
+  circle.pin{fill:var(--pin);stroke:#fff;stroke-width:1.4;cursor:pointer;transition:r .1s}
+  circle.pin:hover{r:7}
+  circle.pin.sel{fill:#fff;stroke:var(--pin);stroke-width:3}
+  circle.pin.dim{opacity:.28}
+  .maptip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;padding:4px 9px;border-radius:6px;display:none;transform:translate(-50%,-150%);white-space:nowrap;z-index:5}
+  .legend{position:absolute;left:14px;bottom:14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--muted)}
+  .legend .row{display:flex;align-items:center;gap:8px;margin:3px 0}
+  .legend .sw{width:13px;height:13px;border-radius:3px;border:1px solid var(--plain-stroke);background:var(--plain)}
+  .legend .sw.cur{background:var(--accent-soft);border-color:var(--accent)}
+  .legend .dotp{width:11px;height:11px;border-radius:50%;background:var(--pin);border:1.5px solid #fff;box-shadow:0 0 0 1px var(--pin)}
+  .panel{flex:.9;max-width:440px;min-width:330px;overflow-y:auto;background:var(--surface)}
+  .pad{padding:20px}
+  .intro h1{font-family:Georgia,serif;font-size:25px;margin:.2em 0 .3em;line-height:1.2}
+  .intro p{color:var(--muted);line-height:1.6;font-size:15px}
+  .hcards{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+  .hcard{border:1px solid var(--line);border-radius:12px;padding:13px 15px;cursor:pointer;background:var(--bg);transition:border-color .12s,transform .12s}
+  .hcard:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .hcard h3{margin:0 0 4px;font-size:16px} .hcard p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+  .hcard .count{font-size:12px;color:var(--accent);margin-top:7px;font-weight:600}
+  .back{background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;padding:0;margin-bottom:10px}
+  .hood-take{font-family:Georgia,serif;font-size:17px;line-height:1.5;color:#2c2922;margin:6px 0 14px}
+  .filters{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+  .chip{border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .chip.gem.active{background:var(--gem);border-color:var(--gem)}
+  .vrow{border-top:1px solid var(--line);padding:13px 0;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+  .vrow:first-of-type{border-top:none}
+  .vrow:hover .vname{color:var(--accent)}
+  .vnum{font-size:12px;color:var(--accent);font-weight:700;min-width:14px}
+  .vname{font-size:15px;font-weight:600} .vmeta{font-size:12px;color:var(--muted);margin-top:1px}
+  .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--gem-soft);color:var(--gem);white-space:nowrap}
+  .detail .big{font-family:Georgia,serif;font-size:23px;margin:2px 0 2px}
+  .detail .dmeta{color:var(--muted);font-size:13px;margin-bottom:12px}
+  .take{font-family:Georgia,serif;font-size:16px;line-height:1.55;margin:0 0 14px;color:#2c2922}
+  .fit{font-size:13px;display:flex;gap:8px;margin:4px 0;color:#403c34}
+  .fit .lab{font-weight:700;min-width:56px}
+  .fit.good .lab{color:#2f7d52}.fit.bad .lab{color:#a23b2d}
+  .addr{margin-top:14px;font-size:13px}
+  .addr a{color:var(--accent);text-decoration:none}.addr a:hover{text-decoration:underline}
+  .empty{font-family:Georgia,serif;font-size:16px;line-height:1.55;color:var(--muted);margin-top:10px}
+  .foot{padding:12px 20px;border-top:1px solid var(--line);color:var(--muted);font-size:11px;background:var(--surface)}
+  .status{position:absolute;left:50%;top:46%;transform:translateX(-50%);color:var(--muted);font-size:14px}
+  .toggle{margin-left:auto;display:flex;gap:6px}
+  @media (max-width:820px){ main{flex-direction:column} .panel{max-width:none;min-width:0;max-height:54vh} .mapwrap{min-height:240px} header input{width:160px} }
+</style></head>
+<body>
+<header>
+  <div class="wordmark">Chi<span class="dot">·</span>Local</div>
+  <div class="tag" id="tagline"></div>
+  <div class="search"><input id="q" placeholder="Search neighborhoods or spots…" autocomplete="off"/><ul class="results" id="results" hidden></ul></div>
+</header>
+<main>
+  <div class="mapwrap">
+    <svg id="map" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="maptip" id="tip"></div>
+    <div class="legend">
+      <div class="row"><span class="sw cur"></span> Curated</div>
+      <div class="row"><span class="sw"></span> Not yet</div>
+      <div class="row"><span class="dotp"></span> A spot</div>
+    </div>
+  </div>
+  <aside class="panel"><div class="pad" id="panel"><div class="status">Loading ChiLocal…</div></div></aside>
+</main>
+<div class="foot" id="foot"></div>
+<script>
+/* ---- config: flip contentSource to "api" to read from your PostGIS-backed endpoints (see API.md) ---- */
+const CONFIG = {
+  boundaries: "data/neighborhoods.min.geojson",
+  contentSource: "static",            // "static" | "api"
+  contentStatic: "content.json",
+  apiBase: "/api"                      // when "api": GET /api/neighborhoods, GET /api/venues
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let GEO, DATA, catName={}, byKey={}, bySlug={}, venuesByHood={}, venueById={};
+let proj, state={hood:null, venue:null, cat:"all", gems:false};
+
+async function getJSON(u){ const r=await fetch(u,{cache:"no-store"}); if(!r.ok) throw new Error(u+" "+r.status); return r.json(); }
+
+async function loadContent(){
+  if(CONFIG.contentSource==="api"){
+    const [nb,ven]=await Promise.all([getJSON(CONFIG.apiBase+"/neighborhoods"), getJSON(CONFIG.apiBase+"/venues")]);
+    const neighborhoods=(nb.features?nb.features.map(f=>({slug:f.properties.slug,name:f.properties.name,geomKey:f.properties.geomKey||f.properties.name,chilocal_take:f.properties.chilocal_take})):nb);
+    return { brand:{name:"ChiLocal",tagline:"Chicago, from someone who actually lives here."},
+             categories:[], neighborhoods, venues:ven.features?ven.features.map(f=>f.properties):ven };
+  }
+  return getJSON(CONFIG.contentStatic);
+}
+
+async function init(){
+  try{ [GEO, DATA] = await Promise.all([getJSON(CONFIG.boundaries), loadContent()]); }
+  catch(e){ $("#panel").innerHTML='<div class="empty">Couldn’t load data ('+esc(e.message)+'). If you’re opening the file directly, serve it over http instead.</div>'; return; }
+
+  (DATA.categories||[]).forEach(c=>catName[c.slug]=c.name);
+  DATA.neighborhoods.forEach(n=>{byKey[n.geomKey]=n;bySlug[n.slug]=n;});
+  DATA.venues.forEach(v=>{ (venuesByHood[v.neighborhood]=venuesByHood[v.neighborhood]||[]).push(v); venueById[v.id]=v; });
+  $("#tagline").textContent=DATA.brand?DATA.brand.tagline:"";
+  $("#foot").innerHTML="Boundaries: City of Chicago / Choose Chicago open data. "+esc(DATA.note||"")+" &middot; Curated for Logan Square, Wicker Park &amp; Pilsen.";
+  buildProjection(); renderMap(); intro(); wireSearch();
+}
+
+function buildProjection(){
+  let mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+  GEO.features.forEach(f=>f.geometry.coordinates.forEach(p=>p.forEach(r=>r.forEach(c=>{mnx=Math.min(mnx,c[0]);mxx=Math.max(mxx,c[0]);mny=Math.min(mny,c[1]);mxy=Math.max(mxy,c[1])}))));
+  const k=Math.cos((mny+mxy)/2*Math.PI/180), W=1000, H=Math.round((mxy-mny)/((mxx-mnx)*k)*W);
+  $("#map").setAttribute("viewBox",`0 0 ${W} ${H}`);
+  proj={ x:lng=>(lng-mnx)*k/((mxx-mnx)*k)*W, y:lat=>H-(lat-mny)/(mxy-mny)*H };
+}
+function dPath(g){let d="";g.coordinates.forEach(poly=>poly.forEach(r=>{r.forEach((c,i)=>d+=(i?"L":"M")+proj.x(c[0]).toFixed(1)+" "+proj.y(c[1]).toFixed(1));d+="Z"}));return d}
+const NS="http://www.w3.org/2000/svg";
+
+let activePath=null;
+function renderMap(){
+  const svg=$("#map"); svg.innerHTML="";
+  GEO.features.forEach(f=>{
+    const nm=f.properties.name, hood=byKey[nm];
+    const p=document.createElementNS(NS,"path");
+    p.setAttribute("d",dPath(f.geometry)); p.setAttribute("class","hood "+(hood?"curated":"plain")); p.dataset.key=nm;
+    if(hood){ p.dataset.slug=hood.slug;
+      p.addEventListener("click",()=>selectHood(hood.slug));
+    }
+    p.addEventListener("mousemove",e=>tipAt(e,hood?hood.name:nm));
+    p.addEventListener("mouseleave",hideTip);
+    svg.appendChild(p);
+  });
+  // venue pins
+  DATA.venues.forEach(v=>{
+    if(typeof v.lat!=="number"||typeof v.lng!=="number") return;
+    const c=document.createElementNS(NS,"circle");
+    c.setAttribute("cx",proj.x(v.lng).toFixed(1)); c.setAttribute("cy",proj.y(v.lat).toFixed(1)); c.setAttribute("r",5);
+    c.setAttribute("class","pin"); c.dataset.id=v.id;
+    c.addEventListener("mousemove",e=>tipAt(e,v.name)); c.addEventListener("mouseleave",hideTip);
+    c.addEventListener("click",ev=>{ev.stopPropagation(); selectVenue(v.id);});
+    svg.appendChild(c);
+  });
+}
+function tipAt(e,t){const tip=$("#tip");tip.style.display="block";tip.style.left=e.offsetX+"px";tip.style.top=e.offsetY+"px";tip.textContent=t;}
+function hideTip(){$("#tip").style.display="none";}
+function setActivePath(slug){
+  $("#map").querySelectorAll("path.curated").forEach(p=>p.classList.toggle("active",p.dataset.slug===slug));
+}
+function paintPins(){
+  $("#map").querySelectorAll("circle.pin").forEach(c=>{
+    const v=venueById[c.dataset.id];
+    c.classList.toggle("sel", state.venue===v.id);
+    c.classList.toggle("dim", !!state.hood && v.neighborhood!==state.hood);
+  });
+}
+
+function intro(){
+  state={hood:null,venue:null,cat:"all",gems:false}; setActivePath(null); paintPins();
+  const cards=DATA.neighborhoods.map(n=>{
+    const cnt=(venuesByHood[n.slug]||[]).length;
+    return `<div class="hcard" data-slug="${esc(n.slug)}"><h3>${esc(n.name)}</h3><p>${esc(n.chilocal_take)}</p><div class="count">${cnt} spots →</div></div>`;
+  }).join("");
+  $("#panel").innerHTML=`<div class="intro"><h1 class="serif">Pick a neighborhood.</h1>
+    <p>ChiLocal isn’t a list of everything — it’s the handful of places worth your time, from people who actually live on these blocks. Three neighborhoods so far. We add more only when we know them.</p>
+    <div class="hcards">${cards}</div></div>`;
+  document.querySelectorAll(".hcard").forEach(c=>c.addEventListener("click",()=>selectHood(c.dataset.slug)));
+}
+
+function selectHood(slug){ state={hood:slug,venue:null,cat:"all",gems:false}; setActivePath(byKey0(slug)); paintPins(); renderHood(); }
+function byKey0(slug){ return bySlug[slug]?bySlug[slug].slug:null; }
+
+function renderHood(){
+  const n=bySlug[state.hood]; const all=venuesByHood[state.hood]||[];
+  const cats=[...new Set(all.map(v=>v.category))];
+  let vs=all.filter(v=>(state.cat==="all"||v.category===state.cat)&&(!state.gems||v.is_hidden_gem));
+  const chips=[`<button class="chip ${state.cat==='all'?'active':''}" data-cat="all">All</button>`]
+    .concat(cats.map(c=>`<button class="chip ${state.cat===c?'active':''}" data-cat="${esc(c)}">${esc(catName[c]||c)}</button>`))
+    .concat([`<button class="chip gem ${state.gems?'active':''}" data-gem="1">★ Hidden gems</button>`]).join("");
+  const rows=vs.map((v,i)=>`<div class="vrow" data-id="${esc(v.id)}"><span class="vnum">${i+1}</span><div style="flex:1">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span class="vname">${esc(v.name)}</span>${v.is_hidden_gem?'<span class="badge">Hidden gem</span>':''}</div>
+      <div class="vmeta">${esc(catName[v.category]||v.category)} · ${esc(v.price||"")}</div></div></div>`).join("")
+      || `<p class="empty">Nothing matches that filter here yet.</p>`;
+  $("#panel").innerHTML=`<button class="back">← All neighborhoods</button>
+    <h2 style="margin:0;font-size:22px">${esc(n.name)}</h2>
+    <p class="hood-take">${esc(n.chilocal_take)}</p>
+    <div class="filters">${chips}</div>${rows}`;
+  $(".back").addEventListener("click",intro);
+  document.querySelectorAll(".chip[data-cat]").forEach(b=>b.addEventListener("click",()=>{state.cat=b.dataset.cat;renderHood();}));
+  document.querySelectorAll(".chip[data-gem]").forEach(b=>b.addEventListener("click",()=>{state.gems=!state.gems;renderHood();}));
+  document.querySelectorAll(".vrow").forEach(r=>r.addEventListener("click",()=>selectVenue(r.dataset.id)));
+}
+
+function selectVenue(id){
+  const v=venueById[id]; if(!v) return;
+  state.hood=v.neighborhood; state.venue=id; setActivePath(v.neighborhood); paintPins();
+  const maps=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.name+" "+(v.address||"")+" Chicago")}`;
+  $("#panel").innerHTML=`<button class="back">← ${esc(bySlug[v.neighborhood].name)}</button>
+    <div class="detail">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+        <div class="big">${esc(v.name)}</div>${v.is_hidden_gem?'<span class="badge">Hidden gem</span>':''}</div>
+      <div class="dmeta">${esc(catName[v.category]||v.category)} · ${esc(v.price||"")} · ${esc(bySlug[v.neighborhood].name)}</div>
+      <p class="take">${esc(v.chilocal_take)}</p>
+      ${v.best_for?`<div class="fit good"><span class="lab">Best for</span><span>${esc(v.best_for)}</span></div>`:""}
+      ${v.skip_if?`<div class="fit bad"><span class="lab">Skip if</span><span>${esc(v.skip_if)}</span></div>`:""}
+      ${v.address?`<div class="addr">📍 ${esc(v.address)} · <a href="${maps}" target="_blank" rel="noopener">Open in Maps</a></div>`:""}
+    </div>`;
+  $(".back").addEventListener("click",()=>{state.venue=null;paintPins();renderHood();});
+}
+
+function wireSearch(){
+  const q=$("#q"), box=$("#results");
+  q.addEventListener("input",()=>{
+    const v=q.value.toLowerCase().trim(); if(!v){box.hidden=true;return;}
+    const hoods=DATA.neighborhoods.filter(n=>n.name.toLowerCase().includes(v))
+      .map(n=>({t:n.name,s:"Neighborhood",act:()=>selectHood(n.slug)}));
+    const vens=DATA.venues.filter(x=>x.name.toLowerCase().includes(v))
+      .map(x=>({t:x.name,s:bySlug[x.neighborhood].name,act:()=>selectVenue(x.id)}));
+    const all=hoods.concat(vens).slice(0,10);
+    box.innerHTML=all.map((r,i)=>`<li data-i="${i}"><span>${esc(r.t)}</span><span class="r-sub">${esc(r.s)}</span></li>`).join("");
+    box.hidden=all.length===0;
+    box.querySelectorAll("li").forEach(li=>li.addEventListener("click",()=>{all[li.dataset.i].act();q.value="";box.hidden=true;}));
+  });
+  document.addEventListener("click",e=>{if(!e.target.closest(".search"))box.hidden=true;});
+}
+init();
+</script></body></html>

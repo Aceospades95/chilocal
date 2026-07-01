@@ -224,7 +224,7 @@ function assemble(v, e) {
   if (t.reservation === "required") tips.push("Reservation required");
   if (t.wheelchair === "yes") tips.push("Wheelchair accessible");
   return {
-    id: v.id, name: e ? t.name : v.q, hood: v.hood,
+    id: v.id, name: v.q, nameOsm: e && t.name !== v.q ? t.name : undefined, hood: v.hood,
     geom: geomNameAt({ lat, lng }),
     cat: v.cat, vibes: v.vibes, energy: v.energy, price: v.price,
     bestFor: v.bestFor, indoor: !!v.in, outdoor: !!v.out,
