@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js";
-import { buildContext } from "./context.js";
-import { loadMemory, memoryView, setHome, toggleSaved, lockDate, habitNudge } from "./memory.js";
-import { NightMap } from "./nightmap.js";
-import { sharePlan } from "./share.js";
+import { prepVenues, decide, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n1";
+import { buildContext } from "./context.js?v=n1";
+import { loadMemory, memoryView, setHome, toggleSaved, lockDate, habitNudge } from "./memory.js?v=n1";
+import { NightMap } from "./nightmap.js?v=n1";
+import { sharePlan } from "./share.js?v=n1";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -373,7 +373,7 @@ function promoteAlt(i) {
   const memv = memoryView(S.mem);
   const input = { vibe: S.mode === "out" ? S.vibe : null, budget: S.budget };
   // recompute pairing + why for the new hero
-  import("./engine.js").then(({ pickSecond, whyLine }) => {
+  import("./engine.js?v=n1").then(({ pickSecond, whyLine }) => {
     S.plan.second = pickSecond(alt.v, S.venues.filter((x) =>
       haversineMi(origin(), x) <= DIST_DIALS.find((d) => d.id === S.dial).mi + 1), { vibe: input.vibe, budget: S.budget }, S.ctx);
     S.plan.why = whyLine(alt.v, alt.reasons, input, S.ctx, alt.extra);

@@ -1,132 +1,69 @@
-# chilocal
+# ChiLocal — the night decides itself
 
-An interactive map of Chicago's boundaries — built to be the foundation of a
-self-hosted local website. Starts with two layers and grows from there.
+**Tell us the vibe, we'll decide your night.** One concrete plan for tonight
+in Chicago — where to go, why it fits, how to get there — in under a minute.
+Built for two: pass-the-phone date-night roulette with vetoes. Never a list.
 
-- **Community Areas** — the City of Chicago's **official 77** community areas (authoritative).
-- **Neighborhoods** — the **98** colloquial neighborhoods from Choose Chicago (approximate; no official set exists).
+Live: **https://chilocal.omnia-house.com** · the original neighborhood
+boundary atlas is preserved at **`/explore.html`**.
 
-Features: layer toggle, hover-to-highlight, click for details, search, four
-keyless basemaps (light / streets / dark / satellite), and a choropleth engine
-that's ready for your own data.
+→ Product thinking, matching-engine design, data provenance, and roadmap:
+**[PRODUCT.md](PRODUCT.md)** · Live-API migration path: **[API.md](API.md)**
 
-It's a static site (Leaflet, no build step, no API keys), packaged as a tiny
-nginx container for your Unraid server.
+## What's in the box
 
----
+- `site/` — the app. Static, no build step, vanilla ES modules:
+  - `index.html` + `css/night.css` — the funnel, reveal sheet, two-player flow
+  - `js/night/engine.js` — the matching engine (filters, scoring, OSM-hours
+    parser, two-player joint scoring, second-stop pairing, honest why-lines)
+  - `js/night/nightmap.js` — custom dark SVG map of the 98 neighborhoods:
+    radar scan, camera zoom, route draw, pin drop, hood glow
+  - `js/night/context.js` — Chicago clock + Open-Meteo weather (keyless)
+  - `js/night/memory.js` — date log, been-there, wishlist, habit nudges
+    (localStorage)
+  - `js/night/share.js` — canvas share card ("Date #14 · Green Mill → …")
+  - `data/venues.json` — 179 verified venues with per-field provenance
+  - `explore.html` — the previous editorial map, kept whole
+- `scripts/` — the data pipeline:
+  - `seed-venues.json` — the editorial layer (takes, vibes, tiers) — ours
+  - `build-venues.mjs` — verifies every seed against OpenStreetMap
+    (Overpass) and active City of Chicago business licenses; drops anything
+    it can't verify; emits `site/data/venues.json`
+  - `overpass-query.txt`, `cache/` — reproducible source pulls
 
-## Quick start (Docker / Unraid)
-
-```bash
-docker compose up -d --build
-```
-
-Then open `http://<your-server-ip>:8080`.
-
-The build downloads the **full-resolution official boundaries** from the Chicago
-Data Portal and bakes them into the image. If the build host is offline, it
-falls back to the committed simplified samples — the build never fails.
-
-### On Unraid specifically
-
-Two easy paths:
-
-1. **Compose Manager plugin** (recommended): create a new stack named `chilocal`,
-   paste this repo's files (or point it at the folder), and hit *Compose Up*.
-2. **Plain Docker**: build once and run —
-   ```bash
-   docker build -t chilocal:latest .
-   docker run -d --name chilocal --restart unless-stopped -p 8080:80 chilocal:latest
-   ```
-   In the Unraid Docker tab the container will appear; the WebUI is port `8080`.
-
-Change the host port by editing the `ports:` line in `docker-compose.yml`
-(e.g. `"8088:80"`).
-
-## Run locally (no Docker)
-
-It's just static files. From the `site/` folder:
+## Quick start
 
 ```bash
-cd site
-python3 -m http.server 8000      # then open http://localhost:8000
+cd site && python3 -m http.server 8811     # → http://localhost:8811
 ```
 
-Opening `index.html` directly works too — it'll use the bundled samples or the
-live portal.
-
-## Get full-resolution boundaries (outside Docker)
+Refresh the venue data:
 
 ```bash
-./scripts/fetch-data.sh
+curl -X POST -H "User-Agent: ChiLocal/1.0 (github.com/Aceospades95/chilocal)" \
+  --data-binary @scripts/overpass-query.txt \
+  https://overpass-api.de/api/interpreter -o /tmp/osm-chicago.json
+node scripts/build-venues.mjs /tmp/osm-chicago.json scripts/cache/chi-licenses.json
 ```
 
-This writes `site/data/community-areas.geojson` and `neighborhoods.geojson` at
-full resolution, straight from the official portal. Re-run anytime to refresh.
+## Deploy (unchanged pipeline)
 
----
+Push to `main` → GitHub Actions builds `ghcr.io/aceospades95/chilocal:latest`
+→ Unraid → Docker → `chilocal-map` → *force update*. The image is the same
+tiny nginx static server as before (`Dockerfile`, `nginx.conf` untouched);
+`scripts/fetch-data.sh` still bakes full-resolution boundary data at build
+time when the network allows.
 
-## How the data loads
-
-Each layer tries three sources in order (configured in `site/js/config.js`):
-
-1. `data/<layer>.geojson` — full-resolution, from `fetch-data.sh` / Docker build.
-2. `data/<layer>.min.geojson` — committed simplified sample (works offline).
-3. The **live** Chicago Data Portal endpoint (CORS-enabled) — last resort.
-
-So the map always renders, and you control how accurate/heavy the bundled data is.
-
-## Add your own data (choropleth)
-
-Every feature has a stable `id` (community area number, or a neighborhood slug)
-and a `name`. Join a `{id|name: value}` map and the layer recolors with a legend:
-
-```js
-// In the browser console, or your own script after the map loads:
-ChiLocal.setData("community-areas",
-  { "8": 105000, "32": 42000, "28": 67000 },   // keys = area numbers (or names)
-  { label: "Population", unit: "people" }
-);
+```bash
+docker compose up -d --build   # local: http://localhost:8080
 ```
 
-Other handy calls: `ChiLocal.select(layerId, id)`, `ChiLocal.clear()`,
-`ChiLocal.setBasemap("dark")`, `ChiLocal.listFeatures("neighborhoods")`.
+## Data & licenses
 
-## Add a new boundary layer
-
-1. Drop a GeoJSON in `site/data/` (or add a `fetch-data.sh` line for it).
-2. Add an entry to `layers` in `site/js/config.js` (set `nameField` / `idField`
-   to the property keys in your file, pick a `color`).
-
-The sidebar, search, and choropleth pick it up automatically — no other code.
-
-Good Chicago candidates on the same portal: wards, police districts, ZIP codes,
-parks, census tracts.
-
----
-
-## Project structure
-
-```
-chilocal/
-├─ site/                     # the web app (everything served)
-│  ├─ index.html
-│  ├─ css/style.css
-│  ├─ js/config.js           # ← layers, basemaps, branding live here
-│  ├─ js/app.js              # map + interaction logic (ChiLocal API)
-│  ├─ vendor/leaflet/        # Leaflet, vendored (no CDN at runtime)
-│  └─ data/                  # boundary GeoJSON (+ samples)
-├─ scripts/fetch-data.sh     # pull full-resolution official data
-├─ Dockerfile               # build-time fetch → nginx
-├─ docker-compose.yml
-└─ nginx.conf
-```
-
-## Data source & accuracy
-
-All boundaries come from the [Chicago Data Portal](https://data.cityofchicago.org):
-Community Areas (`igwz-8jzy`, official) and Neighborhoods (`y6yq-dbs2`,
-approximate, names not official). Basemap tiles © OpenStreetMap, CARTO, and Esri.
-
-Basemap tiles require internet at view time; the boundary data is local once
-fetched/bundled.
+Venue facts (coordinates, names, addresses, websites, opening hours, tips
+like cash-only) come from **OpenStreetMap** — © OpenStreetMap contributors,
+**ODbL 1.0** — and from **City of Chicago open data** (business licenses,
+boundary files). Weather by **Open-Meteo**. Editorial takes, vibe tags, and
+price-tier estimates are ChiLocal's own opinion (`scripts/seed-venues.json`).
+Hours are surfaced only when sourced, always with a "double-check" link out.
+No scraped reviews, no lifted copy.
