@@ -39,6 +39,19 @@ export class NightMap {
     this.H = H;
     this.px = (lng) => ((lng - mnx) * k / ((mxx - mnx) * k)) * W;
     this.py = (lat) => H - ((lat - mny) / (mxy - mny)) * H;
+    this.unproject = (ux, uy) => ({
+      lng: (ux / W) * (mxx - mnx) + mnx,
+      lat: mny + ((H - uy) / H) * (mxy - mny),
+    });
+    /* screen px -> map units. Only exact when the map is untilted (flat). */
+    this.screenToUnits = (pxX, pxY) => {
+      const r = this.svg.getBoundingClientRect();
+      const scale = Math.max(r.width / this.box.w, r.height / this.box.h);
+      const offX = (r.width - this.box.w * scale) / 2;
+      const offY = (r.height - this.box.h * scale) / 2;
+      return { x: this.box.x + (pxX - r.left - offX) / scale,
+               y: this.box.y + (pxY - r.top - offY) / scale };
+    };
 
     this.svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
     this.svg.innerHTML = `
@@ -59,6 +72,7 @@ export class NightMap {
       </defs>
       <rect id="nm-water-rect" x="${-W}" y="${-H}" width="${W * 3}" height="${H * 3}" fill="url(#nm-water)"/>
       <g id="nm-hoods"></g>
+      <g id="nm-detail"></g>
       <g id="nm-streets"></g>
       <g id="nm-transit"></g>
       <g id="nm-fx"></g>
@@ -174,7 +188,14 @@ export class NightMap {
       st.setProperty("--lbl", (13 * z).toFixed(2) + "px");
       st.setProperty("--wd", (6 * z).toFixed(2) + "px");
       st.setProperty("--lift", (9 * z).toFixed(2) + "px");
-      this.svg.parentElement.classList.toggle("zoomed", z < 0.55);
+      st.setProperty("--uz", z.toFixed(4) + "px"); // 1 screen-ish px in map units
+      const host = this.svg.parentElement;
+      host.classList.toggle("zoomed", z < 0.78);
+      host.classList.toggle("zoomed2", z < 0.3);
+      if (z < 0.85) { // close enough that detail matters — fetch it once
+        this.loadStreets("data/streets.min.geojson");
+        this.loadDetail("data/detail.min.geojson");
+      }
     }
   }
 
@@ -211,10 +232,20 @@ export class NightMap {
       return b;
     };
 
+    svg.addEventListener("click", (e) => {
+      if (this._placePick && !this._dragMoved) {
+        const u = this.screenToUnits(e.clientX, e.clientY);
+        const ll = this.unproject(u.x, u.y);
+        const cb = this._placePick;
+        this.disarmPlacePick();
+        cb(ll);
+      }
+    }, true);
     svg.addEventListener("pointerdown", (e) => {
       if (!active()) return;
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      svg.setPointerCapture(e.pointerId);
+      // NO setPointerCapture: capturing retargets the eventual click to the
+      // svg, which silently killed every neighborhood tap for real pointers.
       if (this._anim) { cancelAnimationFrame(this._anim); this._anim = null; }
       if (ptrs.size === 1) {
         start = { x: e.clientX, y: e.clientY, box: { ...this.box } };
@@ -231,7 +262,7 @@ export class NightMap {
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (ptrs.size === 1 && start) {
         const dxPx = e.clientX - start.x, dyPx = e.clientY - start.y;
-        if (Math.abs(dxPx) + Math.abs(dyPx) > 5) this._dragMoved = true;
+        if (Math.hypot(dxPx, dyPx) > 9) this._dragMoved = true;
         if (!this._dragMoved) return;
         const { dx, dy } = toUnits(dxPx, dyPx);
         this._setBox(clampBox({ ...start.box, x: start.box.x - dx, y: start.box.y - dy }));
@@ -287,6 +318,16 @@ export class NightMap {
   _scaleBox(b, f, rx, ry) {
     const w = b.w * f, h = b.h * f;
     return { x: b.x + (b.w - w) * rx, y: b.y + (b.h - h) * ry, w, h };
+  }
+
+  /* arm a one-shot "tap the map to place" interaction (flat coords only) */
+  armPlacePick(cb) {
+    this._placePick = cb;
+    this.svg.parentElement.classList.add("placing");
+  }
+  disarmPlacePick() {
+    this._placePick = null;
+    this.svg.parentElement.classList.remove("placing");
   }
 
   /* view presets: flat (top-down) / mid (2.5D) / full (deep 3D) */
@@ -358,7 +399,7 @@ export class NightMap {
     return w && h ? w / h : 1;
   }
 
-  cityView(inset = {}) {
+  cityView(inset = {}, zoomF = 1) {
     let box = { ...this.cityBox };
     const aspect = this._aspect();
     if (box.w / box.h < aspect) { const nw = box.h * aspect; box.x -= (nw - box.w) / 2; box.w = nw; }
@@ -371,6 +412,7 @@ export class NightMap {
     if (inset.right) {
       box.w = box.w / (1 - inset.right);
     }
+    if (zoomF !== 1) box = this._scaleBox(box, zoomF, 0.5, 0.42);
     return this.animateTo(box, 950);
   }
 
@@ -427,18 +469,22 @@ export class NightMap {
     this.clearSpot();
     const g = document.createElementNS(NS, "g");
     g.setAttribute("id", "nm-spot");
-    const u = this.box.w / 150;
     for (const p of pts) {
       const x = this.px(p.lng), y = this.py(p.lat);
+      // radii live in CSS (calc on --uz) so dots hold a constant SCREEN size
       const hit = document.createElementNS(NS, "circle");
       hit.setAttribute("cx", x.toFixed(1)); hit.setAttribute("cy", y.toFixed(1));
-      hit.setAttribute("r", (u * 2.2).toFixed(2));
       hit.setAttribute("class", "nm-spot-hit");
       const dot = document.createElementNS(NS, "circle");
       dot.setAttribute("cx", x.toFixed(1)); dot.setAttribute("cy", y.toFixed(1));
-      dot.setAttribute("r", (u * 0.55).toFixed(2));
       dot.setAttribute("class", "nm-spot-dot");
       dot.style.pointerEvents = "none";
+      const tag = document.createElementNS(NS, "text");
+      tag.setAttribute("class", "nm-spotlabel");
+      tag.setAttribute("x", x.toFixed(1));
+      tag.setAttribute("y", (y - 2).toFixed(1));
+      tag.setAttribute("text-anchor", "middle");
+      tag.textContent = p.name;
       hit.addEventListener("mouseenter", () => this.setLabel({ lat: p.lat, lng: p.lng }, p.name));
       hit.addEventListener("mouseleave", () => this.setLabel(null));
       hit.addEventListener("click", (ev) => {
@@ -447,9 +493,32 @@ export class NightMap {
         this.setLabel(null);
         if (this.onSpotClick) this.onSpotClick(p.id);
       });
-      g.append(hit, dot);
+      g.append(hit, dot, tag);
     }
     this.svg.querySelector("#nm-pins").appendChild(g);
+  }
+
+  /* parks + water, revealed as you zoom (fetched once, lazily) */
+  async loadDetail(url) {
+    if (this._detailLoaded) return;
+    this._detailLoaded = true;
+    const gj = await fetch(url).then((r) => r.json()).catch(() => null);
+    if (!gj) { this._detailLoaded = false; return; }
+    const host = this.svg.querySelector("#nm-detail");
+    const draw = (coordsList, cls) => {
+      let d = "";
+      for (const ring of coordsList) {
+        ring.forEach((c, i) => { d += (i ? "L" : "M") + this.px(c[0]).toFixed(1) + " " + this.py(c[1]).toFixed(1); });
+        d += "Z";
+      }
+      const path = document.createElementNS(NS, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("class", cls);
+      path.setAttribute("fill-rule", "evenodd");
+      host.appendChild(path);
+    };
+    draw(gj.water || [], "nm-waterbody");
+    draw(gj.parks || [], "nm-park");
   }
 
   /* ------------------------- overlays: transit + streets ------------------ */

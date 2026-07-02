@@ -29,6 +29,7 @@ export function setHome(m, home) { m.home = home; save(m); }
 export function logGenerated(m, plan) {
   m.generated.unshift({
     iso: new Date().toISOString().slice(0, 10),
+    heroId: plan.hero.v.id || null,
     heroName: plan.hero.v.name, heroCat: plan.hero.v.cat, heroHood: plan.hero.v.hood,
     secondName: plan.second?.venue.name || null,
     why: plan.why || null,

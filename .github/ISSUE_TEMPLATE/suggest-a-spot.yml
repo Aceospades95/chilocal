@@ -1,0 +1,35 @@
+name: Suggest a spot
+description: Nominate a place for the ChiLocal book. It ships after review + verification.
+title: "Suggest a spot: "
+labels: [spot-suggestion]
+body:
+  - type: input
+    id: name
+    attributes: { label: Name, placeholder: e.g. Kingston Mines }
+    validations: { required: true }
+  - type: input
+    id: hood
+    attributes: { label: Neighborhood }
+    validations: { required: true }
+  - type: input
+    id: cat
+    attributes: { label: Category, placeholder: Jazz club / Taqueria / Dive bar… }
+    validations: { required: true }
+  - type: dropdown
+    id: vibes
+    attributes:
+      label: Vibes it serves
+      multiple: true
+      options: [dinner & drinks, dancing & late, something new, a show, keep it chill, out in the air]
+    validations: { required: true }
+  - type: input
+    id: price
+    attributes: { label: "Price tier (1–4 $)" }
+  - type: textarea
+    id: why
+    attributes: { label: Why it belongs, description: One or two lines in your own words — this becomes the editorial take. }
+    validations: { required: true }
+  - type: markdown
+    attributes:
+      value: |
+        **Review process:** a maintainer verifies the spot is real and open (OpenStreetMap / active Chicago business license), adds it to `scripts/seed-venues.json`, and re-runs `scripts/build-venues.mjs`. Unverifiable places are declined — that's the quality floor.
