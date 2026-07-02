@@ -29,12 +29,20 @@ export function setHome(m, home) { m.home = home; save(m); }
 export function logGenerated(m, plan) {
   m.generated.unshift({
     iso: new Date().toISOString().slice(0, 10),
+    heroId: plan.hero.v.id || null,
     heroName: plan.hero.v.name, heroCat: plan.hero.v.cat, heroHood: plan.hero.v.hood,
     secondName: plan.second?.venue.name || null,
     why: plan.why || null,
   });
   m.generated = m.generated.slice(0, 20);
   save(m);
+}
+
+export function toggleBeen(m, id) {
+  if ((m.been[id] || 0) > 0) delete m.been[id];
+  else m.been[id] = 1;
+  save(m);
+  return m.been[id] || 0;
 }
 
 export function toggleSaved(m, id) {

@@ -5,8 +5,7 @@ on a Friday at 6pm and in under a minute has *one concrete plan for tonight*:
 where to go, why it fits, how to get there. Not a list. Never a list — a list
 is the problem we're solving.
 
-Live at **https://chilocal.omnia-house.com** · the old neighborhood atlas
-lives on at `/explore.html`.
+Live at **https://chilocal.omnia-house.com**.
 
 ---
 
@@ -35,7 +34,7 @@ Decide together (2P) ─────┘        1.9s, on the map        one hero 
 - **Lock it in** — "Date #14. It's decided." Directions deep-link, canvas
   share card (built-in distribution), and the night is logged.
 
-## Explore — the book of the city
+## Explore — the book of the city (v3)
 
 The second half of the product (header toggle: **Tonight / Explore**). The map
 tilts into a 2.5D night diorama — every one of the 98 official neighborhoods
@@ -47,6 +46,23 @@ venue. Explore always bridges back to the engine: **"⚡ Make it tonight's
 plan"** adopts any browsed venue as the hero (with honest why-line + paired
 second stop), and **"🎲 Surprise us — but here"** runs the full decision loop
 confined to that neighborhood. Browse feeds decide; decide stays the product.
+
+The map is a real instrument now: drag/scroll/pinch camera with Flat · 2.5D ·
+3D presets; venue-weighted neighborhood labels rest on the map
+(collision-culled per zoom, never clipped or under the panel); constant-size
+venue dots grow name tags at deep zoom; and past hood-level zoom the detail
+tier fades in automatically — major streets with arterial names, parks, water
+(OSM, simplified, ~500 KB total gzipped ~120 KB) — under the Tonight route
+too. CTA L lines in official colors stay a toggle.
+
+**The personal layer:** ♡ wishlist anywhere; "✓ been here" from any profile
+(feeds the engine's novelty memory); **add your own places** (pin-on-map
+picker, on-device, `◆ yours`, instantly pickable) with **"Suggest to
+ChiLocal"** opening a prefilled GitHub issue — the review gate into the
+curated book (verify via OSM/city license → seed → pipeline). "🎲 Surprise us
+from our list" runs the engine over saved + your own places only. History
+("our nights") keeps the locked date log, the last 20 generated plans (each
+shareable), and every entry links back to its venue profile.
 
 ## Where the effort went: pick quality
 

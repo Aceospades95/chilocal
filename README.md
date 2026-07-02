@@ -23,7 +23,9 @@ boundary atlas is preserved at **`/explore.html`**.
     (localStorage)
   - `js/night/share.js` — canvas share card ("Date #14 · Green Mill → …")
   - `data/venues.json` — 179 verified venues with per-field provenance
-  - `explore.html` — the previous editorial map, kept whole
+  - `data/cta-lines.min.geojson`, `data/streets.min.geojson`,
+    `data/detail.min.geojson` — map overlays (CTA rail, major streets +
+    arterial names, parks/water), City of Chicago open data + OSM (ODbL)
 - `scripts/` — the data pipeline:
   - `seed-venues.json` — the editorial layer (takes, vibes, tiers) — ours
   - `build-venues.mjs` — verifies every seed against OpenStreetMap

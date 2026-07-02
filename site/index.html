@@ -6,7 +6,7 @@
 <title>ChiLocal — tell us the vibe, we'll decide your night</title>
 <meta name="description" content="One plan for tonight in Chicago: where to go, why it fits, how to get there. Built for two."/>
 <meta name="theme-color" content="#070c16"/>
-<link rel="stylesheet" href="css/night.css?v=n3"/>
+<link rel="stylesheet" href="css/night.css?v=n4"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='19' font-size='19'%3E%F0%9F%8C%83%3C/text%3E%3C/svg%3E"/>
 </head>
 <body data-screen="ask">
@@ -158,6 +158,7 @@
         <h2 id="lk-hero" class="lk-hero"></h2>
         <p class="rv-meta" id="lk-meta"></p>
         <p class="lk-second" id="lk-second"></p>
+        <p class="mutep" id="lk-profile-hint" hidden>tap a name to see its full profile</p>
         <div class="actions column">
           <a id="lk-directions" class="btn primary" target="_blank" rel="noopener">Get directions</a>
           <button id="lk-share" class="btn ghost">Share our plan</button>
@@ -183,6 +184,22 @@
     <div id="nights-body"></div>
   </dialog>
 
+  <dialog id="addplace">
+    <button class="x" aria-label="close">×</button>
+    <h3>Add your own spot</h3>
+    <p class="mutep">Lives on this device, joins your wishlist pool, and the engine can pick it. Suggest it to ChiLocal afterward if it deserves the big list.</p>
+    <input id="ap-name" placeholder="Name of the place *" autocomplete="off"/>
+    <select id="ap-cat" class="ap-select"></select>
+    <div class="dial"><label>Price</label><div class="seg" id="ap-price"></div></div>
+    <div class="dial" style="margin-top:10px"><label>What it's for *</label><div class="fchips" id="ap-vibes"></div></div>
+    <textarea id="ap-take" rows="2" maxlength="160" placeholder="Your one-line take (optional)"></textarea>
+    <div class="ap-locrow">
+      <button class="btn ghost" id="ap-pick">📍 Pin it on the map *</button>
+      <span id="ap-loc" class="mutep"></span>
+    </div>
+    <button class="cta slim" id="ap-save" disabled><span class="cta-big">Save to your places</span></button>
+  </dialog>
+
   <dialog id="stayin">
     <button class="x" aria-label="close">×</button>
     <h3>Staying in?</h3>
@@ -199,6 +216,6 @@
   </footer>
 </div>
 
-<script type="module" src="js/night/app.js?v=n3"></script>
+<script type="module" src="js/night/app.js?v=n4"></script>
 </body>
 </html>
