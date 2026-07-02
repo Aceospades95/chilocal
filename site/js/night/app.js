@@ -4,7 +4,7 @@
 
 import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n4";
 import { buildContext } from "./context.js?v=n4";
-import { loadMemory, memoryView, setHome, toggleSaved, lockDate, habitNudge, logGenerated } from "./memory.js?v=n4";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n4";
 import { NightMap } from "./nightmap.js?v=n4";
 import { sharePlan } from "./share.js?v=n4";
 
@@ -38,6 +38,7 @@ function refreshVenues() {
   }));
   S.venues = prepVenues([...S.baseVenues, ...mine]);
   if (S.geo) buildExploreIndex();
+  if (S.map && S.exIndex) S.map.setLabelWeights(new Map([...S.exIndex.groups].map(([k, g]) => [k, g.venues.length])));
 }
 
 function pointInFeature(pt, feature) {
@@ -98,6 +99,8 @@ async function boot() {
     renderExplore();
   };
 
+  S.map.setLabelWeights(new Map([...S.exIndex.groups].map(([k, g]) => [k, g.venues.length])));
+
   // restore map prefs
   S.map.setTilt(prefs.tilt || "mid");
   $$("#tilt-seg button").forEach((b) => b.classList.toggle("on", b.dataset.t === (prefs.tilt || "mid")));
@@ -141,6 +144,7 @@ function setView(view) {
     renderExplore();
     show("explore");
   } else {
+    S.map.disarmPlacePick?.();
     S.map.setExplore(false);
     S.map.clearSpot?.();
     S.map.resetView(700);
@@ -322,12 +326,17 @@ async function runDecision() {
   show("deciding");
   S.map.resetView(500);
   S.map.startScan();
+  const lines = S.session.onlyList
+    ? [() => "Only your list tonight — as requested", ...THINK_LINES]
+    : S.session.onlyGeom
+      ? [() => `Staying inside ${S.session.onlyGeom}`, ...THINK_LINES]
+      : THINK_LINES;
   const lineEl = $("#think-line");
   let li = 0;
-  lineEl.textContent = THINK_LINES[0](S.ctx);
+  lineEl.textContent = lines[0](S.ctx);
   const timer = setInterval(() => {
-    li = (li + 1) % THINK_LINES.length;
-    lineEl.textContent = THINK_LINES[li](S.ctx);
+    li = (li + 1) % lines.length;
+    lineEl.textContent = lines[li](S.ctx);
   }, 620);
 
   const input = {
@@ -369,7 +378,9 @@ async function runDecision() {
   if (S.view !== "tonight") return; // user walked away mid-decision
   if (plan.empty) {
     show("ask");
-    toast("Even we couldn't make that work tonight. Loosen a dial?");
+    toast(S.session.onlyList
+      ? "Your list came up empty for tonight — save a few more spots first."
+      : "Even we couldn't make that work tonight. Loosen a dial?");
     return;
   }
   S.plan = plan;
@@ -726,6 +737,14 @@ function wireStatic() {
   };
   $("#lk-again").onclick = resetToAsk;
   $$("dialog .x").forEach((b) => b.onclick = () => b.closest("dialog").close());
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || S.view !== "explore" || document.querySelector("dialog[open]")) return;
+    if (S.ex.venue) {
+      S.ex.venue = null; S.map.clearSpot?.(); renderExplore();
+      const g = S.exIndex.groups.get(S.ex.hood);
+      if (g) S.map.markSpots(g.venues);
+    } else if (S.ex.hood) exBackToCity();
+  });
   $("#stayin-out").onclick = () => { $("#stayin").close(); S.mode = "out"; S.vibe = null; newSession(); runDecision(); };
 }
 
@@ -865,6 +884,20 @@ function renderExplore() {
       <h2 class="ex-title">${esc(v.name)}</h2>
       <p class="ex-meta">${esc(v.hood)} · ${"$".repeat(v.price)} · ${esc(travelLabel(haversineMi(origin(), v)))}</p>
       <p class="ex-venue-take">${esc(v.take)}</p>
+      <div class="prof-chips">
+        ${v.vibes.map((vb) => { const V = VIBES.find((x) => x.id === vb); return V ? `<span class="pc hot">${V.icon} ${esc(V.name)}</span>` : ""; }).join("")}
+        ${(v.bestFor || []).map((b) => `<span class="pc">${esc(b)}</span>`).join("")}
+        ${v.inst ? `<span class="pc cool">★ institution</span>` : ""}
+        ${v.late ? `<span class="pc cool">open late</span>` : ""}
+        ${v.outdoor ? `<span class="pc cool">outdoors</span>` : ""}
+        ${(v.seasons || []).includes("all") ? "" : (v.seasons || []).map((x) => `<span class="pc">${esc(x)} thing</span>`).join("")}
+      </div>
+      <div class="energy-row"><span>ENERGY</span>
+        <span class="dots">${[1,2,3,4,5].map((n) => `<span class="${n <= v.energy ? "on" : ""}"></span>`).join("")}</span>
+        <span>${v.energy <= 2 ? "hushed" : v.energy === 3 ? "lively" : "loud"}</span>
+        <button class="been-toggle ${(S.mem.been[v.id] || 0) > 0 ? "on" : ""}" id="ex-been" style="margin-left:auto">
+          ${(S.mem.been[v.id] || 0) > 0 ? "✓ been here" : "mark as been"}</button>
+      </div>
       <p class="rv-hours">${hoursLine(v)}${v.tips?.length ? ` <span class="tips">· ${v.tips.map(esc).join(" · ")}</span>` : ""}${v.approx ? ` <span class="tips">· location approximate</span>` : ""}</p>
       <div class="ex-actions">
         <button class="btn primary" id="ex-adopt">⚡ Make it tonight's plan</button>
@@ -885,6 +918,12 @@ function renderExplore() {
       const on = toggleSaved(S.mem, v.id);
       $("#ex-save").classList.toggle("on", on);
       $("#ex-save").textContent = on ? "♥ Saved" : "♡ Save";
+    };
+    $("#ex-been").onclick = () => {
+      const n = toggleBeen(S.mem, v.id);
+      $("#ex-been").classList.toggle("on", n > 0);
+      $("#ex-been").textContent = n > 0 ? "✓ been here" : "mark as been";
+      toast(n > 0 ? "Logged — the engine won't re-suggest it for a while." : "Cleared.");
     };
     $("#ex-remove") && ($("#ex-remove").onclick = () => {
       saveMyPlaces(loadMyPlaces().filter((m) => m.id !== v.id));

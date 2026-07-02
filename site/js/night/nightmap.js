@@ -149,6 +149,7 @@ export class NightMap {
       label.setAttribute("y", cy2.toFixed(1));
       label.setAttribute("text-anchor", "middle");
       label.textContent = name.replace(/,/, " · ").toUpperCase();
+      label.dataset.area = bigArea.toFixed(0);
       labelsG.appendChild(label);
 
       g.append(wall, face);
@@ -169,7 +170,9 @@ export class NightMap {
         if (this.svg.parentElement.classList.contains("explore"))
           label.classList.add("show");
       });
-      face.addEventListener("mouseleave", () => label.classList.remove("show"));
+      face.addEventListener("mouseleave", () => {
+        if (this.selected !== name) label.classList.remove("show");
+      });
     }
     this._orderedGroups = [...hoodsG.children];
 
@@ -196,7 +199,65 @@ export class NightMap {
         this.loadStreets("data/streets.min.geojson");
         this.loadDetail("data/detail.min.geojson");
       }
+      this._queueCull();
     }
+  }
+
+  setLabelWeights(weights) {
+    this._labelWeights = weights; // polygonName -> venue count
+    this._queueCull();
+  }
+
+  _cullLabels() {
+    const host = this.svg.parentElement;
+    if (!host.classList.contains("explore")) {
+      for (const l of this.hoodLabels.values()) l.classList.remove("vis");
+      return;
+    }
+    const elW = this.svg.clientWidth || 1, elH = this.svg.clientHeight || 1;
+    const scale = Math.max(elW / this.box.w, elH / this.box.h);
+    const offX = (elW - this.box.w * scale) / 2, offY = (elH - this.box.h * scale) / 2;
+    const F = 13 * (this.box.w / this.cityBox.w) * scale; // label px on screen
+    // labels must live in the VISIBLE window — not under the panel, not clipped
+    const desktop = matchMedia("(min-width: 920px)").matches;
+    const winX1 = desktop ? elW - 445 : elW - 6;
+    const winY1 = desktop ? elH - 8 : elH * 0.52;
+    const kept = [];
+    const wts = this._labelWeights || new Map();
+    // venue-rich neighborhoods name themselves first; empty giants fill in after
+    const ordered = [...this.hoodLabels.entries()]
+      .sort((a, b) => ((wts.get(b[0]) || 0) - (wts.get(a[0]) || 0)) ||
+                      ((+b[1].dataset.area) - (+a[1].dataset.area)));
+    for (const [name, l] of ordered) {
+      const bb = this.hoodBBoxes.get(name);
+      const w = l.textContent.length * F * 0.62;
+      const weight = wts.get(name) || 0;
+      // skip hoods too small on screen to own their name (unless venue-rich)
+      if (bb.w * scale < w * (weight >= 3 ? 0.45 : 0.8)) { l.classList.remove("vis"); continue; }
+      const sx = offX + (+l.getAttribute("x") - this.box.x) * scale;
+      const sy = offY + (+l.getAttribute("y") - this.box.y) * scale;
+      const r = { x0: sx - w / 2 - 8, x1: sx + w / 2 + 8, y0: sy - F - 6, y1: sy + 6 };
+      if (r.x0 < 6 || r.x1 > winX1 || r.y0 < 60 || r.y1 > winY1) { l.classList.remove("vis"); continue; }
+      const hit = kept.some((k) => r.x0 < k.x1 && r.x1 > k.x0 && r.y0 < k.y1 && r.y1 > k.y0);
+      l.classList.toggle("vis", !hit);
+      if (!hit) kept.push(r);
+    }
+    // spot name tags: same treatment among themselves (priority = list order)
+    const tags = [...this.svg.querySelectorAll(".nm-spotlabel")];
+    const keptT = [];
+    for (const t of tags) {
+      const w = t.textContent.length * F * 0.68 * 0.68;
+      const sx = offX + (+t.getAttribute("x") - this.box.x) * scale;
+      const sy = offY + (+t.getAttribute("y") - this.box.y) * scale;
+      const r = { x0: sx - w / 2 - 5, x1: sx + w / 2 + 5, y0: sy - F - 4, y1: sy + 4 };
+      const hit = keptT.some((k) => r.x0 < k.x1 && r.x1 > k.x0 && r.y0 < k.y1 && r.y1 > k.y0);
+      t.classList.toggle("vis", !hit);
+      if (!hit) keptT.push(r);
+    }
+  }
+  _queueCull() {
+    clearTimeout(this._cullTimer);
+    this._cullTimer = setTimeout(() => this._cullLabels(), 110);
   }
 
   _restoreOrder() {
@@ -389,7 +450,8 @@ export class NightMap {
   /* ------------------------------ explore -------------------------------- */
   setExplore(on) {
     this.svg.parentElement.classList.toggle("explore", on);
-    if (!on) this.selectHood(null, { camera: false });
+    if (!on) { this.selectHood(null, { camera: false }); this.disarmPlacePick(); }
+    this._queueCull();
   }
 
   /* frame the whole city with UI insets (explore home view) */
@@ -420,6 +482,8 @@ export class NightMap {
   selectHood(name, opts = {}) {
     if (this.selected && this.hoodGroups.has(this.selected))
       this.hoodGroups.get(this.selected).classList.remove("sel");
+    for (const [n, l] of this.hoodLabels) if (n !== name) l.classList.remove("show");
+    if (name && this.hoodLabels.has(name)) this.hoodLabels.get(name).classList.add("show");
     this.selected = name || null;
     this._restoreOrder();
     if (!name) {
@@ -496,6 +560,7 @@ export class NightMap {
       g.append(hit, dot, tag);
     }
     this.svg.querySelector("#nm-pins").appendChild(g);
+    this._queueCull();
   }
 
   /* parks + water, revealed as you zoom (fetched once, lazily) */

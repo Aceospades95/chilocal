@@ -38,6 +38,13 @@ export function logGenerated(m, plan) {
   save(m);
 }
 
+export function toggleBeen(m, id) {
+  if ((m.been[id] || 0) > 0) delete m.been[id];
+  else m.been[id] = 1;
+  save(m);
+  return m.been[id] || 0;
+}
+
 export function toggleSaved(m, id) {
   const i = m.saved.indexOf(id);
   if (i >= 0) m.saved.splice(i, 1); else m.saved.push(id);
