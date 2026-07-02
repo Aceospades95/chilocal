@@ -5,8 +5,7 @@ on a Friday at 6pm and in under a minute has *one concrete plan for tonight*:
 where to go, why it fits, how to get there. Not a list. Never a list — a list
 is the problem we're solving.
 
-Live at **https://chilocal.omnia-house.com** · the old neighborhood atlas
-lives on at `/explore.html`.
+Live at **https://chilocal.omnia-house.com**.
 
 ---
 
