@@ -10,6 +10,7 @@ const DEFAULTS = () => ({
   been: {},                   // id -> count
   saved: [],                  // wishlist ids
   hoodVisits: {},             // hood -> count
+  generated: [],              // last 20 plans the engine produced (locked or not)
 });
 
 export function loadMemory() {
@@ -24,6 +25,17 @@ function save(m) {
 }
 
 export function setHome(m, home) { m.home = home; save(m); }
+
+export function logGenerated(m, plan) {
+  m.generated.unshift({
+    iso: new Date().toISOString().slice(0, 10),
+    heroName: plan.hero.v.name, heroCat: plan.hero.v.cat, heroHood: plan.hero.v.hood,
+    secondName: plan.second?.venue.name || null,
+    why: plan.why || null,
+  });
+  m.generated = m.generated.slice(0, 20);
+  save(m);
+}
 
 export function toggleSaved(m, id) {
   const i = m.saved.indexOf(id);

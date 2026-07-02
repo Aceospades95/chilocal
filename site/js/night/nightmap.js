@@ -57,16 +57,21 @@ export class NightMap {
           <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      <rect x="${-W}" y="${-H}" width="${W * 3}" height="${H * 3}" fill="url(#nm-water)"/>
+      <rect id="nm-water-rect" x="${-W}" y="${-H}" width="${W * 3}" height="${H * 3}" fill="url(#nm-water)"/>
       <g id="nm-hoods"></g>
+      <g id="nm-streets"></g>
+      <g id="nm-transit"></g>
       <g id="nm-fx"></g>
       <g id="nm-route"></g>
-      <g id="nm-pins"></g>`;
+      <g id="nm-pins"></g>
+      <g id="nm-labels"></g>`;
 
     const hoodsG = this.svg.querySelector("#nm-hoods");
+    const labelsG = this.svg.querySelector("#nm-labels");
     this.hoodPaths = new Map();   // name -> face path (scan flicker, glow clone)
     this.hoodGroups = new Map();  // name -> <g>
     this.hoodBBoxes = new Map();  // name -> {x,y,w,h}
+    this.hoodLabels = new Map();  // name -> <text> (top layer, never occluded)
 
     // paint north → south so a lifted hood overlaps its northern neighbor,
     // and every wall hides behind the hood south of it
@@ -83,16 +88,33 @@ export class NightMap {
       const name = f.properties.name;
       let d = "";
       let bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9;
+      let bigRing = null, bigArea = -1;
       const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
-      polys.forEach((poly) => poly.forEach((ring) => {
-        ring.forEach((c, i) => {
-          const x = this.px(c[0]), y = this.py(c[1]);
+      polys.forEach((poly) => poly.forEach((ring, ri) => {
+        const pts = ring.map((c) => [this.px(c[0]), this.py(c[1])]);
+        pts.forEach(([x, y], i) => {
           bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x);
           by0 = Math.min(by0, y); by1 = Math.max(by1, y);
           d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
         });
         d += "Z";
+        if (ri === 0) { // outer ring: track the biggest for label placement
+          let a = 0;
+          for (let i = 0, j = pts.length - 1; i < pts.length; j = i++)
+            a += pts[j][0] * pts[i][1] - pts[i][0] * pts[j][1];
+          if (Math.abs(a) > bigArea) { bigArea = Math.abs(a); bigRing = pts; }
+        }
       }));
+      // area centroid of the dominant ring (bbox centers miss on crescents)
+      let cx = (bx0 + bx1) / 2, cy2 = (by0 + by1) / 2;
+      if (bigRing && bigRing.length > 2) {
+        let a = 0, sx = 0, sy = 0;
+        for (let i = 0, j = bigRing.length - 1; i < bigRing.length; j = i++) {
+          const cr = bigRing[j][0] * bigRing[i][1] - bigRing[i][0] * bigRing[j][1];
+          a += cr; sx += (bigRing[j][0] + bigRing[i][0]) * cr; sy += (bigRing[j][1] + bigRing[i][1]) * cr;
+        }
+        if (Math.abs(a) > 1e-6) { cx = sx / (3 * a); cy2 = sy / (3 * a); }
+      }
 
       const g = document.createElementNS(NS, "g");
       g.setAttribute("class", "nm-hoodg");
@@ -109,31 +131,37 @@ export class NightMap {
 
       const label = document.createElementNS(NS, "text");
       label.setAttribute("class", "nm-hoodlabel");
-      label.setAttribute("x", ((bx0 + bx1) / 2).toFixed(1));
-      label.setAttribute("y", ((by0 + by1) / 2).toFixed(1));
+      label.setAttribute("x", cx.toFixed(1));
+      label.setAttribute("y", cy2.toFixed(1));
       label.setAttribute("text-anchor", "middle");
       label.textContent = name.replace(/,/, " · ").toUpperCase();
+      labelsG.appendChild(label);
 
-      g.append(wall, face, label);
+      g.append(wall, face);
       hoodsG.appendChild(g);
       this.hoodPaths.set(name, face);
       this.hoodGroups.set(name, g);
+      this.hoodLabels.set(name, label);
       this.hoodBBoxes.set(name, { x: bx0, y: by0, w: bx1 - bx0, h: by1 - by0 });
 
       face.addEventListener("click", (ev) => {
         ev.stopPropagation();
+        if (this._dragMoved) return; // that was a pan, not a pick
         if (this.onHoodClick) this.onHoodClick(name);
       });
-      // raise toward the viewer: hovered hood paints above its neighbors
-      face.addEventListener("mouseenter", () => hoodsG.appendChild(g));
-      face.addEventListener("mouseleave", () => {
-        if (!g.classList.contains("sel")) this._restoreOrder();
+      // hover = pure CSS lift + a label on the top layer. No DOM reshuffling:
+      // moving nodes under the cursor is what caused stuck tiles + dead clicks.
+      face.addEventListener("mouseenter", () => {
+        if (this.svg.parentElement.classList.contains("explore"))
+          label.classList.add("show");
       });
+      face.addEventListener("mouseleave", () => label.classList.remove("show"));
     }
     this._orderedGroups = [...hoodsG.children];
 
     this.cityBox = { x: -W * 0.06, y: -H * 0.02, w: W * 1.24, h: H * 1.04 };
     this._setBox(this.cityBox);
+    this._wireInteractions();
   }
 
   _setBox(b) {
@@ -146,15 +174,127 @@ export class NightMap {
       st.setProperty("--lbl", (13 * z).toFixed(2) + "px");
       st.setProperty("--wd", (6 * z).toFixed(2) + "px");
       st.setProperty("--lift", (9 * z).toFixed(2) + "px");
+      this.svg.parentElement.classList.toggle("zoomed", z < 0.55);
     }
   }
 
   _restoreOrder() {
     const parent = this.svg.querySelector("#nm-hoods");
     for (const g of this._orderedGroups) parent.appendChild(g);
-    // keep the selected hood on top after re-sorting
     if (this.selected && this.hoodGroups.has(this.selected))
       parent.appendChild(this.hoodGroups.get(this.selected));
+  }
+
+  /* ---------------- pan / zoom / pinch — the user takes the camera -------- */
+  _wireInteractions() {
+    const svg = this.svg;
+    const ptrs = new Map();
+    let start = null, pinch = null;
+    this._dragMoved = false;
+
+    const active = () => svg.parentElement.classList.contains("explore");
+    const toUnits = (dxPx, dyPx) => {
+      const r = { w: svg.clientWidth || 1, h: svg.clientHeight || 1 };
+      const scale = Math.max(r.w / this.box.w, r.h / this.box.h);
+      return { dx: dxPx / scale, dy: dyPx / scale };
+    };
+    const clampBox = (b) => {
+      const minW = this.cityBox.w / 16, maxW = this.cityBox.w * 1.7;
+      if (b.w < minW) { const f = minW / b.w; b = this._scaleBox(b, f, .5, .5); }
+      if (b.w > maxW) { const f = maxW / b.w; b = this._scaleBox(b, f, .5, .5); }
+      // keep the city loosely on stage
+      const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+      const lim = { x0: this.cityBox.x - b.w * .45, x1: this.cityBox.x + this.cityBox.w + b.w * .45,
+                    y0: this.cityBox.y - b.h * .45, y1: this.cityBox.y + this.cityBox.h + b.h * .45 };
+      b.x += Math.min(0, lim.x1 - cx) + Math.max(0, lim.x0 - cx);
+      b.y += Math.min(0, lim.y1 - cy) + Math.max(0, lim.y0 - cy);
+      return b;
+    };
+
+    svg.addEventListener("pointerdown", (e) => {
+      if (!active()) return;
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      svg.setPointerCapture(e.pointerId);
+      if (this._anim) { cancelAnimationFrame(this._anim); this._anim = null; }
+      if (ptrs.size === 1) {
+        start = { x: e.clientX, y: e.clientY, box: { ...this.box } };
+        this._dragMoved = false;
+      } else if (ptrs.size === 2) {
+        const [a, b] = [...ptrs.values()];
+        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), box: { ...this.box },
+                  mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+        start = null;
+      }
+    });
+    svg.addEventListener("pointermove", (e) => {
+      if (!active() || !ptrs.has(e.pointerId)) return;
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (ptrs.size === 1 && start) {
+        const dxPx = e.clientX - start.x, dyPx = e.clientY - start.y;
+        if (Math.abs(dxPx) + Math.abs(dyPx) > 5) this._dragMoved = true;
+        if (!this._dragMoved) return;
+        const { dx, dy } = toUnits(dxPx, dyPx);
+        this._setBox(clampBox({ ...start.box, x: start.box.x - dx, y: start.box.y - dy }));
+      } else if (ptrs.size === 2 && pinch) {
+        const [a, b] = [...ptrs.values()];
+        const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+        const f = pinch.d / d;
+        this._dragMoved = true;
+        const rect = svg.getBoundingClientRect();
+        const rx = (pinch.mx - rect.left) / (rect.width || 1);
+        const ry = (pinch.my - rect.top) / (rect.height || 1);
+        this._setBox(clampBox(this._scaleBox(pinch.box, f, rx, ry)));
+      }
+    });
+    const up = (e) => {
+      ptrs.delete(e.pointerId);
+      if (ptrs.size < 2) pinch = null;
+      if (ptrs.size === 0) {
+        start = null;
+        setTimeout(() => { this._dragMoved = false; }, 0); // let click handlers read it
+      }
+    };
+    svg.addEventListener("pointerup", up);
+    svg.addEventListener("pointercancel", up);
+
+    svg.addEventListener("wheel", (e) => {
+      if (!active()) return;
+      e.preventDefault();
+      if (this._anim) { cancelAnimationFrame(this._anim); this._anim = null; }
+      const f = Math.exp(e.deltaY * 0.0016);
+      const rect = svg.getBoundingClientRect();
+      const rx = (e.clientX - rect.left) / (rect.width || 1);
+      const ry = (e.clientY - rect.top) / (rect.height || 1);
+      this._setBox(clampBox(this._scaleBox(this.box, f, rx, ry)));
+    }, { passive: false });
+
+    svg.addEventListener("dblclick", (e) => {
+      if (!active()) return;
+      e.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const rx = (e.clientX - rect.left) / (rect.width || 1);
+      const ry = (e.clientY - rect.top) / (rect.height || 1);
+      this.animateTo(clampBox(this._scaleBox(this.box, 1 / 1.7, rx, ry)), 500);
+    });
+
+    // click the water to step back out
+    this.svg.querySelector("#nm-water-rect").addEventListener("click", () => {
+      if (!active() || this._dragMoved) return;
+      if (this.onBackgroundClick) this.onBackgroundClick();
+    });
+  }
+
+  _scaleBox(b, f, rx, ry) {
+    const w = b.w * f, h = b.h * f;
+    return { x: b.x + (b.w - w) * rx, y: b.y + (b.h - h) * ry, w, h };
+  }
+
+  /* view presets: flat (top-down) / mid (2.5D) / full (deep 3D) */
+  setTilt(mode) {
+    const host = this.svg.parentElement;
+    host.classList.remove("tilt-flat", "tilt-mid", "tilt-full");
+    host.classList.add("tilt-" + mode);
+    this.tilt = mode;
   }
 
   /* project unit-space point to on-screen px. Uses a live probe element so
@@ -288,9 +428,78 @@ export class NightMap {
     const g = document.createElementNS(NS, "g");
     g.setAttribute("id", "nm-spot");
     const u = this.box.w / 150;
-    g.innerHTML = pts.map((p) => `
-      <circle class="nm-spot-dot" cx="${this.px(p.lng).toFixed(1)}" cy="${this.py(p.lat).toFixed(1)}" r="${(u * 0.55).toFixed(2)}"/>`).join("");
+    for (const p of pts) {
+      const x = this.px(p.lng), y = this.py(p.lat);
+      const hit = document.createElementNS(NS, "circle");
+      hit.setAttribute("cx", x.toFixed(1)); hit.setAttribute("cy", y.toFixed(1));
+      hit.setAttribute("r", (u * 2.2).toFixed(2));
+      hit.setAttribute("class", "nm-spot-hit");
+      const dot = document.createElementNS(NS, "circle");
+      dot.setAttribute("cx", x.toFixed(1)); dot.setAttribute("cy", y.toFixed(1));
+      dot.setAttribute("r", (u * 0.55).toFixed(2));
+      dot.setAttribute("class", "nm-spot-dot");
+      dot.style.pointerEvents = "none";
+      hit.addEventListener("mouseenter", () => this.setLabel({ lat: p.lat, lng: p.lng }, p.name));
+      hit.addEventListener("mouseleave", () => this.setLabel(null));
+      hit.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (this._dragMoved) return;
+        this.setLabel(null);
+        if (this.onSpotClick) this.onSpotClick(p.id);
+      });
+      g.append(hit, dot);
+    }
     this.svg.querySelector("#nm-pins").appendChild(g);
+  }
+
+  /* ------------------------- overlays: transit + streets ------------------ */
+  async loadTransit(url) {
+    if (this._transitLoaded) return;
+    this._transitLoaded = true;
+    const gj = await fetch(url).then((r) => r.json());
+    const COLORS = { Red: "#c60c30", Blue: "#00a1de", Brown: "#62361b", Green: "#009b3a",
+      Orange: "#f9461c", Purple: "#522398", Pink: "#e27ea6", Yellow: "#f9e300" };
+    const host = this.svg.querySelector("#nm-transit");
+    for (const f of gj.features) {
+      const lines = String(f.properties.lines || "");
+      const names = Object.keys(COLORS).filter((c) => lines.includes(c));
+      const color = names.length === 1 ? COLORS[names[0]] : "#aab6c8"; // shared track = steel
+      let d = "";
+      for (const seg of f.geometry.coordinates)
+        seg.forEach((c, i) => { d += (i ? "L" : "M") + this.px(c[0]).toFixed(1) + " " + this.py(c[1]).toFixed(1); });
+      const path = document.createElementNS(NS, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("class", "nm-rail");
+      path.setAttribute("stroke", color);
+      host.appendChild(path);
+    }
+  }
+
+  async loadStreets(url) {
+    if (this._streetsLoaded) return;
+    this._streetsLoaded = true;
+    const gj = await fetch(url).then((r) => r.json());
+    const host = this.svg.querySelector("#nm-streets");
+    let d = "";
+    for (const seg of gj.features[0].geometry.coordinates)
+      seg.forEach((c, i) => { d += (i ? "L" : "M") + this.px(c[0]).toFixed(1) + " " + this.py(c[1]).toFixed(1); });
+    const path = document.createElementNS(NS, "path");
+    path.setAttribute("d", d);
+    path.setAttribute("class", "nm-street");
+    host.appendChild(path);
+    for (const l of gj.labels || []) {
+      const t = document.createElementNS(NS, "text");
+      t.setAttribute("class", "nm-streetlabel");
+      t.setAttribute("x", this.px(l.x).toFixed(1));
+      t.setAttribute("y", this.py(l.y).toFixed(1));
+      t.setAttribute("text-anchor", "middle");
+      t.textContent = l.n;
+      host.appendChild(t);
+    }
+  }
+
+  setOverlay(kind, on) {
+    this.svg.parentElement.classList.toggle("show-" + kind, on);
   }
   clearSpot() {
     this.svg.querySelector("#nm-spot")?.remove();

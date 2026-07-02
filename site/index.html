@@ -6,7 +6,7 @@
 <title>ChiLocal — tell us the vibe, we'll decide your night</title>
 <meta name="description" content="One plan for tonight in Chicago: where to go, why it fits, how to get there. Built for two."/>
 <meta name="theme-color" content="#070c16"/>
-<link rel="stylesheet" href="css/night.css?v=n2"/>
+<link rel="stylesheet" href="css/night.css?v=n3"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='19' font-size='19'%3E%F0%9F%8C%83%3C/text%3E%3C/svg%3E"/>
 </head>
 <body data-screen="ask">
@@ -29,6 +29,20 @@
     <svg id="nm"></svg>
     <div class="nm-sweep"></div>
     <div class="nm-vignette"></div>
+  </div>
+
+  <!-- explore map controls -->
+  <div id="map-controls">
+    <div class="seg" id="tilt-seg">
+      <button data-t="flat">Flat</button>
+      <button data-t="mid" class="on">2.5D</button>
+      <button data-t="full">3D</button>
+    </div>
+    <div class="ov-chips">
+      <button id="ov-transit">🚇 L lines</button>
+      <button id="ov-streets">🛣 Streets</button>
+    </div>
+    <span class="hint">drag to pan · scroll to zoom</span>
   </div>
 
   <main>
@@ -182,10 +196,9 @@
 
   <footer>
     <span>Facts from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) &amp; <a href="https://data.cityofchicago.org" target="_blank" rel="noopener">Chicago open data</a> · weather by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> · opinions ours</span>
-    <a href="explore.html">neighborhood atlas →</a>
   </footer>
 </div>
 
-<script type="module" src="js/night/app.js?v=n2"></script>
+<script type="module" src="js/night/app.js?v=n3"></script>
 </body>
 </html>
