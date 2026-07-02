@@ -78,10 +78,12 @@ export function renderShareCard(plan, ctxNight, dateN) {
     y = wrap(g, plan.second.venue.name, L + 190, y + 112, W - 2 * L - 190, 70) + 20;
   }
 
-  // the why, quoted
-  g.fillStyle = "#aab4c8";
-  g.font = "italic 42px Georgia, serif";
-  y = wrap(g, `“${plan.why}”`, L, y + 150, W - 2 * L, 58);
+  // the why, quoted (older history entries may not have one)
+  if (plan.why) {
+    g.fillStyle = "#aab4c8";
+    g.font = "italic 42px Georgia, serif";
+    y = wrap(g, `“${plan.why}”`, L, y + 150, W - 2 * L, 58);
+  }
 
   // footer
   g.strokeStyle = "rgba(255,180,92,.4)"; g.lineWidth = 2;

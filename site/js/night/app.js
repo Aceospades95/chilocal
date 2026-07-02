@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n2";
-import { buildContext } from "./context.js?v=n2";
-import { loadMemory, memoryView, setHome, toggleSaved, lockDate, habitNudge } from "./memory.js?v=n2";
-import { NightMap } from "./nightmap.js?v=n2";
-import { sharePlan } from "./share.js?v=n2";
+import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n3";
+import { buildContext } from "./context.js?v=n3";
+import { loadMemory, memoryView, setHome, toggleSaved, lockDate, habitNudge, logGenerated } from "./memory.js?v=n3";
+import { NightMap } from "./nightmap.js?v=n3";
+import { sharePlan } from "./share.js?v=n3";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -48,10 +48,28 @@ async function boot() {
   buildExploreIndex();
   S.map.onHoodClick = (name) => {
     if (S.view !== "explore") return;
+    if (S.ex.hood === name && !S.ex.venue) { exBackToCity(); return; } // click again = step out
     S.ex.venue = null;
-    S.ex.hood = S.exIndex.groups.has(name) ? name : name; // select even empty hoods
     exSelectHood(name);
   };
+  S.map.onBackgroundClick = () => {
+    if (S.view !== "explore") return;
+    if (S.ex.venue) { S.ex.venue = null; S.map.clearSpot?.(); renderExplore();
+      const g = S.exIndex.groups.get(S.ex.hood);
+      if (g) S.map.markSpots(g.venues);
+    } else if (S.ex.hood) exBackToCity();
+  };
+  S.map.onSpotClick = (id) => {
+    if (S.view !== "explore") return;
+    S.ex.venue = id;
+    renderExplore();
+  };
+
+  // restore map prefs
+  S.map.setTilt(prefs.tilt || "mid");
+  $$("#tilt-seg button").forEach((b) => b.classList.toggle("on", b.dataset.t === (prefs.tilt || "mid")));
+  if (prefs.ovTransit) toggleOverlay("transit", true);
+  if (prefs.ovStreets) toggleOverlay("streets", true);
 
   renderContextChip();
   renderAsk();
@@ -114,8 +132,8 @@ function renderAsk() {
     : `<b>Set your home base</b> — where do nights start?`;
 
   const n = S.mem.dates.length;
-  $("#nights-chip").textContent = n ? `${n} night${n > 1 ? "s" : ""} logged` : "";
-  $("#nights-chip").style.display = n ? "" : "none";
+  $("#nights-chip").textContent = n ? `our nights · ${n}` : "our nights";
+  $("#nights-chip").style.display = "";
 
   const nudge = habitNudge(S.mem);
   const el = $("#nudge");
@@ -159,11 +177,11 @@ function renderDials(sel) {
     </div></div>`;
   $$("#seg-budget button", el).forEach((b) => b.onclick = () => {
     S.budget = +b.dataset.v; $$("#seg-budget button", el).forEach((x) => x.classList.toggle("on", x === b));
-    savePrefs({ budget: S.budget, dial: S.dial, party: S.party });
+    savePrefs({ ...loadPrefs(), budget: S.budget, dial: S.dial, party: S.party });
   });
   $$("#seg-dist button", el).forEach((b) => b.onclick = () => {
     S.dial = b.dataset.v; $$("#seg-dist button", el).forEach((x) => x.classList.toggle("on", x === b));
-    savePrefs({ budget: S.budget, dial: S.dial, party: S.party });
+    savePrefs({ ...loadPrefs(), budget: S.budget, dial: S.dial, party: S.party });
   });
 }
 
@@ -318,6 +336,7 @@ async function runDecision() {
   }
   S.plan = plan;
   S.session.excluded.add(plan.hero.v.id);
+  logGenerated(S.mem, plan);
   renderReveal();
 }
 
@@ -534,11 +553,24 @@ function openNights() {
   const dlg = $("#nights");
   const rows = [...S.mem.dates].reverse().map((d) =>
     `<div class="night-row"><span class="nn">#${d.n}</span><span class="nd">${esc(d.iso)}</span><span class="nv">${esc(d.heroName)}</span><span class="nh">${esc(d.hood)}</span></div>`).join("");
+  const gen = (S.mem.generated || []).slice(0, 10).map((g, i) =>
+    `<div class="night-row gen"><span class="nd">${esc(g.iso)}</span><span class="nv">${esc(g.heroName)}${g.secondName ? " → " + esc(g.secondName) : ""}</span><button class="linkish gen-share" data-i="${i}">share ↗</button></div>`).join("");
   const saved = S.mem.saved.map((id) => S.venues.find((v) => v.id === id)).filter(Boolean)
     .map((v) => `<span class="chip">${esc(v.name)}</span>`).join(" ");
   $("#nights-body").innerHTML =
-    (rows ? `<h3>The log</h3>${rows}` : `<p class="mutep">No nights logged yet. Lock a plan and it starts counting.</p>`) +
+    (rows ? `<h3>The log</h3>${rows}` : `<p class="mutep">No nights locked yet — lock a plan and Date #1 starts the count.</p>`) +
+    (gen ? `<h3>Generated lately</h3>${gen}` : "") +
     (saved ? `<h3>Wishlist</h3><div class="chips">${saved}</div>` : "");
+  $$(".gen-share", $("#nights-body")).forEach((b) => b.onclick = async () => {
+    const g = S.mem.generated[+b.dataset.i];
+    const plan = {
+      hero: { v: { name: g.heroName, cat: g.heroCat || "", hood: g.heroHood || "" } },
+      second: g.secondName ? { venue: { name: g.secondName } } : null,
+      why: g.why,
+    };
+    const r = await sharePlan(plan, S.ctx, null);
+    if (r === "downloaded") toast("Card saved.");
+  });
   dlg.showModal();
 }
 
@@ -593,12 +625,19 @@ function wireStatic() {
   $("#nights-chip").onclick = openNights;
   $("#wordmark").onclick = resetToAsk;
   $$("#mode-seg button").forEach((b) => b.onclick = () => setView(b.dataset.m));
+  $$("#tilt-seg button").forEach((b) => b.onclick = () => {
+    S.map.setTilt(b.dataset.t);
+    $$("#tilt-seg button").forEach((x) => x.classList.toggle("on", x === b));
+    savePrefs({ ...loadPrefs(), tilt: b.dataset.t });
+  });
+  $("#ov-transit").onclick = () => toggleOverlay("transit");
+  $("#ov-streets").onclick = () => toggleOverlay("streets");
   $$(".back-ask").forEach((b) => b.onclick = resetToAsk);
 
   $$("#party-seg button").forEach((b) => b.onclick = () => {
     S.party = b.dataset.v;
     $$("#party-seg button").forEach((x) => x.classList.toggle("on", x === b));
-    savePrefs({ budget: S.budget, dial: S.dial, party: S.party });
+    savePrefs({ ...loadPrefs(), budget: S.budget, dial: S.dial, party: S.party });
   });
 
   $("#rv-lock").onclick = lockIn;
@@ -702,6 +741,29 @@ function exSelectHood(key) {
   if (g) exAfterCam(() => { if (S.ex.hood === key && !S.ex.venue) S.map.markSpots(g.venues); });
 }
 
+function exBackToCity() {
+  S.ex.hood = null; S.ex.venue = null;
+  S.map.clearSpot?.();
+  S.map.selectHood(null, { camera: false });
+  S.exCam = S.map.cityView(exInset());
+  renderExplore();
+}
+
+/* overlays + tilt (persisted) */
+function toggleOverlay(kind, force) {
+  const btn = kind === "transit" ? $("#ov-transit") : $("#ov-streets");
+  const on = force ?? !btn.classList.contains("on");
+  btn.classList.toggle("on", on);
+  S.map.setOverlay(kind, on);
+  if (on) {
+    if (kind === "transit") S.map.loadTransit("data/cta-lines.min.geojson");
+    else S.map.loadStreets("data/streets.min.geojson");
+  }
+  const prefs = loadPrefs();
+  savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
+              ovStreets: $("#ov-streets").classList.contains("on") });
+}
+
 /* run fn once the last camera move settles (markers size from the final box) */
 function exAfterCam(fn) {
   (S.exCam?.then ? S.exCam : Promise.resolve()).then(fn);
@@ -776,13 +838,7 @@ function renderExplore() {
           </button>`).join("")}
         <div class="ex-actions"><button class="btn ghost" id="ex-surprise">🎲 Surprise us — but here</button></div>`
       : `<p class="ex-empty">No picks here yet — the engine is still eating its way across the city. Tell Jacob what deserves the first pin.</p>`}`;
-    $("#ex-back").onclick = () => {
-      S.ex.hood = null;
-      S.map.clearSpot?.();
-      S.map.selectHood(null, { camera: false });
-      S.exCam = S.map.cityView(exInset());
-      renderExplore();
-    };
+    $("#ex-back").onclick = exBackToCity;
     $$("#ex-vchips button", el).forEach((b) => b.onclick = () => { S.ex.vibe = b.dataset.v; renderExplore(); });
     $$(".ex-row", el).forEach((b) => b.onclick = () => { S.ex.venue = b.dataset.id; renderExplore(); });
     $("#ex-surprise") && ($("#ex-surprise").onclick = () => {
