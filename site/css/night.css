@@ -74,12 +74,18 @@ header > * { pointer-events: auto; }
     radial-gradient(1.5px 1.5px at 97% 41%, rgba(207,228,255,.6), transparent 100%);
 }
 #mapwrap {
-  position: absolute; inset: 0; z-index: 0;
+  position: absolute; inset: 0; z-index: 0; overflow: hidden;
   transition: opacity .8s ease, filter .8s ease;
   opacity: .48; filter: saturate(.85);
 }
 #mapwrap.on { opacity: 1; filter: none; }
-#nm { width: 100%; height: 100%; display: block; }
+/* The svg renders at 2x layout size and every transform ends in scale(.5):
+ * the GPU layer holds a supersampled raster, so the 3D tilt and mid-zoom
+ * frames always MINIFY the texture — crisp at every moment, never stretched. */
+#nm {
+  width: 200%; height: 200%; display: block;
+  transform: scale(.5); transform-origin: 0 0;
+}
 
 .nm-hood {
   fill: #101a30; stroke: #24365c; stroke-width: 1;
@@ -99,16 +105,17 @@ header > * { pointer-events: auto; }
 #mapwrap.explore .nm-hoodlabel.vis { opacity: .42; }
 
 /* -------- explore: the 2.5D diorama (three view presets) -------- */
+/* translate(p) · perspective · rotateX · translate(-p) · scale(.5):
+ * tilt pivots around the container point p while the 2x raster shrinks
+ * into place. (p is in element %, i.e. half the container %.) */
 #nm { transition: transform .9s cubic-bezier(.3,.8,.3,1); }
 #mapwrap.explore.tilt-mid #nm {
-  transform: perspective(1500px) rotateX(16deg);
-  transform-origin: 50% 55%;
+  transform: translate(25%, 27.5%) perspective(1500px) rotateX(16deg) translate(-25%, -27.5%) scale(.5);
 }
 #mapwrap.explore.tilt-full #nm {
-  transform: perspective(1300px) rotateX(28deg);
-  transform-origin: 50% 62%;
+  transform: translate(25%, 31%) perspective(1300px) rotateX(28deg) translate(-25%, -31%) scale(.5);
 }
-#mapwrap.explore.tilt-flat #nm { transform: none; }
+#mapwrap.explore.tilt-flat #nm { transform: scale(.5); }
 #mapwrap.explore.tilt-flat .nm-wall { display: none; }
 #mapwrap.explore #nm { touch-action: none; cursor: grab; }
 #mapwrap.explore #nm:active { cursor: grabbing; }
@@ -127,8 +134,8 @@ header > * { pointer-events: auto; }
   filter: drop-shadow(0 0 7px rgba(255,180,92,.45));
 }
 @media (max-width: 919px) {
-  #mapwrap.explore.tilt-mid #nm { transform: perspective(1100px) rotateX(13deg); transform-origin: 50% 40%; }
-  #mapwrap.explore.tilt-full #nm { transform: perspective(900px) rotateX(22deg); transform-origin: 50% 42%; }
+  #mapwrap.explore.tilt-mid #nm { transform: translate(25%, 20%) perspective(1100px) rotateX(13deg) translate(-25%, -20%) scale(.5); }
+  #mapwrap.explore.tilt-full #nm { transform: translate(25%, 21%) perspective(900px) rotateX(22deg) translate(-25%, -21%) scale(.5); }
 }
 .nm-scan { fill: #22375f; }
 .nm-hood-glow {
@@ -194,7 +201,7 @@ header > * { pointer-events: auto; }
   filter: drop-shadow(0 1px 2px rgba(0,0,0,.85));
   transition: opacity .3s;
 }
-#mapwrap.zoomed .nm-streetlabel { opacity: .95; }
+#mapwrap.zoomed .nm-streetlabel.vis { opacity: .95; }
 
 /* map controls (explore only) */
 #map-controls {
@@ -596,6 +603,7 @@ dialog h3 + .night-row { margin-top: 4px; }
 }
 .ex-row:hover { background: rgba(255,180,92,.05); }
 .ex-row .n { font-family: var(--serif); font-weight: 700; font-size: 16px; flex: 1; }
+.ex-row .rowheart { color: var(--coral); font-size: 12px; }
 .ex-row .c { font-size: 12px; color: var(--amber); white-space: nowrap; }
 .ex-row .m { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46%; }
 .ven-badges { font-size: 11px; color: var(--skyblue); white-space: nowrap; }

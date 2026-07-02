@@ -210,14 +210,26 @@ export class NightMap {
 
   _cullLabels() {
     const host = this.svg.parentElement;
+    const { w: elW, h: elH } = this._dims(); // container px (post-shrink)
+    const scale = Math.max(elW / this.box.w, elH / this.box.h);
+    const offX = (elW - this.box.w * scale) / 2, offY = (elH - this.box.h * scale) / 2;
+    const F = 13 * (this.box.w / this.cityBox.w) * scale; // label px on screen
+    // street names cull among themselves in EVERY mode — the Tonight reveal
+    // shows them too, and "N Clark St""Lake Shore Dr" must not read as one
+    const keptS = [];
+    for (const t of this.svg.querySelectorAll(".nm-streetlabel")) {
+      const w = t.textContent.length * F * 0.72 * 0.62;
+      const sx = offX + (+t.getAttribute("x") - this.box.x) * scale;
+      const sy = offY + (+t.getAttribute("y") - this.box.y) * scale;
+      const r = { x0: sx - w / 2 - 6, x1: sx + w / 2 + 6, y0: sy - F * 0.72 - 4, y1: sy + 4 };
+      const hit = keptS.some((k) => r.x0 < k.x1 && r.x1 > k.x0 && r.y0 < k.y1 && r.y1 > k.y0);
+      t.classList.toggle("vis", !hit);
+      if (!hit) keptS.push(r);
+    }
     if (!host.classList.contains("explore")) {
       for (const l of this.hoodLabels.values()) l.classList.remove("vis");
       return;
     }
-    const elW = this.svg.clientWidth || 1, elH = this.svg.clientHeight || 1;
-    const scale = Math.max(elW / this.box.w, elH / this.box.h);
-    const offX = (elW - this.box.w * scale) / 2, offY = (elH - this.box.h * scale) / 2;
-    const F = 13 * (this.box.w / this.cityBox.w) * scale; // label px on screen
     // labels must live in the VISIBLE window — not under the panel, not clipped
     const desktop = matchMedia("(min-width: 920px)").matches;
     const winX1 = desktop ? elW - 445 : elW - 6;
@@ -276,7 +288,7 @@ export class NightMap {
 
     const active = () => svg.parentElement.classList.contains("explore");
     const toUnits = (dxPx, dyPx) => {
-      const r = { w: svg.clientWidth || 1, h: svg.clientHeight || 1 };
+      const r = this._dims(); // container px == final on-screen px
       const scale = Math.max(r.w / this.box.w, r.h / this.box.h);
       return { dx: dxPx / scale, dy: dyPx / scale };
     };
@@ -455,10 +467,14 @@ export class NightMap {
   }
 
   /* frame the whole city with UI insets (explore home view) */
-  /* layout-box aspect — getBoundingClientRect lies under the 3D tilt */
+  /* container box — the svg itself is supersampled at 2x layout size */
+  _dims() {
+    const el = this.svg.parentElement;
+    return { w: el.clientWidth || 1, h: el.clientHeight || 1 };
+  }
   _aspect() {
-    const w = this.svg.clientWidth, h = this.svg.clientHeight;
-    return w && h ? w / h : 1;
+    const { w, h } = this._dims();
+    return w / h;
   }
 
   cityView(inset = {}, zoomF = 1) {
@@ -630,6 +646,7 @@ export class NightMap {
       t.textContent = l.n;
       host.appendChild(t);
     }
+    this._queueCull(); // labels arrived after the last cull pass
   }
 
   setOverlay(kind, on) {

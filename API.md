@@ -1,86 +1,10 @@
-# ChiLocal map — data contract
+# ChiLocal — data contracts
 
-The map is data-driven. Geography (neighborhood polygons) is served statically
-because it rarely changes; **curated content** (neighborhoods + venues) comes from
-either a static JSON file or a live API.
+The night app (`site/index.html`) is data-driven off static files today, with
+a clean migration path to the existing Next.js + PostGIS stack. (The original
+boundary-atlas contract this file used to describe lives in git history.)
 
-Switch in `site/index.html` → `CONFIG`:
-
-```js
-const CONFIG = {
-  boundaries: "data/neighborhoods.min.geojson", // static polygons (backdrop)
-  contentSource: "static",   // ← change to "api"
-  contentStatic: "data/content.json",
-  apiBase: "/api"            // used when contentSource === "api"
-};
-```
-
-## Static shape (`data/content.json`)
-
-```jsonc
-{
-  "brand": { "name": "ChiLocal", "tagline": "…" },
-  "categories": [ { "slug": "restaurant", "name": "Restaurants" }, … ],
-  "neighborhoods": [
-    { "slug": "logan-square", "name": "Logan Square",
-      "geomKey": "Logan Square",          // matches pri_neigh in the boundary file
-      "chilocal_take": "…" }
-  ],
-  "venues": [
-    { "id": "lula-cafe", "neighborhood": "logan-square", "category": "restaurant",
-      "name": "Lula Cafe", "price": "$$$", "chilocal_take": "…",
-      "best_for": "…", "skip_if": "…", "is_hidden_gem": false,
-      "address": "2537 N Kedzie Blvd", "lat": 41.9286, "lng": -87.7079 }
-  ]
-}
-```
-
-## Live API (`contentSource: "api"`)
-
-The app calls two endpoints and assembles the same shape:
-
-- `GET /api/neighborhoods` → array of `{ slug, name, geomKey, chilocal_take }`
-  (a GeoJSON `FeatureCollection` with those as `properties` also works).
-- `GET /api/venues` → array of venue objects (same fields as above; a
-  `FeatureCollection` with venue fields in `properties` also works).
-
-### PostGIS reference queries (match the seed schema)
-
-```sql
--- /api/neighborhoods
-SELECT slug, name, name AS "geomKey", chilocal_take
-FROM neighborhoods ORDER BY name;
-
--- /api/venues  (assumes a geometry(Point,4326) column `geom`; otherwise select lat/lng)
-SELECT id, name,
-       neighborhood_slug AS neighborhood,
-       category_slug     AS category,
-       price_range       AS price,
-       chilocal_take, best_for, skip_if, is_hidden_gem, address,
-       ST_Y(geom) AS lat, ST_X(geom) AS lng
-FROM venues ORDER BY name;
-```
-
-> Note: `geomKey` maps a ChiLocal neighborhood to the official boundary polygon
-> name (`pri_neigh`). Pilsen → `"Lower West Side"`. If you later store your own
-> neighborhood polygons, serve them as the boundaries file via
-> `ST_AsGeoJSON(geom)` and drop `geomKey`.
-
-## Wiring into ChiLocal-App (Next.js)
-
-Add two route handlers (e.g. `app/api/neighborhoods/route.ts`,
-`app/api/venues/route.ts`) running the queries above against your PostGIS pool,
-return JSON, set `contentSource:"api"` and `apiBase` to your app origin. The map
-component can be dropped in as-is (it's framework-agnostic vanilla JS/SVG).
-
----
-
-# Night engine data contract (v2, 2026-07)
-
-The decide-our-night app (`site/index.html`) reads two static files; both can
-later be served by the Next.js + PostGIS stack without touching the front end.
-
-## `data/venues.json`
+## `data/venues.json` (the book of the city)
 
 ```jsonc
 {
@@ -114,9 +38,34 @@ later be served by the Next.js + PostGIS stack without touching the front end.
 }
 ```
 
-Serving the same shape from `GET /api/venues` (PostGIS: one row per venue,
-`hours` as raw opening_hours text, provenance columns) lets the app go live
-by changing one fetch URL in `js/night/app.js` → `boot()`.
+## Map files (static, ODbL-attributed)
+
+- `data/neighborhoods.min.geojson` — the 98 official neighborhoods
+  (properties: `name`, `id`); the entire map is drawn from this.
+- `data/cta-lines.min.geojson` — CTA rail (City of Chicago open data).
+- `data/streets.min.geojson` — major streets, one MultiLineString +
+  `labels: [{x, y, n}]` arterial name anchors (OSM, simplified).
+- `data/detail.min.geojson` — `{ parks: [], water: [] }` polygons (OSM).
+
+## Going live (`GET /api/venues`)
+
+Serve the same venue shape from the PostGIS stack — one row per venue, `hours`
+as raw `opening_hours` text, provenance columns (`src`, `osm`,
+`hoursChecked`) — and the app goes live by changing one fetch URL in
+`js/night/app.js` → `boot()`. Keep the contract honest: `hours: null` means
+unknown (the UI says so), never a guess.
+
+```sql
+SELECT id, name, name_osm AS "nameOsm", hood, geom_name AS geom,
+       cat, vibes, energy, price, best_for AS "bestFor",
+       indoor, outdoor, seasons, late, inst, take,
+       ST_Y(pt) AS lat, ST_X(pt) AS lng, addr, site,
+       hours, hours_checked AS "hoursChecked", tips, osm, src
+FROM night_venues ORDER BY name;
+```
+
+Nightly job worth adding at that point: re-check City of Chicago business
+licenses (`license_status = 'AAI'`, unexpired) and flag venues that lapse.
 
 ## Rebuild pipeline
 
