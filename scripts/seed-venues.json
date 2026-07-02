@@ -1,0 +1,4454 @@
+{
+ "_comment": "ChiLocal editorial seed. Facts (coords, website, hours, address) come from OSM via build-venues.mjs — this file is ONLY the point of view. vibes: dinner|dance|new|show|chill|active. energy 1 (hushed) - 5 (rowdy). price 1-4 (editorial estimate, shown as ≈). seasons: all|warm|summer|winter. bestFor: date group solo classic late view weird splurge cheap.",
+ "venues": [
+  {
+   "id": "lula-cafe",
+   "q": "Lula Cafe",
+   "hood": "Logan Square",
+   "cat": "Farm-to-table dining",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The neighborhood farm-to-table that started it all — seasonal, unhurried, and still the safest great-night bet in Logan Square."
+  },
+  {
+   "id": "longman-eagle",
+   "q": "Longman & Eagle",
+   "hood": "Logan Square",
+   "cat": "Whiskey inn",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A roadside inn with a whiskey wall and serious cooking. Walk-ins only — come hungry, stay for one more pour."
+  },
+  {
+   "id": "giant",
+   "q": "Giant",
+   "hood": "Logan Square",
+   "cat": "New American",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Tiny room, huge flavors, zero pretension. The kind of place you leave already planning the next visit."
+  },
+  {
+   "id": "daisies",
+   "q": "Daisies",
+   "hood": "Logan Square",
+   "cat": "Pasta & produce",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Midwest vegetables and handmade pasta treated like the main event. Gentle, pretty, quietly excellent."
+  },
+  {
+   "id": "mi-tocaya",
+   "q": "Mi Tocaya Antojería",
+   "hood": "Logan Square",
+   "cat": "Mexican",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Personal, loud-hearted Mexican cooking that swings between comfort and surprise. Order beyond the things you recognize."
+  },
+  {
+   "id": "billy-sunday",
+   "q": "Billy Sunday",
+   "hood": "Logan Square",
+   "cat": "Cocktail bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Amari, obscure bottles, and bartenders who love a question. A drink here feels like a short seminar you actually enjoy."
+  },
+  {
+   "id": "scofflaw",
+   "q": "Scofflaw",
+   "hood": "Logan Square",
+   "cat": "Gin bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Gin drinks, a fireplace, and armchairs you sink into. Built for the night the wind comes off the lake sideways."
+  },
+  {
+   "id": "whirlaway",
+   "q": "Whirlaway Lounge",
+   "hood": "Logan Square",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "solo"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A living-room dive where the jukebox and the regulars do the decorating. Cheap, warm, and utterly itself."
+  },
+  {
+   "id": "coles",
+   "q": "Cole's",
+   "hood": "Logan Square",
+   "cat": "Bar & venue",
+   "vibes": [
+    "chill",
+    "show"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Free live music and comedy in the back, cheap beer up front. The lowest-stakes great night out in the neighborhood.",
+   "alt": [
+    "Cole's Bar"
+   ]
+  },
+  {
+   "id": "logan-arcade",
+   "q": "Logan Arcade",
+   "hood": "Logan Square",
+   "cat": "Arcade bar",
+   "vibes": [
+    "new",
+    "active"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "weird",
+    "cheap",
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Row after row of lovingly maintained pinball. Bring quarters and a competitive streak; lose track of two hours."
+  },
+  {
+   "id": "fireside-bowl",
+   "q": "Fireside Bowl",
+   "hood": "Logan Square",
+   "cat": "Bowling alley",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A punk-rock bowling alley that survived every era of the neighborhood. Scuffed lanes, loud speakers, perfect."
+  },
+  {
+   "id": "middle-brow",
+   "q": "Middle Brow Bungalow",
+   "hood": "Logan Square",
+   "cat": "Brewery & pizza",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Naturally leavened pizza and house beer in a sunlit corner room. Casual on purpose, careful underneath."
+  },
+  {
+   "id": "pizza-lobo",
+   "q": "Pizza Lobo",
+   "hood": "Logan Square",
+   "cat": "Pizza & patio",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "cheap"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Foldable New York slices, frozen drinks, and a patio that hums all summer. Zero occasion required."
+  },
+  {
+   "id": "estereo",
+   "q": "Estereo",
+   "hood": "Logan Square",
+   "cat": "Latin bar",
+   "vibes": [
+    "dance",
+    "chill"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "late",
+    "group",
+    "date"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "All-day Latin American bar that turns into a low-key dance floor after dark. Agave, cumbia, windows open in summer."
+  },
+  {
+   "id": "slippery-slope",
+   "q": "The Slippery Slope",
+   "hood": "Logan Square",
+   "cat": "Dance bar",
+   "vibes": [
+    "dance"
+   ],
+   "energy": 5,
+   "price": 1,
+   "bestFor": [
+    "late",
+    "group",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Skee-ball up front, a packed no-cover dance floor in back. Sweaty, unserious, reliably fun past midnight."
+  },
+  {
+   "id": "hungry-brain",
+   "q": "Hungry Brain",
+   "hood": "Roscoe Village",
+   "cat": "Jazz bar",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "weird",
+    "solo"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Thrift-store couches and some of the most adventurous jazz in the city. Sunday improv sets are a rite of passage."
+  },
+  {
+   "id": "constellation",
+   "q": "Constellation",
+   "hood": "Roscoe Village",
+   "cat": "Experimental music venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "solo"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A listening room for jazz and new music where the audience actually listens. Sit close; let it get strange."
+  },
+  {
+   "id": "beat-kitchen",
+   "q": "Beat Kitchen",
+   "hood": "Roscoe Village",
+   "cat": "Rock club",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A shoebox rock room where next year's favorite band plays to eighty people. Cheap tickets, close stage."
+  },
+  {
+   "id": "sleeping-village",
+   "q": "Sleeping Village",
+   "hood": "Avondale",
+   "cat": "Bar & venue",
+   "vibes": [
+    "show",
+    "chill",
+    "dance"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group",
+    "late"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Tap wall up front, great bookings in back, string lights over the patio. The rare venue that's also just a good bar."
+  },
+  {
+   "id": "chief-oneills",
+   "q": "Chief O'Neill's",
+   "hood": "Avondale",
+   "cat": "Irish pub",
+   "vibes": [
+    "dinner",
+    "chill",
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A proper Irish pub with trad sessions and one of the best beer gardens on the Northwest Side. Go for the music, stay for the roast."
+  },
+  {
+   "id": "kumas-corner",
+   "q": "Kuma's Corner",
+   "hood": "Avondale",
+   "cat": "Metal burgers",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 5,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "weird",
+    "cheap"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Burgers named after metal bands, served loud. Not a quiet date — that's the point."
+  },
+  {
+   "id": "honey-butter",
+   "q": "Honey Butter Fried Chicken",
+   "hood": "Avondale",
+   "cat": "Fried chicken",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "cheap",
+    "classic"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Fried chicken with corn muffins and zero irony. Counter service, patio out back, everyone leaves happy.",
+   "alt": [
+    "Honey Butter Fried Chicken"
+   ]
+  },
+  {
+   "id": "smartbar",
+   "q": "Smartbar",
+   "hood": "Lakeview",
+   "cat": "Dance club",
+   "vibes": [
+    "dance"
+   ],
+   "energy": 5,
+   "price": 2,
+   "bestFor": [
+    "late",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The city's serious dance floor since the '80s — world-class DJs, zero bottle service. Go after midnight or don't go.",
+   "alt": [
+    "SmartBar",
+    "Smart Bar"
+   ]
+  },
+  {
+   "id": "metro-chicago",
+   "q": "Metro",
+   "hood": "Lakeview",
+   "cat": "Rock venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Four decades of career-making rock shows in a room that still feels like a secret club. Check who's on tonight."
+  },
+  {
+   "id": "schubas",
+   "q": "Schubas Tavern",
+   "hood": "Lakeview",
+   "cat": "Music hall",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A wood-paneled back room built for songwriters. Intimate enough to hear the lyrics, tavern up front for after."
+  },
+  {
+   "id": "sidetrack",
+   "q": "Sidetrack",
+   "hood": "Northalsted",
+   "cat": "Video bar",
+   "vibes": [
+    "dance",
+    "new"
+   ],
+   "energy": 5,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "late",
+    "weird"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Showtunes night at this sprawling video bar is a Chicago institution — a thousand people belting Sondheim. Surrender to it."
+  },
+  {
+   "id": "chicago-diner",
+   "q": "Chicago Diner",
+   "hood": "Lakeview",
+   "cat": "Vegan diner",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "cheap",
+    "classic"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Meat-free since before it was cool, and the milkshakes convert skeptics. Comfort food with a conscience."
+  },
+  {
+   "id": "music-box",
+   "q": "Music Box Theatre",
+   "hood": "Lakeview",
+   "cat": "Movie palace",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A 1929 movie palace with clouds on the ceiling and a real organ. Any film here becomes an occasion — check the late shows."
+  },
+  {
+   "id": "gman-tavern",
+   "q": "GMan Tavern",
+   "hood": "Lakeview",
+   "cat": "Rock bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Metro's kid-sibling bar: good jukebox, pinball, pre- and post-show energy without the ticket.",
+   "alt": [
+    "The Ginger Man Tavern",
+    "Ginger Man Tavern"
+   ]
+  },
+  {
+   "id": "big-star",
+   "q": "Big Star",
+   "hood": "Wicker Park",
+   "cat": "Tacos & whiskey",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "date"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "warm",
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Tacos, bourbon, and the patio that defines Chicago summer. Weeknights are the move; weekends are a sport."
+  },
+  {
+   "id": "myopic-books",
+   "q": "Myopic Books",
+   "hood": "Wicker Park",
+   "cat": "Used bookstore",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "solo",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Three creaking floors of used books, open late. The rare first-date test both people can pass."
+  },
+  {
+   "id": "emporium-wicker",
+   "q": "Emporium Arcade Bar",
+   "hood": "Wicker Park",
+   "cat": "Arcade bar",
+   "vibes": [
+    "new",
+    "active"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Craft beer and a wall of vintage cabinets. Settle it over Street Fighter II like adults."
+  },
+  {
+   "id": "subterranean",
+   "q": "Subterranean",
+   "hood": "Wicker Park",
+   "cat": "Music venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A tall skinny room at the six corners where you're never more than forty feet from the band."
+  },
+  {
+   "id": "rainbo-club",
+   "q": "Rainbo Club",
+   "hood": "Ukrainian Village",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "solo"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The artists' dive: cheap drinks, a photo booth, and more Chicago history per stool than anywhere on Division."
+  },
+  {
+   "id": "empty-bottle",
+   "q": "Empty Bottle",
+   "hood": "Ukrainian Village",
+   "cat": "Rock club",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Scrappy, beloved, and booking the best weird rock in town for thirty years. Free Mondays are a gateway drug."
+  },
+  {
+   "id": "all-together-now",
+   "q": "All Together Now",
+   "hood": "Ukrainian Village",
+   "cat": "Wine bar & shop",
+   "vibes": [
+    "chill",
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A bright little wine shop-café hybrid where the pours are natural and the snacks punch up. Early-evening magic."
+  },
+  {
+   "id": "kasama",
+   "q": "Kasama",
+   "hood": "East Village",
+   "cat": "Filipino",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Filipino cooking that runs from breakfast pastries to a full tasting menu. One of the most exciting kitchens in the city, full stop."
+  },
+  {
+   "id": "beatnik-west-town",
+   "q": "Beatnik",
+   "hood": "West Town",
+   "cat": "Opulent cocktails",
+   "vibes": [
+    "chill",
+    "new",
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge",
+    "view"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Antique mirrors, palms, and cocktails that arrive like theater props. Maximalism done with a straight face."
+  },
+  {
+   "id": "ina-mae",
+   "q": "Ina Mae Tavern",
+   "hood": "Wicker Park",
+   "cat": "New Orleans tavern",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "date"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Po'boys and hurricanes done with real care. The closest Chicago gets to a French Quarter porch."
+  },
+  {
+   "id": "club-lucky",
+   "q": "Club Lucky",
+   "hood": "Bucktown",
+   "cat": "Old-school Italian",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Red sauce, martinis, and a 1940s supper-club room that hasn't changed because it never needed to."
+  },
+  {
+   "id": "map-room",
+   "q": "Map Room",
+   "hood": "Bucktown",
+   "cat": "Beer bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "solo",
+    "cheap",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A travelers' tavern papered in maps with one of the city's great beer lists. Come early, claim the corner table."
+  },
+  {
+   "id": "le-bouchon",
+   "q": "Le Bouchon",
+   "hood": "Bucktown",
+   "cat": "French bistro",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Twenty seats of unapologetic French bistro — duck, candlelight, elbows almost touching. Romance without the fuss."
+  },
+  {
+   "id": "the-charleston",
+   "q": "Charleston",
+   "hood": "Bucktown",
+   "cat": "Corner bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A warm corner tavern with occasional bluegrass in the window and no screens worth watching. Conversation wins here."
+  },
+  {
+   "id": "green-mill",
+   "q": "Green Mill",
+   "hood": "Uptown",
+   "cat": "Jazz club",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Velvet booths, a century of jazz, and a no-phones glare that keeps it holy. The single most Chicago room in Chicago — bring cash."
+  },
+  {
+   "id": "carols-pub",
+   "q": "Carol's Pub",
+   "hood": "Uptown",
+   "cat": "Honky-tonk",
+   "vibes": [
+    "dance",
+    "new"
+   ],
+   "energy": 5,
+   "price": 1,
+   "bestFor": [
+    "late",
+    "weird",
+    "group",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A honky-tonk on the North Side with live country bands and two-stepping strangers. Unbeatable at 1 a.m."
+  },
+  {
+   "id": "big-chicks",
+   "q": "Big Chicks",
+   "hood": "Uptown",
+   "cat": "Queer bar",
+   "vibes": [
+    "chill",
+    "dance"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "weird"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "An art-covered queer bar that feels like a very good house party. Everyone's welcome; the wall art alone is worth the trip."
+  },
+  {
+   "id": "sun-wah",
+   "q": "Sun Wah BBQ",
+   "hood": "Uptown",
+   "cat": "Hong Kong BBQ",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "cheap",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Ducks in the window, the Beijing duck feast on the table. Order it, watch the carving, thank yourself later.",
+   "alt": [
+    "Sun Wah Bar-B-Q",
+    "Sun Wah Bar B Q",
+    "Sun Wah Barbecue"
+   ]
+  },
+  {
+   "id": "demera",
+   "q": "Demera",
+   "hood": "Uptown",
+   "cat": "Ethiopian",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Injera, honey wine, and a corner view of the Uptown marquees. Eating with your hands is the icebreaker.",
+   "alt": [
+    "Demera Ethiopian Restaurant",
+    "Demera Ethiopian"
+   ]
+  },
+  {
+   "id": "riviera",
+   "q": "Riviera Theatre",
+   "hood": "Uptown",
+   "cat": "Concert hall",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A faded-gold former movie palace that makes every show feel bigger. Check the marquee before you plan anything else."
+  },
+  {
+   "id": "aragon",
+   "q": "Aragon Ballroom",
+   "hood": "Uptown",
+   "cat": "Ballroom venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A Moorish palace with stars painted on the ceiling. The sound is famously rough; the room forgives everything."
+  },
+  {
+   "id": "hopleaf",
+   "q": "Hopleaf",
+   "hood": "Andersonville",
+   "cat": "Belgian tavern",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Mussels, frites, and a Belgian beer list you could study for years. The back room is one of the city's great winter dens.",
+   "alt": [
+    "Hopleaf Bar"
+   ]
+  },
+  {
+   "id": "simons-tavern",
+   "q": "Simon's Tavern",
+   "hood": "Andersonville",
+   "cat": "Swedish dive",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A Prohibition-era Swedish dive that serves warm glögg all winter. The neon fish sign alone deserves a landmark plaque."
+  },
+  {
+   "id": "chicago-magic-lounge",
+   "q": "Chicago Magic Lounge",
+   "hood": "Andersonville",
+   "cat": "Magic club",
+   "vibes": [
+    "show",
+    "new"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "weird",
+    "splurge"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Enter through a laundromat, end up in an Art Deco theater with close-up magic at your table. Pure date-night alchemy."
+  },
+  {
+   "id": "marty-martini",
+   "q": "Marty's Martini Bar",
+   "hood": "Andersonville",
+   "cat": "Martini bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A closet-sized room pouring oversized martinis. Squeeze in, order a classic, act like it's 1962."
+  },
+  {
+   "id": "womens-and-childrens-first",
+   "q": "Women & Children First",
+   "hood": "Andersonville",
+   "cat": "Bookstore",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "solo",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A feminist bookstore that's anchored Andersonville for decades — readings, staff picks with teeth, browsing that turns into hours."
+  },
+  {
+   "id": "moody-tongue",
+   "q": "Moody Tongue",
+   "hood": "South Loop",
+   "cat": "Brewery & tasting room",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 2,
+   "price": 4,
+   "bestFor": [
+    "splurge",
+    "date",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A brewery with Michelin ambitions — beer pairings treated like grand cru. The strangest fancy night in town, in the best way."
+  },
+  {
+   "id": "kimski",
+   "q": "Kimski",
+   "hood": "Bridgeport",
+   "cat": "Korean-Polish",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "cheap",
+    "weird"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Korean-Polish street food from the Maria's family — kimchi on your pierogi and it works. Only in Bridgeport."
+  },
+  {
+   "id": "marias-bridgeport",
+   "q": "Maria's Packaged Goods & Community Bar",
+   "hood": "Bridgeport",
+   "cat": "Slashie",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "weird"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A liquor-store-front, bar-in-back 'slashie' that became the South Side's cultural embassy. Start or end every Bridgeport night here."
+  },
+  {
+   "id": "duck-inn",
+   "q": "The Duck Inn",
+   "hood": "Bridgeport",
+   "cat": "Tavern dining",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A working-class corner turned duck-fat-everything tavern. The rotisserie duck for two is the neighborhood's best date order."
+  },
+  {
+   "id": "bernices",
+   "q": "Bernice's Tavern",
+   "hood": "Bridgeport",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A century-old family dive with bingo nights and buckets of character. The South Side at its most welcoming."
+  },
+  {
+   "id": "ramova",
+   "q": "Ramova Theatre",
+   "hood": "Bridgeport",
+   "cat": "Revived theater",
+   "vibes": [
+    "show",
+    "new"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A 1929 neighborhood palace brought back from thirty years of dust — shows, a brewery, and Bridgeport pride in every seat."
+  },
+  {
+   "id": "ricobenes",
+   "q": "Ricobene's",
+   "hood": "Bridgeport",
+   "cat": "Italian counter",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Home of the breaded-steak sandwich — a gloriously excessive Chicago original. Napkins are not optional.",
+   "alt": [
+    "Ricobene's Pizzeria",
+    "Ricobenes"
+   ]
+  },
+  {
+   "id": "palmisano-park",
+   "q": "Palmisano Park",
+   "hood": "Bridgeport",
+   "cat": "Quarry park",
+   "vibes": [
+    "active",
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "view",
+    "cheap",
+    "weird"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A limestone quarry turned hilltop park with a skyline view most rooftops would kill for. Golden hour here is a cheat code."
+  },
+  {
+   "id": "skylark",
+   "q": "Skylark",
+   "hood": "Pilsen",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Tater tots, stiff pours, a photo booth, cash only. The Pilsen dive every other dive quietly measures itself against."
+  },
+  {
+   "id": "thalia-hall",
+   "q": "Thalia Hall",
+   "hood": "Pilsen",
+   "cat": "Historic venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "An 1892 opera house modeled on Prague's, now booking the best mid-size shows in the city. Balcony seats feel like time travel."
+  },
+  {
+   "id": "haisous",
+   "q": "HaiSous",
+   "hood": "Pilsen",
+   "cat": "Vietnamese",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Vietnamese cooking with fire and finesse — clay-pot fish, wings you'll defend with your life. Pilsen's proudest dining room.",
+   "alt": [
+    "HaiSous Vietnamese Kitchen"
+   ]
+  },
+  {
+   "id": "5-rabanitos",
+   "q": "5 Rabanitos",
+   "hood": "Pilsen",
+   "cat": "Mexican",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A humble room where the mole and chile rellenos outclass places charging triple. BYO energy, bring everyone."
+  },
+  {
+   "id": "nat-museum-mexican-art",
+   "q": "National Museum of Mexican Art",
+   "hood": "Pilsen",
+   "cat": "Museum",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "solo"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Free, gorgeous, and the beating heart of Pilsen — folk art to contemporary, plus the city's best Día de Muertos show. Go before dinner."
+  },
+  {
+   "id": "pilsen-murals",
+   "q": "16th Street murals",
+   "hood": "Pilsen",
+   "cat": "Street art walk",
+   "vibes": [
+    "new",
+    "active"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird",
+    "solo"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "approx": true,
+   "ll": [
+    41.8603,
+    -87.6585
+   ],
+   "take": "Blocks of murals along 16th Street's rail embankment — an open-air gallery that changes every season. Walk it, then eat in the neighborhood."
+  },
+  {
+   "id": "ping-tom",
+   "q": "Ping Tom Memorial Park",
+   "hood": "Chinatown",
+   "cat": "Riverfront park",
+   "vibes": [
+    "active",
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "view",
+    "cheap"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A riverfront park with pagoda pavilions and trains rumbling across the water. Chinatown's quiet showstopper at dusk."
+  },
+  {
+   "id": "minghin",
+   "q": "MingHin Cuisine",
+   "hood": "Chinatown",
+   "cat": "Cantonese & dim sum",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "The reliable giant of Chinatown — dim sum by day, lacquered ducks and clay pots late. Bring a crowd and order wide."
+  },
+  {
+   "id": "qxy-dumplings",
+   "q": "Qing Xiang Yuan Dumpling",
+   "hood": "Chinatown",
+   "cat": "Dumpling house",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Handmade dumplings in flavors from classic to curious, folded to order. Cheap, fast, quietly perfect."
+  },
+  {
+   "id": "girl-and-the-goat",
+   "q": "Girl & the Goat",
+   "hood": "West Loop",
+   "cat": "New American",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "group",
+    "splurge",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Still loud, still fun, still worth it after all these years. Share everything; fight over the pig face."
+  },
+  {
+   "id": "monteverde",
+   "q": "Monteverde",
+   "hood": "West Loop",
+   "cat": "Pasta",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Pasta made in the window, cacio whey pepe on the table. Book ahead or charm the bar — either way, go."
+  },
+  {
+   "id": "avec",
+   "q": "Avec",
+   "hood": "West Loop",
+   "cat": "Mediterranean",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A cedar sauna of a dining room that changed how Chicago eats. Squeeze in late for bacon-wrapped dates and strangers-turned-friends."
+  },
+  {
+   "id": "publican",
+   "q": "The Publican",
+   "hood": "Fulton Market",
+   "cat": "Beer hall dining",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A beer-hall cathedral to pork, oysters, and Belgian ale. Communal tables, zero quiet, maximum joy."
+  },
+  {
+   "id": "aba",
+   "q": "Aba",
+   "hood": "Fulton Market",
+   "cat": "Rooftop Mediterranean",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "view",
+    "splurge"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "warm",
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A leafy rooftop greenhouse of hummus and cool wine. On a warm night it's the easiest yes in Fulton Market."
+  },
+  {
+   "id": "cabra",
+   "q": "Cabra",
+   "hood": "Fulton Market",
+   "cat": "Rooftop Peruvian",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "view",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Ceviche and pisco thirteen floors up, under string lights. Summer-night energy bottled on a rooftop."
+  },
+  {
+   "id": "rose-mary",
+   "q": "Rose Mary",
+   "hood": "Fulton Market",
+   "cat": "Adriatic",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Croatian-Italian 'Adriatic drinking food' with serious fire behind it. Book early; the room earns its hype."
+  },
+  {
+   "id": "richards-bar",
+   "q": "Richard's Bar",
+   "hood": "River West",
+   "cat": "Old-man bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "late",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Sinatra on the speakers, Malört on the rail, decades in the wood paneling. An old-school Chicago bar experience, no theme-park version."
+  },
+  {
+   "id": "aire-baths",
+   "q": "AIRE Ancient Baths",
+   "hood": "River West",
+   "cat": "Bathhouse",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 1,
+   "price": 4,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Candlelit thermal pools inside an old factory. The most transporting two hours you can book in January.",
+   "alt": [
+    "Aire Ancient Bath",
+    "Aire Ancient Baths"
+   ]
+  },
+  {
+   "id": "alinea",
+   "q": "Alinea",
+   "hood": "Lincoln Park",
+   "cat": "Avant-garde tasting",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 1,
+   "price": 4,
+   "bestFor": [
+    "splurge",
+    "date",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Dinner as a magic show — edible balloons, plates painted on the table. For the anniversary you want mythologized."
+  },
+  {
+   "id": "oriole",
+   "q": "Oriole",
+   "hood": "West Loop",
+   "cat": "Tasting menu",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 1,
+   "price": 4,
+   "bestFor": [
+    "splurge",
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Through a freight elevator into one of America's warmest fine-dining rooms. Special-occasion cooking without the stiffness."
+  },
+  {
+   "id": "gejas",
+   "q": "Geja's Cafe",
+   "hood": "Lincoln Park",
+   "cat": "Fondue den",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 1,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic",
+    "splurge"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Candlelit fondue and live flamenco guitar since the '60s. Corny? Absolutely. Also the most reliable romance in the city."
+  },
+  {
+   "id": "athenian-room",
+   "q": "Athenian Room",
+   "hood": "Lincoln Park",
+   "cat": "Greek diner",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Kalamata chicken and Greek fries that have fueled generations of DePaul dates. Cheap, fast, weirdly perfect."
+  },
+  {
+   "id": "kingston-mines",
+   "q": "Kingston Mines",
+   "hood": "Lincoln Park",
+   "cat": "Blues club",
+   "vibes": [
+    "show",
+    "dance"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "late",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Two stages of sweaty, no-frills blues until deep into the night. Tourists come, locals stay — the music doesn't care."
+  },
+  {
+   "id": "steppenwolf",
+   "q": "Steppenwolf Theatre",
+   "hood": "Lincoln Park",
+   "cat": "Theater",
+   "vibes": [
+    "show"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The ensemble that put Chicago acting on the map, still swinging hard. Check what's on; rush seats reward the spontaneous."
+  },
+  {
+   "id": "second-city",
+   "q": "The Second City",
+   "hood": "Old Town",
+   "cat": "Comedy theater",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The comedy factory that built SNL's bench. The mainstage revue is the safe bet; the late-night improv sets are the loose cannon."
+  },
+  {
+   "id": "old-town-ale-house",
+   "q": "Old Town Ale House",
+   "hood": "Old Town",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "late",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Scandalous paintings, a jukebox of standards, and bartenders who've seen everything. Roger Ebert called it the best bar in the world; who are we to argue."
+  },
+  {
+   "id": "twin-anchors",
+   "q": "Twin Anchors",
+   "hood": "Old Town",
+   "cat": "Rib tavern",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Ribs in a 1930s tavern where Sinatra held court. No reservations — put your name in and have an Old Style."
+  },
+  {
+   "id": "zanies",
+   "q": "Zanies Comedy Club",
+   "hood": "Old Town",
+   "cat": "Comedy club",
+   "vibes": [
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A low-ceilinged classic where touring headliners work close enough to see you check your phone. Don't.",
+   "alt": [
+    "Zanies"
+   ]
+  },
+  {
+   "id": "gilt-bar",
+   "q": "Gilt Bar",
+   "hood": "River North",
+   "cat": "Dark tavern",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Dark wood, dim lamps, ricotta gnocchi you'll dream about. River North without the River North energy."
+  },
+  {
+   "id": "ciccio-mio",
+   "q": "Ciccio Mio",
+   "hood": "River North",
+   "cat": "Old-world Italian",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A candlelit time machine to 1940s Italian-American dining. The kind of room that makes you order a second negroni."
+  },
+  {
+   "id": "three-dots",
+   "q": "Three Dots and a Dash",
+   "hood": "River North",
+   "cat": "Tiki bar",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "date",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Down an alley, under the skulls, into a rum-soaked grotto. Order the flaming bowl; make the night ridiculous."
+  },
+  {
+   "id": "andys-jazz",
+   "q": "Andy's Jazz Club",
+   "hood": "River North",
+   "cat": "Jazz club",
+   "vibes": [
+    "show",
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Straight-ahead jazz with dinner service, two sets a night. The easy on-ramp to a jazz habit."
+  },
+  {
+   "id": "green-door",
+   "q": "Green Door Tavern",
+   "hood": "River North",
+   "cat": "Historic tavern",
+   "vibes": [
+    "chill",
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A crooked 1872 building that's been pouring since Prohibition (ask about the speakeasy downstairs). Burgers and history in equal measure."
+  },
+  {
+   "id": "pequods",
+   "q": "Pequod's Pizza",
+   "hood": "Lincoln Park",
+   "cat": "Pan pizza",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group",
+    "cheap",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Caramelized-crust pan pizza with a cult that grows by the year. Order ahead or embrace the wait with a pitcher.",
+   "alt": [
+    "Pequod's Pizzeria",
+    "Pequods Pizzeria"
+   ]
+  },
+  {
+   "id": "cindys",
+   "q": "Cindy's",
+   "hood": "The Loop",
+   "cat": "Rooftop bar",
+   "vibes": [
+    "chill",
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "view",
+    "date",
+    "splurge"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "warm",
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A glasshouse rooftop staring straight down at the Bean and Millennium Park. Sunset here converts even the rooftop-skeptical."
+  },
+  {
+   "id": "italian-village",
+   "q": "Italian Village",
+   "hood": "The Loop",
+   "cat": "Vintage Italian",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Upstairs at the Village: twinkling lights, private booths, and red sauce served since 1927. Kitsch aged into genuine romance."
+  },
+  {
+   "id": "millers-pub",
+   "q": "Miller's Pub",
+   "hood": "The Loop",
+   "cat": "Late-night tavern",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "late",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Ribs and Manhattans under the L tracks until the small hours. The Loop's dependable old friend."
+  },
+  {
+   "id": "cso",
+   "q": "Symphony Center",
+   "hood": "The Loop",
+   "cat": "Symphony hall",
+   "vibes": [
+    "show"
+   ],
+   "energy": 1,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic",
+    "splurge"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "One of the world's great orchestras, and cheap gallery seats if you're flexible. Dress up a little; let the hall do the rest."
+  },
+  {
+   "id": "art-institute",
+   "q": "Art Institute of Chicago",
+   "hood": "The Loop",
+   "cat": "Art museum",
+   "vibes": [
+    "new",
+    "show",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic",
+    "solo"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A world-class collection you can wander like a city. Pick one wing, go slow, argue about the Caillebotte over drinks after."
+  },
+  {
+   "id": "gene-siskel",
+   "q": "Gene Siskel Film Center",
+   "hood": "The Loop",
+   "cat": "Art-house cinema",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "solo"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Restorations, premieres, and films you won't stream for years. The programming does the deciding for you."
+  },
+  {
+   "id": "cultural-center",
+   "q": "Chicago Cultural Center",
+   "hood": "The Loop",
+   "cat": "Free culture palace",
+   "vibes": [
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date",
+    "solo",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Free exhibitions under the largest Tiffany dome on earth. The most beautiful zero-dollar hour in Chicago — go before it closes at night."
+  },
+  {
+   "id": "riverwalk",
+   "q": "Chicago Riverwalk",
+   "hood": "The Loop",
+   "cat": "Riverfront promenade",
+   "vibes": [
+    "active",
+    "chill",
+    "new"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "view",
+    "cheap"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A mile and a half of river, wine kiosks, and architecture lit up overhead. The city's best free evening stroll."
+  },
+  {
+   "id": "millennium-park",
+   "q": "Millennium Park",
+   "hood": "The Loop",
+   "cat": "Park & lawn",
+   "vibes": [
+    "active",
+    "chill",
+    "show"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "date"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The Bean, the Pritzker lawn, and free summer concerts under the skyline. Pack a blanket; check the summer film and music calendar."
+  },
+  {
+   "id": "maggie-daley",
+   "q": "Maggie Daley Park",
+   "hood": "The Loop",
+   "cat": "Park & skating ribbon",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "winter",
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "In winter the skating ribbon snakes between the towers — skating a loop through downtown light is peak Chicago romance."
+  },
+  {
+   "id": "buddy-guys",
+   "q": "Buddy Guy's Legends",
+   "hood": "South Loop",
+   "cat": "Blues club",
+   "vibes": [
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The living legend's own club, with blues seven nights and gumbo on the menu. In January, the man himself takes the stage."
+  },
+  {
+   "id": "jazz-showcase",
+   "q": "Jazz Showcase",
+   "hood": "South Loop",
+   "cat": "Jazz room",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A listening room in the old Dearborn Station where the music is the whole point. Seventy years of serious bookings, zero pretense."
+  },
+  {
+   "id": "adler",
+   "q": "Adler Planetarium",
+   "hood": "Museum Campus",
+   "cat": "Planetarium",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "view"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Space shows inside, and the single best skyline panorama in Chicago outside. Evening events here are a criminally underrated date."
+  },
+  {
+   "id": "northerly-island",
+   "q": "Northerly Island",
+   "hood": "Museum Campus",
+   "cat": "Lakefront prairie",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "view",
+    "cheap",
+    "date"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A prairie loop on the lake with the skyline stacked behind the water. Bring a picnic; watch the planes and sailboats trade places."
+  },
+  {
+   "id": "virtue",
+   "q": "Virtue",
+   "hood": "Hyde Park",
+   "cat": "Southern",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Southern cooking with white-tablecloth care and South Side soul. The cauliflower and short rib are already classics."
+  },
+  {
+   "id": "the-promontory",
+   "q": "The Promontory",
+   "hood": "Hyde Park",
+   "cat": "Hearth & venue",
+   "vibes": [
+    "dinner",
+    "show",
+    "dance"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Hearth-fired dinners downstairs, concerts and dance parties upstairs. Hyde Park's all-in-one night out."
+  },
+  {
+   "id": "promontory-point",
+   "q": "Promontory Point",
+   "hood": "Hyde Park",
+   "cat": "Lakefront point",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "view",
+    "date",
+    "cheap",
+    "classic"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Limestone steps into the lake and the full skyline floating to the north. The most romantic free real estate in Chicago.",
+   "exclude": [
+    "The Promontory"
+   ]
+  },
+  {
+   "id": "court-theatre",
+   "q": "Court Theatre",
+   "hood": "Hyde Park",
+   "cat": "Classic theater",
+   "vibes": [
+    "show"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Tony-winning classic theater on the UChicago campus — Greek tragedy to August Wilson, staged with rigor. Ideas-first date night."
+  },
+  {
+   "id": "stony-island-arts",
+   "q": "Stony Island Arts Bank",
+   "hood": "South Shore",
+   "cat": "Arts archive",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "weird",
+    "solo",
+    "date",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A rescued 1920s bank turned archive of Black culture — Frankie Knuckles' records, Johnson Publishing's library. Unlike anywhere else in America."
+  },
+  {
+   "id": "lems-bbq",
+   "q": "Lem's Bar-B-Q",
+   "hood": "Chatham",
+   "cat": "BBQ shack",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "classic",
+    "cheap"
+   ],
+   "in": false,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Aquarium-smoker rib tips and hot links that define South Side barbecue. Takeout only — eat on the hood of the car like you're supposed to."
+  },
+  {
+   "id": "birrieria-zaragoza",
+   "q": "Birrieria Zaragoza",
+   "hood": "Archer Heights",
+   "cat": "Birria temple",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "One family, one dish: La Barca-style goat birria, done to perfection for decades. A pilgrimage that costs fifteen dollars."
+  },
+  {
+   "id": "la-chaparrita",
+   "q": "La Chaparrita",
+   "hood": "Little Village",
+   "cat": "Taqueria",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A grocery-store taqueria slinging some of the city's best suadero and tripas. Trust the salsa bar with your life.",
+   "alt": [
+    "Taqueria La Chaparrita",
+    "Tamales Emma La Chaparrita"
+   ],
+   "legal": "LA CHAPARRITA INC"
+  },
+  {
+   "id": "ostios-tap",
+   "q": "Osito's Tap",
+   "hood": "Little Village",
+   "cat": "Hidden cocktail bar",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A speakeasy behind a candy shop pouring mezcal with pride and skill. La Villita's best-kept not-so-secret."
+  },
+  {
+   "id": "jims-original",
+   "q": "Jim's Original",
+   "hood": "Near West Side",
+   "cat": "Late-night stand",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "late",
+    "cheap",
+    "classic",
+    "weird"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Polish sausage, grilled onions, and free hot peppers at 3 a.m., same as it's been since Maxwell Street days. The city's great equalizer.",
+   "alt": [
+    "Jim's Original Hot Dog",
+    "Jim's Original Maxwell Street"
+   ]
+  },
+  {
+   "id": "als-beef-taylor",
+   "q": "Al's Beef",
+   "hood": "Little Italy",
+   "cat": "Italian beef stand",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The Taylor Street original. Order it dipped, lean over the counter, ruin your shirt with honor.",
+   "alt": [
+    "Al's #1 Italian Beef",
+    "Al's Italian Beef"
+   ]
+  },
+  {
+   "id": "rosas-lounge",
+   "q": "Rosa's Lounge",
+   "hood": "Logan Square",
+   "cat": "Blues lounge",
+   "vibes": [
+    "show"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "classic",
+    "date",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A family-run blues room far from the tourist strip, where the players come to actually play. Mama Rosa's legacy is the real thing."
+  },
+  {
+   "id": "california-clipper",
+   "q": "California Clipper",
+   "hood": "Humboldt Park",
+   "cat": "Vintage lounge",
+   "vibes": [
+    "chill",
+    "show"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A 1937 lounge with curved booths and live twang most nights. Feels like a movie set that serves a great Old Fashioned."
+  },
+  {
+   "id": "rootstock",
+   "q": "Rootstock",
+   "hood": "Humboldt Park",
+   "cat": "Wine bar",
+   "vibes": [
+    "chill",
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "solo"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Natural wine and a kitchen that outperforms the room's humility. Late pours for the after-something crowd.",
+   "alt": [
+    "Rootstock Wine & Beer Bar"
+   ]
+  },
+  {
+   "id": "humboldt-boathouse",
+   "q": "Humboldt Park Boathouse",
+   "hood": "Humboldt Park",
+   "cat": "Lagoon & boathouse",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "view"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A Prairie-style boathouse on a lagoon with skyline peeking over the trees. Paddleboats in summer, postcard light at dusk.",
+   "alt": [
+    "Humboldt Park Boathouse Pavilion",
+    "The Boathouse Cafe"
+   ]
+  },
+  {
+   "id": "garfield-conservatory",
+   "q": "Garfield Park Conservatory",
+   "hood": "East Garfield Park",
+   "cat": "Glass garden",
+   "vibes": [
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Two acres of jungle under glass — 75 degrees and green when the city is grey. February's secret weapon; check evening event nights."
+  },
+  {
+   "id": "lincoln-conservatory",
+   "q": "Lincoln Park Conservatory",
+   "hood": "Lincoln Park",
+   "cat": "Victorian glasshouse",
+   "vibes": [
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A Victorian fern paradise next to the free zoo. Small, warm, and quietly transporting — pair with a lakefront walk."
+  },
+  {
+   "id": "lily-pool",
+   "q": "Alfred Caldwell Lily Pool",
+   "hood": "Lincoln Park",
+   "cat": "Hidden garden",
+   "vibes": [
+    "chill",
+    "new",
+    "active"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A Prairie School stone lagoon hiding in plain sight off Fullerton. Most Chicagoans have never found it; now you have."
+  },
+  {
+   "id": "north-pond",
+   "q": "North Pond",
+   "hood": "Lincoln Park",
+   "cat": "Pond-side dining",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 1,
+   "price": 4,
+   "bestFor": [
+    "splurge",
+    "date",
+    "view"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "An Arts-and-Crafts pavilion on a pond, skyline over the reeds. The most scenic tasting menu in the city."
+  },
+  {
+   "id": "montrose-beach",
+   "q": "Montrose Beach",
+   "hood": "Uptown",
+   "cat": "Beach & dunes",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "view",
+    "date",
+    "group"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "summer"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The city's biggest beach, plus dunes, birds, and a bar on the sand. Stay for the skyline turning pink over the water."
+  },
+  {
+   "id": "north-ave-beach",
+   "q": "North Avenue Beach",
+   "hood": "Lincoln Park",
+   "cat": "Beach",
+   "vibes": [
+    "active"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "view",
+    "classic"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "summer"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Volleyball, the boathouse deck, and the classic skyline-from-the-sand view. Chicago summer's front porch."
+  },
+  {
+   "id": "the-606",
+   "q": "Bloomingdale Trail",
+   "hood": "Wicker Park",
+   "cat": "Elevated trail",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date",
+    "solo"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "An old rail line turned 2.7-mile elevated promenade over the Northwest Side. Walk it at dusk, drop down wherever dinner smells best."
+  },
+  {
+   "id": "lincoln-square-chill",
+   "q": "The Book Cellar",
+   "hood": "Lincoln Square",
+   "cat": "Bookstore & wine",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "solo",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A bookstore that pours wine while you browse. Lincoln Square's coziest first-stop before dinner on Giddings Plaza.",
+   "alt": [
+    "Book Cellar"
+   ]
+  },
+  {
+   "id": "davis-theater",
+   "q": "Davis Theater",
+   "hood": "Lincoln Square",
+   "cat": "Neighborhood cinema",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A century-old neighborhood cinema with a full bar attached. Movie, then a nightcap next door without moving the car."
+  },
+  {
+   "id": "spacca-napoli",
+   "q": "Spacca Napoli",
+   "hood": "Ravenswood",
+   "cat": "Neapolitan pizza",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Pizza napoletana made with near-religious devotion — the owner studied in Naples and it shows in every blistered crust."
+  },
+  {
+   "id": "san-soo-gab-san",
+   "q": "San Soo Gab San",
+   "hood": "West Ridge",
+   "cat": "Korean BBQ",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "late",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Charcoal Korean BBQ with a table full of banchan at hours when almost nothing else is open. The 1 a.m. feast of champions."
+  },
+  {
+   "id": "superdawg",
+   "q": "Superdawg",
+   "hood": "Norwood Park",
+   "cat": "Drive-in",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "classic",
+    "cheap",
+    "weird",
+    "date"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A 1948 drive-in with flirting hot dogs on the roof and carhops at your window. Milkshakes, neon, pure Americana."
+  },
+  {
+   "id": "kie-gol-lanee",
+   "q": "Kie-Gol-Lanee",
+   "hood": "Uptown",
+   "cat": "Oaxacan",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Oaxacan moles and tlayudas from a family kitchen that deserves triple the fame. Order the mole negro and go quiet for a minute."
+  },
+  {
+   "id": "lao-peng-you",
+   "q": "Lao Peng You",
+   "hood": "West Town",
+   "cat": "Noodle shop",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Hand-pulled noodles and dumplings from two brothers who treat dough like a craft. Small menu, no wrong answers."
+  },
+  {
+   "id": "podhalanka",
+   "q": "Podhalanka",
+   "hood": "Noble Square",
+   "cat": "Polish diner",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The last old-Polonia diner standing — pierogi and borscht served like your babcia is watching. Cash, and go before it's gone."
+  },
+  {
+   "id": "phyllis-musical-inn",
+   "q": "Phyllis' Musical Inn",
+   "hood": "Wicker Park",
+   "cat": "Dive & beer garden",
+   "vibes": [
+    "chill",
+    "show"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "warm",
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A former polka hall with the neighborhood's best-hidden beer garden and bands that play for the door. Division Street's soul survivor."
+  },
+  {
+   "id": "davenports",
+   "q": "Davenport's Piano Bar",
+   "hood": "Wicker Park",
+   "cat": "Cabaret",
+   "vibes": [
+    "show",
+    "new",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A proper cabaret room where singers work the standards and the piano bar takes requests. Delightfully out of step with everything."
+  },
+  {
+   "id": "neo-futurists",
+   "q": "The Neo-Futurists",
+   "hood": "Andersonville",
+   "cat": "Experimental theater",
+   "vibes": [
+    "show",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "weird",
+    "date",
+    "late",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Thirty plays in sixty minutes, order set by the audience, price set by a dice roll. The best late-night theater experiment in America.",
+   "alt": [
+    "Neofuturists",
+    "Neo-Futurarium"
+   ]
+  },
+  {
+   "id": "golden-dagger",
+   "q": "Golden Dagger",
+   "hood": "Lincoln Park",
+   "cat": "Indie venue",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A little indie listening room with coffee, cocktails, and bands on the way up. Low cover, high hit rate."
+  },
+  {
+   "id": "punch-house",
+   "q": "Punch House",
+   "hood": "Pilsen",
+   "cat": "Basement lounge",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "late"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A wood-paneled '70s basement pouring communal punch bowls under a fish tank. Bring three friends and split a bowl."
+  },
+  {
+   "id": "reggies",
+   "q": "Reggies",
+   "hood": "South Loop",
+   "cat": "Rock club & grill",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "late"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Punk and metal most nights, rooftop grill upstairs, zero attitude about any of it. The South Loop's loudest good time.",
+   "alt": [
+    "Reggies Rock Club",
+    "Reggie's Rock Club",
+    "Reggies Music Joint"
+   ]
+  },
+  {
+   "id": "epiphany",
+   "q": "Epiphany Center for the Arts",
+   "hood": "West Loop",
+   "cat": "Church-turned-venue",
+   "vibes": [
+    "show",
+    "new"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Concerts and art shows inside a restored 1885 church — stained glass, stone arches, full bar. The room upstages most headliners."
+  },
+  {
+   "id": "salt-shed",
+   "q": "The Salt Shed",
+   "hood": "Goose Island",
+   "cat": "Landmark venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "group",
+    "view",
+    "classic"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The old Morton Salt factory reborn as the city's most striking concert hall — riverside, neon-crowned, instantly iconic. Summer shows outside are magic."
+  },
+  {
+   "id": "lincoln-hall",
+   "q": "Lincoln Hall",
+   "hood": "Lincoln Park",
+   "cat": "Music venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Arguably the best-sounding mid-size room in the city. If a band you half-know is playing, that's the plan."
+  },
+  {
+   "id": "hideout",
+   "q": "The Hideout",
+   "hood": "Noble Square",
+   "cat": "Legendary shack",
+   "vibes": [
+    "show",
+    "chill",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "weird",
+    "classic",
+    "date",
+    "cheap"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A century-old balloon-frame house hiding between factories, booking country, poetry, and everything odd and wonderful. Chicago's clubhouse."
+  },
+  {
+   "id": "richard-driehaus",
+   "q": "Driehaus Museum",
+   "hood": "River North",
+   "cat": "Gilded Age mansion",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A marble-and-onyx Gilded Age palace frozen in 1883. Wander it slowly and feel wildly underdressed in the best way."
+  },
+  {
+   "id": "mca",
+   "q": "Museum of Contemporary Art",
+   "hood": "Streeterville",
+   "cat": "Contemporary art",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "solo"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Big-swing contemporary shows a block off Michigan Ave. Tuesday evenings often run late and cheap — the thinking person's happy hour."
+  },
+  {
+   "id": "olive-park",
+   "q": "Milton Lee Olive Park",
+   "hood": "Streeterville",
+   "cat": "Secret lakefront park",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "view",
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A tree-lined promenade jutting into the lake beside Navy Pier that somehow nobody knows. Skyline, water, quiet — a hidden-in-plain-sight stunner."
+  },
+  {
+   "id": "oz-park",
+   "q": "Oz Park",
+   "hood": "Lincoln Park",
+   "cat": "Storybook park",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "date"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A neighborhood park guarded by statues of Dorothy, the Tin Man, and friends. A gentle stroll with a wink — pair it with ice cream."
+  },
+  {
+   "id": "smith-museum",
+   "q": "International Museum of Surgical Science",
+   "hood": "Gold Coast",
+   "cat": "Odd museum",
+   "vibes": [
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "weird",
+    "date",
+    "solo"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Four floors of antique surgical tools and murals in a lakefront mansion. Macabre, fascinating, and a guaranteed conversation generator."
+  },
+  {
+   "id": "coq-dor",
+   "q": "Coq d'Or",
+   "hood": "Gold Coast",
+   "cat": "Hotel bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "classic",
+    "date",
+    "splurge"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The Drake's wood-paneled bar, pouring since the day after Prohibition ended. Order a Manhattan and let the leather booth do its work."
+  },
+  {
+   "id": "zebra-lounge",
+   "q": "Zebra Lounge",
+   "hood": "Gold Coast",
+   "cat": "Piano lounge",
+   "vibes": [
+    "chill",
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "late",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A tiny zebra-striped piano bar that's been enabling singalongs since 1929. Absurd, intimate, unkillable."
+  },
+  {
+   "id": "pompei",
+   "q": "Pompei",
+   "hood": "Little Italy",
+   "cat": "Italian bakery-café",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Taylor Street's century-old bakery-café. Get the strudel pizza and a table by the window before a Little Italy stroll."
+  },
+  {
+   "id": "mario-italian-lemonade",
+   "q": "Mario's Italian Lemonade",
+   "hood": "Little Italy",
+   "cat": "Italian ice stand",
+   "vibes": [
+    "new",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "date"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "summer"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A summer-only lemonade shack that's been an institution since 1954. The line is part of the ritual; the watermelon ice is the reward.",
+   "alt": [
+    "Mario's Lemonade",
+    "Mario's Italian Ice"
+   ]
+  },
+  {
+   "id": "garden-of-phoenix",
+   "q": "Garden of the Phoenix",
+   "hood": "Hyde Park",
+   "cat": "Japanese garden",
+   "vibes": [
+    "chill",
+    "new",
+    "active"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "in": false,
+   "out": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A Japanese garden on a Jackson Park island, with Yoko Ono's lotus sculpture rising by the water. Serenity hiding behind the museum.",
+   "alt": [
+    "Osaka Garden",
+    "Osaka Japanese Garden"
+   ]
+  },
+  {
+   "id": "robust-coffee",
+   "q": "Build Coffee",
+   "hood": "Woodlawn",
+   "cat": "Bookstore café",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "solo",
+    "cheap"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A bookstore-café inside the Experimental Station — zines, used paperbacks, and serious neighborhood roots. Daytime-into-dusk energy."
+  },
+  {
+   "id": "timber-lanes",
+   "q": "Timber Lanes",
+   "hood": "North Center",
+   "cat": "Hand-set bowling",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "weird",
+    "cheap",
+    "date"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Eight lanes, paper scoring, a cash bar, and pins set by hand like it's 1945. Bowling stripped to its charming essentials."
+  },
+  {
+   "id": "begyle",
+   "q": "Begyle Brewing",
+   "hood": "North Center",
+   "cat": "Taproom",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A no-frills family taproom on Ravenswood's brewery corridor. Bring a pizza in, make friends at the long tables."
+  },
+  {
+   "id": "dovetail",
+   "q": "Dovetail Brewery",
+   "hood": "North Center",
+   "cat": "Lager hall",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "classic",
+    "cheap"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Continental lagers brewed the slow old-world way, poured in a hall that feels lifted from Bavaria. The Maibock season is an event."
+  },
+  {
+   "id": "half-acre",
+   "q": "Half Acre Beer Company",
+   "hood": "Andersonville",
+   "cat": "Brewery taproom",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "The Daisy Cutter mothership — a big, friendly Balmoral taproom with a garden out back. Where beer-nerd and neighborhood-regular overlap.",
+   "alt": [
+    "Half Acre Beer Co. Balmoral Tap Room & Garden",
+    "Half Acre Balmoral"
+   ]
+  },
+  {
+   "id": "sultans-market",
+   "q": "Sultan's Market",
+   "hood": "Wicker Park",
+   "cat": "Middle Eastern counter",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "solo"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Falafel sandwiches and lentil soup that have rescued a thousand budgets. Order at the counter, grab the window ledge."
+  },
+  {
+   "id": "bar-roma",
+   "q": "Bar Roma",
+   "hood": "Andersonville",
+   "cat": "Roman trattoria",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Cacio e pepe and negronis with Andersonville warmth. The patio out back feels like a Roman courtyard that took the Blue Line."
+  },
+  {
+   "id": "clark-street-ale",
+   "q": "Clark Street Ale House",
+   "hood": "River North",
+   "cat": "Beer tavern",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A 'STOP & DRINK' sign, midwestern taps, and a beer garden hiding out back. River North's least pretentious room by a mile."
+  },
+  {
+   "id": "pops-for-champagne",
+   "q": "Pops for Champagne",
+   "hood": "River North",
+   "cat": "Champagne bar",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge",
+    "classic"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A round bar devoted entirely to bubbles, decades before that was a trend. Celebrate something — or invent something to celebrate."
+  },
+  {
+   "id": "exchequer",
+   "q": "Exchequer Restaurant & Pub",
+   "hood": "The Loop",
+   "cat": "Historic pub & pizza",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Deep dish and ribs in a former Capone speakeasy, walls crammed with a century of memorabilia. Pre-theater fuel with a wink."
+  },
+  {
+   "id": "cafe-bionda",
+   "q": "La Scarola",
+   "hood": "River West",
+   "cat": "Red-sauce Italian",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "date",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Chaotic, garlicky, photo-covered red-sauce joint where regulars are family. Order the escarole and let the room happen to you."
+  },
+  {
+   "id": "sound-bar",
+   "q": "Sound-Bar",
+   "hood": "River North",
+   "cat": "Nightclub",
+   "vibes": [
+    "dance"
+   ],
+   "energy": 5,
+   "price": 3,
+   "bestFor": [
+    "late",
+    "group"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A proper multi-room club with a serious system when you want lasers-and-bass maximalism. Dress code applies; naps beforehand advised."
+  },
+  {
+   "id": "celeste",
+   "q": "Celeste",
+   "hood": "River North",
+   "cat": "Cocktail parlor",
+   "vibes": [
+    "chill",
+    "dance"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "late",
+    "splurge"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Three floors from Victorian parlor to garden roof, with dancing creeping in as the night goes. One address, an entire evening arc."
+  },
+  {
+   "id": "friendship",
+   "q": "The Friendship",
+   "hood": "Logan Square",
+   "cat": "Supper club & jazz",
+   "vibes": [
+    "dinner",
+    "show",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A modern supper club with jazz combos and a menu that respects the classics. Dinner-and-a-show without leaving the room."
+  },
+  {
+   "id": "royal-palms",
+   "q": "The Royal Palms Shuffleboard Club",
+   "hood": "Bucktown",
+   "cat": "Shuffleboard club",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "date",
+    "weird"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A warehouse of full-size shuffleboard courts, tropical drinks, and instant friendly rivalry. The easiest 'we did something' night there is."
+  },
+  {
+   "id": "loyalist",
+   "q": "The Loyalist",
+   "hood": "West Loop",
+   "cat": "Basement bistro",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "in": true,
+   "out": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "The clubby downstairs sibling of Smyth — dim, buzzy, and home to a burger people argue about nationally. Late seatings reward the patient."
+  },
+  {
+   "id": "vincent",
+   "q": "Vincent",
+   "hood": "Andersonville",
+   "cat": "Dutch bistro",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Moules-frites and gin in a dark-wooded corner bistro. The late-ish kitchen makes it the neighborhood's best second act."
+  },
+  {
+   "id": "east-room",
+   "q": "East Room",
+   "hood": "Logan Square",
+   "cat": "DJ bar",
+   "legal": "EAST ROOM LTD",
+   "vibes": [
+    "dance"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "late",
+    "cheap",
+    "group"
+   ],
+   "in": true,
+   "out": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "No sign, no cover most nights, DJs until very late. The dance-floor answer when you didn't plan on dancing."
+  }
+ ]
+}

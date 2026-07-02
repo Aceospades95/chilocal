@@ -1,0 +1,12 @@
+[out:json][timeout:300];
+area["wikidata"="Q1297"]->.chi;
+(
+  nwr(area.chi)["name"]["amenity"~"^(bar|pub|restaurant|cafe|nightclub|biergarten|theatre|cinema|arts_centre|music_venue|events_venue|casino|planetarium|ice_cream)$"];
+  nwr(area.chi)["name"]["leisure"~"^(bowling_alley|amusement_arcade|escape_game|dance|ice_rink|park|marina|beach_resort)$"];
+  nwr(area.chi)["name"]["tourism"~"^(museum|gallery|attraction|zoo|aquarium|viewpoint)$"];
+  nwr(area.chi)["name"]["shop"~"^(books|records|music)$"];
+  nwr(area.chi)["name"]["club"="music"];
+  nwr(area.chi)["name"]["natural"="beach"];
+  nwr(area.chi)["name"]["man_made"="pier"];
+);
+out center tags;

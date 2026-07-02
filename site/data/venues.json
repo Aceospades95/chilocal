@@ -1,0 +1,6132 @@
+{
+ "generated": "2026-07-01",
+ "note": "Venue facts (coordinates, names, addresses, websites, opening hours, tips) from OpenStreetMap via Overpass API — © OpenStreetMap contributors, ODbL 1.0. Editorial takes, vibe tags, energy and price tiers (≈ estimates) are ChiLocal's own opinion. Opening hours reflect OSM data and may be out of date — always linked out for confirmation.",
+ "license": "Data: ODbL 1.0 (OpenStreetMap). Editorial content: © ChiLocal.",
+ "venues": [
+  {
+   "id": "5-rabanitos",
+   "name": "5 Rabanitos",
+   "nameOsm": "5 Rabanitos Restaurante and Taqueria",
+   "hood": "Pilsen",
+   "geom": "Lower West Side",
+   "cat": "Mexican",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A humble room where the mole and chile rellenos outclass places charging triple. BYO energy, bring everyone.",
+   "lat": 41.8579,
+   "lng": -87.67094,
+   "addr": "1758 West 18th Street",
+   "site": "https://5rabanitosdotcom.wordpress.com/",
+   "hours": null,
+   "hoursChecked": "2026-06-15",
+   "osm": "node/6251767399",
+   "src": "osm"
+  },
+  {
+   "id": "aba",
+   "name": "Aba",
+   "hood": "Fulton Market",
+   "geom": "West Loop",
+   "cat": "Rooftop Mediterranean",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "view",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "warm",
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A leafy rooftop greenhouse of hummus and cool wine. On a warm night it's the easiest yes in Fulton Market.",
+   "lat": 41.88702,
+   "lng": -87.64887,
+   "addr": "302 North Green Street",
+   "site": "http://abarestaurantchicago.com",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6256520187",
+   "src": "osm"
+  },
+  {
+   "id": "adler",
+   "name": "Adler Planetarium",
+   "hood": "Museum Campus",
+   "geom": "Museum Campus",
+   "cat": "Planetarium",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "view"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Space shows inside, and the single best skyline panorama in Chicago outside. Evening events here are a criminally underrated date.",
+   "lat": 41.86636,
+   "lng": -87.60663,
+   "addr": "1300 South Lake Shore Drive",
+   "site": "https://www.adlerplanetarium.org/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/24825591",
+   "src": "osm"
+  },
+  {
+   "id": "aire-baths",
+   "name": "AIRE Ancient Baths",
+   "nameOsm": "Aire Ancient Bath",
+   "hood": "River West",
+   "geom": "West Town",
+   "cat": "Bathhouse",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 1,
+   "price": 4,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Candlelit thermal pools inside an old factory. The most transporting two hours you can book in January.",
+   "lat": 41.89569,
+   "lng": -87.64799,
+   "addr": "800 West Superior Street",
+   "site": "https://beaire.com/en/aire-ancient-baths-chicago",
+   "hours": null,
+   "hoursChecked": "2025-05-17",
+   "osm": "node/6181809485",
+   "src": "osm"
+  },
+  {
+   "id": "alinea",
+   "name": "Alinea",
+   "hood": "Lincoln Park",
+   "geom": "Old Town",
+   "cat": "Avant-garde tasting",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 1,
+   "price": 4,
+   "bestFor": [
+    "splurge",
+    "date",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Dinner as a magic show — edible balloons, plates painted on the table. For the anniversary you want mythologized.",
+   "lat": 41.91344,
+   "lng": -87.6482,
+   "addr": "1723 North Halsted Street",
+   "site": "https://www.alinearestaurant.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/3502294529",
+   "src": "osm"
+  },
+  {
+   "id": "all-together-now",
+   "name": "All Together Now",
+   "nameOsm": "All Together Now!",
+   "hood": "Ukrainian Village",
+   "geom": "West Town",
+   "cat": "Wine bar & shop",
+   "vibes": [
+    "chill",
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A bright little wine shop-café hybrid where the pours are natural and the snacks punch up. Early-evening magic.",
+   "lat": 41.89566,
+   "lng": -87.6804,
+   "addr": "2119 West Chicago Avenue",
+   "site": null,
+   "hours": "Tu-Fr 11:00-21:00; Sa 10:00-21:00; Su 10:00-17:00",
+   "hoursChecked": null,
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/6269127897",
+   "src": "osm"
+  },
+  {
+   "id": "als-beef-taylor",
+   "name": "Al's Beef",
+   "hood": "Little Italy",
+   "geom": "Little Italy, UIC",
+   "cat": "Italian beef stand",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The Taylor Street original. Order it dipped, lean over the counter, ruin your shirt with honor.",
+   "lat": 41.86931,
+   "lng": -87.654,
+   "addr": "1079 West Taylor Street",
+   "site": "https://www.alsbeef.com/",
+   "hours": "Mo-Fr 09:00-23:00; Sa 10:00-23:00",
+   "hoursChecked": null,
+   "osm": "way/149877831",
+   "src": "osm"
+  },
+  {
+   "id": "andys-jazz",
+   "name": "Andy's Jazz Club",
+   "nameOsm": "Andy's Jazz Club & Restaurant",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Jazz club",
+   "vibes": [
+    "show",
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Straight-ahead jazz with dinner service, two sets a night. The easy on-ramp to a jazz habit.",
+   "lat": 41.88994,
+   "lng": -87.62736,
+   "addr": "11 East Hubbard Street",
+   "site": "https://andysjazzclub.com/",
+   "hours": "Mo-Su 16:00-01:00",
+   "hoursChecked": null,
+   "osm": "node/4731205522",
+   "src": "osm"
+  },
+  {
+   "id": "aragon",
+   "name": "Aragon Ballroom",
+   "nameOsm": "Byline Bank Aragon Ballroom",
+   "hood": "Uptown",
+   "geom": "Uptown",
+   "cat": "Ballroom venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A Moorish palace with stars painted on the ceiling. The sound is famously rough; the room forgives everything.",
+   "lat": 41.96943,
+   "lng": -87.65803,
+   "addr": "1106 West Lawrence Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": "2025-01-17",
+   "osm": "way/31293839",
+   "src": "osm"
+  },
+  {
+   "id": "art-institute",
+   "name": "Art Institute of Chicago",
+   "nameOsm": "The Art Institute of Chicago",
+   "hood": "The Loop",
+   "geom": "Grant Park",
+   "cat": "Art museum",
+   "vibes": [
+    "new",
+    "show",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A world-class collection you can wander like a city. Pick one wing, go slow, argue about the Caillebotte over drinks after.",
+   "lat": 41.87956,
+   "lng": -87.62257,
+   "addr": "111 South Michigan Avenue",
+   "site": "https://www.artic.edu/",
+   "hours": "Mo 11:00-17:00; Tu-We off; Th 11:00-20:00; Fr-Su 11:00-17:00",
+   "hoursChecked": null,
+   "osm": "relation/1870546",
+   "src": "osm"
+  },
+  {
+   "id": "athenian-room",
+   "name": "Athenian Room",
+   "hood": "Lincoln Park",
+   "geom": "Lincoln Park",
+   "cat": "Greek diner",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Kalamata chicken and Greek fries that have fueled generations of DePaul dates. Cheap, fast, weirdly perfect.",
+   "lat": 41.92169,
+   "lng": -87.64909,
+   "addr": "807 West Webster Avenue",
+   "site": "https://www.athenianroom.net/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/4196262789",
+   "src": "osm"
+  },
+  {
+   "id": "avec",
+   "name": "Avec",
+   "nameOsm": "avec",
+   "hood": "West Loop",
+   "geom": "West Loop",
+   "cat": "Mediterranean",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A cedar sauna of a dining room that changed how Chicago eats. Squeeze in late for bacon-wrapped dates and strangers-turned-friends.",
+   "lat": 41.88423,
+   "lng": -87.64338,
+   "addr": "615 West Randolph Street",
+   "site": "https://www.avecrestaurant.com/",
+   "hours": "Mo-Fr 11:30-14:00; Su-Th 15:30-23:00; Fr-Sa 15:30-00:00; Su 10:00-12:00",
+   "hoursChecked": null,
+   "osm": "node/5168217739",
+   "src": "osm"
+  },
+  {
+   "id": "bar-roma",
+   "name": "Bar Roma",
+   "hood": "Andersonville",
+   "geom": "Uptown",
+   "cat": "Roman trattoria",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Cacio e pepe and negronis with Andersonville warmth. The patio out back feels like a Roman courtyard that took the Blue Line.",
+   "lat": 41.97451,
+   "lng": -87.66805,
+   "addr": "5101 North Clark Street",
+   "site": "https://www.barromachicago.com/",
+   "hours": "Tu-Th 16:00-21:00; Fr-Sa 16:00-22:00; Su 16:00-20:30",
+   "hoursChecked": "2024-11-15",
+   "osm": "node/6265199894",
+   "src": "osm"
+  },
+  {
+   "id": "beat-kitchen",
+   "name": "Beat Kitchen",
+   "hood": "Roscoe Village",
+   "geom": "North Center",
+   "cat": "Rock club",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A shoebox rock room where next year's favorite band plays to eighty people. Cheap tickets, close stage.",
+   "lat": 41.93973,
+   "lng": -87.68095,
+   "addr": "2100 West Belmont Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/209882157",
+   "src": "osm"
+  },
+  {
+   "id": "beatnik-west-town",
+   "name": "Beatnik",
+   "hood": "West Town",
+   "geom": "East Village",
+   "cat": "Opulent cocktails",
+   "vibes": [
+    "chill",
+    "new",
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge",
+    "view"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Antique mirrors, palms, and cocktails that arrive like theater props. Maximalism done with a straight face.",
+   "lat": 41.89634,
+   "lng": -87.66771,
+   "addr": "1604 West Chicago Avenue",
+   "site": "https://www.beatnikchicago.com/",
+   "hours": "Tu-Fr 17:00-02:00; Sa 11:00-03:00; Su 11:00-02:00",
+   "hoursChecked": "2025-05-17",
+   "osm": "node/5460871124",
+   "src": "osm"
+  },
+  {
+   "id": "begyle",
+   "name": "Begyle Brewing",
+   "hood": "North Center",
+   "geom": "North Center",
+   "cat": "Taproom",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A no-frills family taproom on Ravenswood's brewery corridor. Bring a pizza in, make friends at the long tables.",
+   "lat": 41.9554,
+   "lng": -87.67455,
+   "addr": "1800 West Cuyler Avenue",
+   "site": "https://www.begylebrewing.com/",
+   "hours": "Mo-Th 12:00-21:00; Fr 12:00-22:00; Sa 11:00-22:00; Su 12:00-20:00",
+   "hoursChecked": null,
+   "osm": "node/6265692545",
+   "src": "osm"
+  },
+  {
+   "id": "bernices",
+   "name": "Bernice's Tavern",
+   "hood": "Bridgeport",
+   "geom": "Bridgeport",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A century-old family dive with bingo nights and buckets of character. The South Side at its most welcoming.",
+   "lat": 41.83527,
+   "lng": -87.64646,
+   "addr": "3238 South Halsted Street",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/210169914",
+   "src": "osm"
+  },
+  {
+   "id": "big-chicks",
+   "name": "Big Chicks",
+   "hood": "Uptown",
+   "geom": "Uptown",
+   "cat": "Queer bar",
+   "vibes": [
+    "chill",
+    "dance"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "An art-covered queer bar that feels like a very good house party. Everyone's welcome; the wall art alone is worth the trip.",
+   "lat": 41.97405,
+   "lng": -87.65515,
+   "addr": "5024 North Sheridan Road",
+   "site": "https://www.bigchicks.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/6177109638",
+   "src": "osm"
+  },
+  {
+   "id": "big-star",
+   "name": "Big Star",
+   "hood": "Wicker Park",
+   "geom": "Wicker Park",
+   "cat": "Tacos & whiskey",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "warm",
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Tacos, bourbon, and the patio that defines Chicago summer. Weeknights are the move; weekends are a sport.",
+   "lat": 41.90916,
+   "lng": -87.67709,
+   "addr": "1531 North Damen Avenue",
+   "site": "https://www.bigstarchicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/209864952",
+   "src": "osm"
+  },
+  {
+   "id": "billy-sunday",
+   "name": "Billy Sunday",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Cocktail bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Amari, obscure bottles, and bartenders who love a question. A drink here feels like a short seminar you actually enjoy.",
+   "lat": 41.9278,
+   "lng": -87.70655,
+   "addr": "3143 West Logan Boulevard",
+   "site": "https://www.billy-sunday.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "node/6267271605",
+   "src": "osm"
+  },
+  {
+   "id": "birrieria-zaragoza",
+   "name": "Birrieria Zaragoza",
+   "hood": "Archer Heights",
+   "geom": "Archer Heights",
+   "cat": "Birria temple",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "One family, one dish: La Barca-style goat birria, done to perfection for decades. A pilgrimage that costs fifteen dollars.",
+   "lat": 41.80447,
+   "lng": -87.72377,
+   "addr": "4852 South Pulaski Road",
+   "site": "https://www.birrieriazaragoza.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6267298423",
+   "src": "osm"
+  },
+  {
+   "id": "buddy-guys",
+   "name": "Buddy Guy's Legends",
+   "hood": "South Loop",
+   "geom": "Loop",
+   "cat": "Blues club",
+   "vibes": [
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The living legend's own club, with blues seven nights and gumbo on the menu. In January, the man himself takes the stage.",
+   "lat": 41.87296,
+   "lng": -87.62646,
+   "addr": "700 South Wabash Avenue",
+   "site": "https://buddyguy.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/149372353",
+   "src": "osm"
+  },
+  {
+   "id": "cabra",
+   "name": "Cabra",
+   "hood": "Fulton Market",
+   "geom": "West Loop",
+   "cat": "Rooftop Peruvian",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "view",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Ceviche and pisco thirteen floors up, under string lights. Summer-night energy bottled on a rooftop.",
+   "lat": 41.88592,
+   "lng": -87.64887,
+   "addr": "200 North Green Street",
+   "site": "https://www.cabrachicago.com",
+   "hours": "Su-Th 16:00-23:00; Fr-Sa 16:00-00:00",
+   "hoursChecked": "2026-06-14",
+   "tips": [
+    "Patio",
+    "Wheelchair accessible"
+   ],
+   "osm": "node/6407178684",
+   "src": "osm"
+  },
+  {
+   "id": "cafe-bionda",
+   "name": "La Scarola",
+   "hood": "River West",
+   "geom": "West Town",
+   "cat": "Red-sauce Italian",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Chaotic, garlicky, photo-covered red-sauce joint where regulars are family. Order the escarole and let the room happen to you.",
+   "lat": 41.89104,
+   "lng": -87.64684,
+   "addr": "721 West Grand Avenue",
+   "site": "https://lascarola.com/",
+   "hours": "Mo-Fr 17:00-23:00; Sa 16:00-23:00; Su 16:00-22:00",
+   "hoursChecked": null,
+   "osm": "node/3575231496",
+   "src": "osm"
+  },
+  {
+   "id": "california-clipper",
+   "name": "California Clipper",
+   "hood": "Humboldt Park",
+   "geom": "Humboldt Park",
+   "cat": "Vintage lounge",
+   "vibes": [
+    "chill",
+    "show"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A 1937 lounge with curved booths and live twang most nights. Feels like a movie set that serves a great Old Fashioned.",
+   "lat": 41.89947,
+   "lng": -87.69696,
+   "addr": "1002 North California Avenue",
+   "site": "https://www.californiaclipper.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/1786793073",
+   "src": "osm"
+  },
+  {
+   "id": "carols-pub",
+   "name": "Carol's Pub",
+   "hood": "Uptown",
+   "geom": "Uptown",
+   "cat": "Honky-tonk",
+   "vibes": [
+    "dance",
+    "new"
+   ],
+   "energy": 5,
+   "price": 1,
+   "bestFor": [
+    "late",
+    "weird",
+    "group",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A honky-tonk on the North Side with live country bands and two-stepping strangers. Unbeatable at 1 a.m.",
+   "lat": 41.96696,
+   "lng": -87.66692,
+   "addr": "4659 North Clark Street",
+   "site": "https://carolschicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/4069272054",
+   "src": "osm"
+  },
+  {
+   "id": "celeste",
+   "name": "Celeste",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Cocktail parlor",
+   "vibes": [
+    "chill",
+    "dance"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "late",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Three floors from Victorian parlor to garden roof, with dancing creeping in as the night goes. One address, an entire evening arc.",
+   "lat": 41.88985,
+   "lng": -87.63163,
+   "addr": "111 West Hubbard Street",
+   "site": "https://celestedisco.com",
+   "hours": "Tu-Fr 17:00-04:00; Sa 17:00-05:00",
+   "hoursChecked": "2025-09-08",
+   "osm": "node/5457612806",
+   "src": "osm"
+  },
+  {
+   "id": "chicago-diner",
+   "name": "Chicago Diner",
+   "nameOsm": "The Chicago Diner",
+   "hood": "Lakeview",
+   "geom": "Boystown",
+   "cat": "Vegan diner",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "cheap",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Meat-free since before it was cool, and the milkshakes convert skeptics. Comfort food with a conscience.",
+   "lat": 41.94402,
+   "lng": -87.64925,
+   "addr": "3411 North Halsted Street",
+   "site": "https://veggiediner.com/",
+   "hours": "Mo-Tu 11:00-22:00, Th-Fr 11:00-22:00,Sa 10:00-22:00,Su 10:00-21:00, We off",
+   "hoursChecked": null,
+   "osm": "node/6306543880",
+   "src": "osm"
+  },
+  {
+   "id": "chicago-magic-lounge",
+   "name": "Chicago Magic Lounge",
+   "hood": "Andersonville",
+   "geom": "Uptown",
+   "cat": "Magic club",
+   "vibes": [
+    "show",
+    "new"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "weird",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Enter through a laundromat, end up in an Art Deco theater with close-up magic at your table. Pure date-night alchemy.",
+   "lat": 41.97401,
+   "lng": -87.66836,
+   "addr": "5050 North Clark Street",
+   "site": "https://www.chicagomagiclounge.com/",
+   "hours": null,
+   "hoursChecked": "2026-01-22",
+   "osm": "node/6495008986",
+   "src": "osm"
+  },
+  {
+   "id": "chief-oneills",
+   "name": "Chief O'Neill's",
+   "nameOsm": "Chief O’Neill’s Pub & Restaurant",
+   "hood": "Avondale",
+   "geom": "Avondale",
+   "cat": "Irish pub",
+   "vibes": [
+    "dinner",
+    "chill",
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A proper Irish pub with trad sessions and one of the best beer gardens on the Northwest Side. Go for the music, stay for the roast.",
+   "lat": 41.94452,
+   "lng": -87.70552,
+   "addr": "3471 North Elston Avenue",
+   "site": "https://www.chiefoneillspub.com/",
+   "hours": "Mo-Th 16:00-02:00; Fr 11:00-02:00; Sa 11:00-03:00; Su 10:00-02:00",
+   "hoursChecked": null,
+   "osm": "node/2712290135",
+   "src": "osm"
+  },
+  {
+   "id": "ciccio-mio",
+   "name": "Ciccio Mio",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Old-world Italian",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A candlelit time machine to 1940s Italian-American dining. The kind of room that makes you order a second negroni.",
+   "lat": 41.88928,
+   "lng": -87.63523,
+   "addr": "226 West Kinzie Street",
+   "site": "https://cicciomio.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6300565807",
+   "src": "osm"
+  },
+  {
+   "id": "cindys",
+   "name": "Cindy's",
+   "nameOsm": "Cindy’s",
+   "hood": "The Loop",
+   "geom": "Loop",
+   "cat": "Rooftop bar",
+   "vibes": [
+    "chill",
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "view",
+    "date",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "warm",
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A glasshouse rooftop staring straight down at the Bean and Millennium Park. Sunset here converts even the rooftop-skeptical.",
+   "lat": 41.88164,
+   "lng": -87.6248,
+   "addr": null,
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/8561339618",
+   "src": "osm"
+  },
+  {
+   "id": "clark-street-ale",
+   "name": "Clark Street Ale House",
+   "nameOsm": "Clark Street Ale House - River North",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Beer tavern",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A 'STOP & DRINK' sign, midwestern taps, and a beer garden hiding out back. River North's least pretentious room by a mile.",
+   "lat": 41.89608,
+   "lng": -87.6315,
+   "addr": "742 North Clark Street",
+   "site": "https://clarkstreetalehouse.com/",
+   "hours": "Mo-Fr 16:00-04:00; Sa 11:00-05:00; Su 11:00-04:00",
+   "hoursChecked": "2023-08-03",
+   "osm": "node/5458017720",
+   "src": "osm"
+  },
+  {
+   "id": "club-lucky",
+   "name": "Club Lucky",
+   "hood": "Bucktown",
+   "geom": "Wicker Park",
+   "cat": "Old-school Italian",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Red sauce, martinis, and a 1940s supper-club room that hasn't changed because it never needed to.",
+   "lat": 41.91248,
+   "lng": -87.67371,
+   "addr": "1824 West Wabansia Avenue",
+   "site": "https://www.clubluckychicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/2324557958",
+   "src": "osm"
+  },
+  {
+   "id": "coles",
+   "name": "Cole's",
+   "nameOsm": "Cole's Bar",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Bar & venue",
+   "vibes": [
+    "chill",
+    "show"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Free live music and comedy in the back, cheap beer up front. The lowest-stakes great night out in the neighborhood.",
+   "lat": 41.92364,
+   "lng": -87.6988,
+   "addr": "2338 North Milwaukee Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/1262346097",
+   "src": "osm"
+  },
+  {
+   "id": "constellation",
+   "name": "Constellation",
+   "nameOsm": "Constellation Club",
+   "hood": "Roscoe Village",
+   "geom": "North Center",
+   "cat": "Experimental music venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A listening room for jazz and new music where the audience actually listens. Sit close; let it get strange.",
+   "lat": 41.9381,
+   "lng": -87.68764,
+   "addr": "3111 North Western Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": "2023-07-28",
+   "osm": "way/209457376",
+   "src": "osm"
+  },
+  {
+   "id": "coq-dor",
+   "name": "Coq d'Or",
+   "hood": "Gold Coast",
+   "geom": "Streeterville",
+   "cat": "Hotel bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "classic",
+    "date",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The Drake's wood-paneled bar, pouring since the day after Prohibition ended. Order a Manhattan and let the leather booth do its work.",
+   "lat": 41.9002,
+   "lng": -87.62331,
+   "addr": "140 East Walton Place",
+   "site": "https://www.thedrakehotel.com/dining/coq-d-or/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/12101462993",
+   "src": "osm"
+  },
+  {
+   "id": "court-theatre",
+   "name": "Court Theatre",
+   "hood": "Hyde Park",
+   "geom": "Hyde Park",
+   "cat": "Classic theater",
+   "vibes": [
+    "show"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Tony-winning classic theater on the UChicago campus — Greek tragedy to August Wilson, staged with rigor. Ideas-first date night.",
+   "lat": 41.79398,
+   "lng": -87.60086,
+   "addr": "5535 South Ellis Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/152586234",
+   "src": "osm"
+  },
+  {
+   "id": "cso",
+   "name": "Symphony Center",
+   "hood": "The Loop",
+   "geom": "Loop",
+   "cat": "Symphony hall",
+   "vibes": [
+    "show"
+   ],
+   "energy": 1,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "One of the world's great orchestras, and cheap gallery seats if you're flexible. Dress up a little; let the hall do the rest.",
+   "lat": 41.87898,
+   "lng": -87.6251,
+   "addr": "220 South Michigan Avenue",
+   "site": "https://cso.org/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/145493030",
+   "src": "osm"
+  },
+  {
+   "id": "cultural-center",
+   "name": "Chicago Cultural Center",
+   "hood": "The Loop",
+   "geom": "Loop",
+   "cat": "Free culture palace",
+   "vibes": [
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date",
+    "solo",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Free exhibitions under the largest Tiffany dome on earth. The most beautiful zero-dollar hour in Chicago — go before it closes at night.",
+   "lat": 41.88388,
+   "lng": -87.62499,
+   "addr": "78 East Washington Street",
+   "site": "https://www.chicago.gov/city/en/depts/dca/supp_info/chicago_culturalcenter.html",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "relation/15899437",
+   "src": "osm"
+  },
+  {
+   "id": "daisies",
+   "name": "Daisies",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Pasta & produce",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Midwest vegetables and handmade pasta treated like the main event. Gentle, pretty, quietly excellent.",
+   "lat": 41.92451,
+   "lng": -87.69952,
+   "addr": "2375 North Milwaukee Avenue",
+   "site": "https://www.daisieschicago.com",
+   "hours": null,
+   "hoursChecked": "2026-05-17",
+   "osm": "node/6324391369",
+   "src": "osm"
+  },
+  {
+   "id": "davenports",
+   "name": "Davenport's Piano Bar",
+   "nameOsm": "Davenport's",
+   "hood": "Wicker Park",
+   "geom": "Wicker Park",
+   "cat": "Cabaret",
+   "vibes": [
+    "show",
+    "new",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A proper cabaret room where singers work the standards and the piano bar takes requests. Delightfully out of step with everything.",
+   "lat": 41.90714,
+   "lng": -87.67191,
+   "addr": "1383 North Milwaukee Avenue",
+   "site": "https://www.davenportspianobar.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/209853578",
+   "src": "osm"
+  },
+  {
+   "id": "davis-theater",
+   "name": "Davis Theater",
+   "hood": "Lincoln Square",
+   "geom": "Lincoln Square",
+   "cat": "Neighborhood cinema",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A century-old neighborhood cinema with a full bar attached. Movie, then a nightcap next door without moving the car.",
+   "lat": 41.9654,
+   "lng": -87.68682,
+   "addr": "4614 North Lincoln Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "way/209477923",
+   "src": "osm"
+  },
+  {
+   "id": "demera",
+   "name": "Demera",
+   "nameOsm": "Demera Ethiopian Restaurant",
+   "hood": "Uptown",
+   "geom": "Uptown",
+   "cat": "Ethiopian",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Injera, honey wine, and a corner view of the Uptown marquees. Eating with your hands is the icebreaker.",
+   "lat": 41.96915,
+   "lng": -87.65946,
+   "addr": "4801 North Broadway",
+   "site": "https://www.demerachicago.com/",
+   "hours": "Mo-Th 16:00-21:00; Fr-Sa 11:30-22:00; Su 11:30-21:00",
+   "hoursChecked": "2026-01-24",
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/5347947503",
+   "src": "osm"
+  },
+  {
+   "id": "dovetail",
+   "name": "Dovetail Brewery",
+   "hood": "North Center",
+   "geom": "North Center",
+   "cat": "Lager hall",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "classic",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Continental lagers brewed the slow old-world way, poured in a hall that feels lifted from Bavaria. The Maibock season is an event.",
+   "lat": 41.95616,
+   "lng": -87.67439,
+   "addr": "1800 West Belle Plaine Avenue",
+   "site": "https://dovetailbrewery.com/",
+   "hours": "Tu 14:00-22:00; We 14:00-22:00; Th 14:00-22:00; Fr 12:00-23:00; Sa 11:00-23:00; Su 10:00-20:00",
+   "hoursChecked": null,
+   "osm": "node/4560958768",
+   "src": "osm"
+  },
+  {
+   "id": "duck-inn",
+   "name": "The Duck Inn",
+   "hood": "Bridgeport",
+   "geom": "Bridgeport",
+   "cat": "Tavern dining",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A working-class corner turned duck-fat-everything tavern. The rotisserie duck for two is the neighborhood's best date order.",
+   "lat": 41.84442,
+   "lng": -87.66014,
+   "addr": "2701 South Eleanor Street",
+   "site": "https://www.theduckinnchicago.com/",
+   "hours": "We-Su 17:00-21:30",
+   "hoursChecked": null,
+   "tips": [
+    "Patio"
+   ],
+   "osm": "way/959713205",
+   "src": "osm"
+  },
+  {
+   "id": "east-room",
+   "name": "East Room",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "DJ bar",
+   "vibes": [
+    "dance"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "late",
+    "cheap",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "No sign, no cover most nights, DJs until very late. The dance-floor answer when you didn't plan on dancing.",
+   "lat": 41.92387,
+   "lng": -87.69916,
+   "addr": "2352-2358 N Milwaukee Ave 2",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "src": "chi-license"
+  },
+  {
+   "id": "emporium-wicker",
+   "name": "Emporium Arcade Bar",
+   "hood": "Wicker Park",
+   "geom": "Wicker Park",
+   "cat": "Arcade bar",
+   "vibes": [
+    "new",
+    "active"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Craft beer and a wall of vintage cabinets. Settle it over Street Fighter II like adults.",
+   "lat": 41.90645,
+   "lng": -87.67185,
+   "addr": "1366 North Milwaukee Avenue",
+   "site": "https://emporiumchicago.com/",
+   "hours": "Mo-Th 17:00-02:00; Fr 15:00-02:00; Sa 12:00-03:00; Su 12:00-02:00",
+   "hoursChecked": null,
+   "osm": "way/209853549",
+   "src": "osm"
+  },
+  {
+   "id": "empty-bottle",
+   "name": "Empty Bottle",
+   "nameOsm": "The Empty Bottle",
+   "hood": "Ukrainian Village",
+   "geom": "Ukrainian Village",
+   "cat": "Rock club",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Scrappy, beloved, and booking the best weird rock in town for thirty years. Free Mondays are a gateway drug.",
+   "lat": 41.90048,
+   "lng": -87.68665,
+   "addr": "1035 North Western Avenue",
+   "site": "https://www.emptybottle.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6315209496",
+   "src": "osm"
+  },
+  {
+   "id": "epiphany",
+   "name": "Epiphany Center for the Arts",
+   "hood": "West Loop",
+   "geom": "West Loop",
+   "cat": "Church-turned-venue",
+   "vibes": [
+    "show",
+    "new"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Concerts and art shows inside a restored 1885 church — stained glass, stone arches, full bar. The room upstages most headliners.",
+   "lat": 41.87872,
+   "lng": -87.66625,
+   "addr": "201-207 South Ashland Avenue",
+   "site": "https://epiphanychi.com/ent-home/",
+   "hours": null,
+   "hoursChecked": "2026-05-27",
+   "osm": "way/210281092",
+   "src": "osm"
+  },
+  {
+   "id": "estereo",
+   "name": "Estereo",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Latin bar",
+   "vibes": [
+    "dance",
+    "chill"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "late",
+    "group",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "All-day Latin American bar that turns into a low-key dance floor after dark. Agave, cumbia, windows open in summer.",
+   "lat": 41.9257,
+   "lng": -87.70218,
+   "addr": "2450 North Milwaukee Avenue",
+   "site": "https://www.estereochicago.com",
+   "hours": "Mo 17:00-02:00; Tu-Su 12:00-02:00",
+   "hoursChecked": "2026-05-17",
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "node/4354344660",
+   "src": "osm"
+  },
+  {
+   "id": "exchequer",
+   "name": "Exchequer Restaurant & Pub",
+   "hood": "The Loop",
+   "geom": "Loop",
+   "cat": "Historic pub & pizza",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Deep dish and ribs in a former Capone speakeasy, walls crammed with a century of memorabilia. Pre-theater fuel with a wink.",
+   "lat": 41.87875,
+   "lng": -87.62632,
+   "addr": "226 South Wabash Avenue",
+   "site": "https://www.exchequerpub.com",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/9093294882",
+   "src": "osm"
+  },
+  {
+   "id": "fireside-bowl",
+   "name": "Fireside Bowl",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Bowling alley",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A punk-rock bowling alley that survived every era of the neighborhood. Scuffed lanes, loud speakers, perfect.",
+   "lat": 41.92517,
+   "lng": -87.6945,
+   "addr": "2648 West Fullerton Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/209455247",
+   "src": "osm"
+  },
+  {
+   "id": "friendship",
+   "name": "The Friendship",
+   "nameOsm": "Friendship Chinese",
+   "hood": "Logan Square",
+   "geom": "Avondale",
+   "cat": "Supper club & jazz",
+   "vibes": [
+    "dinner",
+    "show",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A modern supper club with jazz combos and a menu that respects the classics. Dinner-and-a-show without leaving the room.",
+   "lat": 41.93258,
+   "lng": -87.71343,
+   "addr": null,
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/3575010907",
+   "src": "osm"
+  },
+  {
+   "id": "garden-of-phoenix",
+   "name": "Garden of the Phoenix",
+   "hood": "Hyde Park",
+   "geom": "Jackson Park",
+   "cat": "Japanese garden",
+   "vibes": [
+    "chill",
+    "new",
+    "active"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A Japanese garden on a Jackson Park island, with Yoko Ono's lotus sculpture rising by the water. Serenity hiding behind the museum.",
+   "lat": 41.78678,
+   "lng": -87.58334,
+   "addr": null,
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/4939073083",
+   "src": "osm"
+  },
+  {
+   "id": "garfield-conservatory",
+   "name": "Garfield Park Conservatory",
+   "nameOsm": "Garfield Park",
+   "hood": "East Garfield Park",
+   "geom": "Garfield Park",
+   "cat": "Glass garden",
+   "vibes": [
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Two acres of jungle under glass — 75 degrees and green when the city is grey. February's secret weapon; check evening event nights.",
+   "lat": 41.88131,
+   "lng": -87.71601,
+   "addr": "100 North Central Park Drive",
+   "site": "https://www.chicagoparkdistrict.com/parks-facilities/garfield-james-park",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "relation/20397274",
+   "src": "osm"
+  },
+  {
+   "id": "gejas",
+   "name": "Geja's Cafe",
+   "nameOsm": "Geja’s Cafe",
+   "hood": "Lincoln Park",
+   "geom": "Lincoln Park",
+   "cat": "Fondue den",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 1,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Candlelit fondue and live flamenco guitar since the '60s. Corny? Absolutely. Also the most reliable romance in the city.",
+   "lat": 41.91859,
+   "lng": -87.63801,
+   "addr": "340 West Armitage Avenue",
+   "site": "https://gejascafe.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6291773197",
+   "src": "osm"
+  },
+  {
+   "id": "gene-siskel",
+   "name": "Gene Siskel Film Center",
+   "hood": "The Loop",
+   "geom": "Loop",
+   "cat": "Art-house cinema",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Restorations, premieres, and films you won't stream for years. The programming does the deciding for you.",
+   "lat": 41.88495,
+   "lng": -87.62817,
+   "addr": "164 North State Street",
+   "site": "https://www.siskelfilmcenter.org/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/1586385054",
+   "src": "osm"
+  },
+  {
+   "id": "giant",
+   "name": "Giant",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "New American",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Tiny room, huge flavors, zero pretension. The kind of place you leave already planning the next visit.",
+   "lat": 41.91729,
+   "lng": -87.70748,
+   "addr": "3209 West Armitage Avenue",
+   "site": "https://www.giantrestaurant.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/4072448988",
+   "src": "osm"
+  },
+  {
+   "id": "gilt-bar",
+   "name": "Gilt Bar",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Dark tavern",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Dark wood, dim lamps, ricotta gnocchi you'll dream about. River North without the River North energy.",
+   "lat": 41.88927,
+   "lng": -87.63534,
+   "addr": "230 West Kinzie Street",
+   "site": "https://www.giltbarchicago.com/",
+   "hours": "Mo-Th 17:00-23:00; Fr-Sa 17:00-00:00; Su 17:00-22:00",
+   "hoursChecked": null,
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/5457750245",
+   "src": "osm"
+  },
+  {
+   "id": "girl-and-the-goat",
+   "name": "Girl & the Goat",
+   "nameOsm": "Girl & The Goat",
+   "hood": "West Loop",
+   "geom": "West Loop",
+   "cat": "New American",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "group",
+    "splurge",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Still loud, still fun, still worth it after all these years. Share everything; fight over the pig face.",
+   "lat": 41.88411,
+   "lng": -87.64794,
+   "addr": "809 West Randolph Street",
+   "site": "https://girlandthegoat.com/",
+   "hours": "Su-Th 16:30-23:00; Fr-Sa 16:30-00:00",
+   "hoursChecked": "2025-01-07",
+   "osm": "way/1504713099",
+   "src": "osm"
+  },
+  {
+   "id": "gman-tavern",
+   "name": "GMan Tavern",
+   "nameOsm": "The Ginger Man Tavern",
+   "hood": "Lakeview",
+   "geom": "Wrigleyville",
+   "cat": "Rock bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Metro's kid-sibling bar: good jukebox, pinball, pre- and post-show energy without the ticket.",
+   "lat": 41.9501,
+   "lng": -87.65909,
+   "addr": "3740 North Clark Street",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/370884874",
+   "src": "osm"
+  },
+  {
+   "id": "golden-dagger",
+   "name": "Golden Dagger",
+   "nameOsm": "The Golden Dagger",
+   "hood": "Lincoln Park",
+   "geom": "Lincoln Park",
+   "cat": "Indie venue",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A little indie listening room with coffee, cocktails, and bands on the way up. Low cover, high hit rate.",
+   "lat": 41.92685,
+   "lng": -87.64857,
+   "addr": "2447 North Halsted Street",
+   "site": "https://goldendagger.com",
+   "hours": "Su-We 08:00-00:00; Th-Sa 08:00-02:00",
+   "hoursChecked": null,
+   "osm": "way/210321451",
+   "src": "osm"
+  },
+  {
+   "id": "green-door",
+   "name": "Green Door Tavern",
+   "nameOsm": "The Green Door Tavern",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Historic tavern",
+   "vibes": [
+    "chill",
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A crooked 1872 building that's been pouring since Prohibition (ask about the speakeasy downstairs). Burgers and history in equal measure.",
+   "lat": 41.89462,
+   "lng": -87.6374,
+   "addr": "678 North Orleans Street",
+   "site": "https://www.greendoorchicago.com/",
+   "hours": "Mo-Fr 11:30-02:00; Sa 11:30-03:00; Su 12:00-21:00",
+   "hoursChecked": "2024-11-09",
+   "osm": "way/210680201",
+   "src": "osm"
+  },
+  {
+   "id": "green-mill",
+   "name": "Green Mill",
+   "nameOsm": "Green Mill Cocktail Lounge",
+   "hood": "Uptown",
+   "geom": "Uptown",
+   "cat": "Jazz club",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Velvet booths, a century of jazz, and a no-phones glare that keeps it holy. The single most Chicago room in Chicago — bring cash.",
+   "lat": 41.96918,
+   "lng": -87.65989,
+   "addr": "4802 North Broadway",
+   "site": "https://www.greenmilljazz.com/",
+   "hours": null,
+   "hoursChecked": "2025-01-17",
+   "tips": [
+    "Cash only"
+   ],
+   "osm": "node/1370035488",
+   "src": "osm"
+  },
+  {
+   "id": "haisous",
+   "name": "HaiSous",
+   "nameOsm": "HaiSous Vietnamese Kitchen",
+   "hood": "Pilsen",
+   "geom": "Lower West Side",
+   "cat": "Vietnamese",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Vietnamese cooking with fire and finesse — clay-pot fish, wings you'll defend with your life. Pilsen's proudest dining room.",
+   "lat": 41.85788,
+   "lng": -87.65341,
+   "addr": "1800 South Carpenter Street",
+   "site": "https://www.haisous.com",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/5168246245",
+   "src": "osm"
+  },
+  {
+   "id": "half-acre",
+   "name": "Half Acre Beer Company",
+   "nameOsm": "Half Acre Beer Co. Balmoral Tap Room & Garden",
+   "hood": "Andersonville",
+   "geom": "Lincoln Square",
+   "cat": "Brewery taproom",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "The Daisy Cutter mothership — a big, friendly Balmoral taproom with a garden out back. Where beer-nerd and neighborhood-regular overlap.",
+   "lat": 41.97993,
+   "lng": -87.6815,
+   "addr": "2050 West Balmoral Avenue",
+   "site": "https://www.halfacrebeer.com/balmoral-brewery/",
+   "hours": "We,Th 15:00-21:00; Fr,Sa 11:00-22:00; Su 11:00-19:00",
+   "hoursChecked": null,
+   "osm": "node/5143534457",
+   "src": "osm"
+  },
+  {
+   "id": "hideout",
+   "name": "The Hideout",
+   "hood": "Noble Square",
+   "geom": "West Town",
+   "cat": "Legendary shack",
+   "vibes": [
+    "show",
+    "chill",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "weird",
+    "classic",
+    "date",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A century-old balloon-frame house hiding between factories, booking country, poetry, and everything odd and wonderful. Chicago's clubhouse.",
+   "lat": 41.91392,
+   "lng": -87.66264,
+   "addr": "1354 West Wabansia Avenue",
+   "site": "https://www.hideoutchicago.com/",
+   "hours": null,
+   "hoursChecked": "2026-04-23",
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/6315597292",
+   "src": "osm"
+  },
+  {
+   "id": "honey-butter",
+   "name": "Honey Butter Fried Chicken",
+   "hood": "Avondale",
+   "geom": "Avondale",
+   "cat": "Fried chicken",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "cheap",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Fried chicken with corn muffins and zero irony. Counter service, patio out back, everyone leaves happy.",
+   "lat": 41.9426,
+   "lng": -87.70275,
+   "addr": "3361 North Elston Avenue",
+   "site": "https://www.honeybutter.com/",
+   "hours": "Mo-Th 11:00-21:00; Sa 10:00-22:00; Fr 11:00-22:00; Su 10:00-18:00",
+   "hoursChecked": "2025-06-13",
+   "tips": [
+    "Patio",
+    "Wheelchair accessible"
+   ],
+   "osm": "way/209465036",
+   "src": "osm"
+  },
+  {
+   "id": "hopleaf",
+   "name": "Hopleaf",
+   "nameOsm": "Hopleaf Bar",
+   "hood": "Andersonville",
+   "geom": "Uptown",
+   "cat": "Belgian tavern",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Mussels, frites, and a Belgian beer list you could study for years. The back room is one of the city's great winter dens.",
+   "lat": 41.97582,
+   "lng": -87.66855,
+   "addr": "5148 North Clark Street",
+   "site": "http://www.hopleaf.com",
+   "hours": "Mo-Th 12:00-23:00; Fr-Sa 12:00-00:00; Su 12:00-22:00",
+   "hoursChecked": null,
+   "osm": "node/1370062308",
+   "src": "osm"
+  },
+  {
+   "id": "humboldt-boathouse",
+   "name": "Humboldt Park Boathouse",
+   "nameOsm": "Humboldt Park Boathouse Pavilion",
+   "hood": "Humboldt Park",
+   "geom": "Humboldt Park",
+   "cat": "Lagoon & boathouse",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "view"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A Prairie-style boathouse on a lagoon with skyline peeking over the trees. Paddleboats in summer, postcard light at dusk.",
+   "lat": 41.90562,
+   "lng": -87.70074,
+   "addr": "1301 North Humboldt Drive",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/209392771",
+   "src": "osm"
+  },
+  {
+   "id": "hungry-brain",
+   "name": "Hungry Brain",
+   "hood": "Roscoe Village",
+   "geom": "North Center",
+   "cat": "Jazz bar",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "weird",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Thrift-store couches and some of the most adventurous jazz in the city. Sunday improv sets are a rite of passage.",
+   "lat": 41.93932,
+   "lng": -87.68643,
+   "addr": "2319 West Belmont Avenue",
+   "site": "https://hungrybrainchicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6297771040",
+   "src": "osm"
+  },
+  {
+   "id": "ina-mae",
+   "name": "Ina Mae Tavern",
+   "nameOsm": "Ina Mae Tavern & Packaged Goods",
+   "hood": "Wicker Park",
+   "geom": "Wicker Park",
+   "cat": "New Orleans tavern",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Po'boys and hurricanes done with real care. The closest Chicago gets to a French Quarter porch.",
+   "lat": 41.90766,
+   "lng": -87.67219,
+   "addr": "1415 North Wood Street",
+   "site": "https://www.inamaetavern.com/",
+   "hours": null,
+   "hoursChecked": "2025-12-06",
+   "tips": [
+    "Patio"
+   ],
+   "osm": "way/209864002",
+   "src": "osm"
+  },
+  {
+   "id": "italian-village",
+   "name": "Italian Village",
+   "nameOsm": "Italian VIllage",
+   "hood": "The Loop",
+   "geom": "Loop",
+   "cat": "Vintage Italian",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Upstairs at the Village: twinkling lights, private booths, and red sauce served since 1927. Kitsch aged into genuine romance.",
+   "lat": 41.88036,
+   "lng": -87.63015,
+   "addr": "71 West Monroe Street",
+   "site": "https://italianvillage-chicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/147482998",
+   "src": "osm"
+  },
+  {
+   "id": "jazz-showcase",
+   "name": "Jazz Showcase",
+   "hood": "South Loop",
+   "geom": "Printers Row",
+   "cat": "Jazz room",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A listening room in the old Dearborn Station where the music is the whole point. Seventy years of serious bookings, zero pretense.",
+   "lat": 41.87175,
+   "lng": -87.62879,
+   "addr": "806 South Plymouth Court",
+   "site": "https://www.jazzshowcase.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/4731347921",
+   "src": "osm"
+  },
+  {
+   "id": "jims-original",
+   "name": "Jim's Original",
+   "hood": "Near West Side",
+   "geom": "Little Italy, UIC",
+   "cat": "Late-night stand",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "late",
+    "cheap",
+    "classic",
+    "weird"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Polish sausage, grilled onions, and free hot peppers at 3 a.m., same as it's been since Maxwell Street days. The city's great equalizer.",
+   "lat": 41.8657,
+   "lng": -87.64523,
+   "addr": "1250 South Union Avenue",
+   "site": "http://www.jimsoriginal.com/",
+   "hours": "Mo-Su 06:00-01:00",
+   "hoursChecked": null,
+   "osm": "way/441457240",
+   "src": "osm"
+  },
+  {
+   "id": "kasama",
+   "name": "Kasama",
+   "hood": "East Village",
+   "geom": "East Village",
+   "cat": "Filipino",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Filipino cooking that runs from breakfast pastries to a full tasting menu. One of the most exciting kitchens in the city, full stop.",
+   "lat": 41.8997,
+   "lng": -87.67566,
+   "addr": "1001 North Winchester Avenue",
+   "site": "https://www.kasamachicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/209846182",
+   "src": "osm"
+  },
+  {
+   "id": "kie-gol-lanee",
+   "name": "Kie-Gol-Lanee",
+   "hood": "Uptown",
+   "geom": "Uptown",
+   "cat": "Oaxacan",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Oaxacan moles and tlayudas from a family kitchen that deserves triple the fame. Order the mole negro and go quiet for a minute.",
+   "lat": 41.97358,
+   "lng": -87.65516,
+   "addr": "5004 North Sheridan Road",
+   "site": "https://kiegol.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/12082130642",
+   "src": "osm"
+  },
+  {
+   "id": "kimski",
+   "name": "Kimski",
+   "hood": "Bridgeport",
+   "geom": "Bridgeport",
+   "cat": "Korean-Polish",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "cheap",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Korean-Polish street food from the Maria's family — kimchi on your pierogi and it works. Only in Bridgeport.",
+   "lat": 41.8381,
+   "lng": -87.651,
+   "addr": "960 West 31st Street",
+   "site": null,
+   "hours": null,
+   "hoursChecked": "2025-05-16",
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/4642697042",
+   "src": "osm"
+  },
+  {
+   "id": "kingston-mines",
+   "name": "Kingston Mines",
+   "hood": "Lincoln Park",
+   "geom": "Sheffield & DePaul",
+   "cat": "Blues club",
+   "vibes": [
+    "show",
+    "dance"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "late",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Two stages of sweaty, no-frills blues until deep into the night. Tourists come, locals stay — the music doesn't care.",
+   "lat": 41.92871,
+   "lng": -87.64921,
+   "addr": "2548 North Halsted Street",
+   "site": "https://kingstonmines.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/210321648",
+   "src": "osm"
+  },
+  {
+   "id": "kumas-corner",
+   "name": "Kuma's Corner",
+   "nameOsm": "Kuma’s Corner - Belmont",
+   "hood": "Avondale",
+   "geom": "Avondale",
+   "cat": "Metal burgers",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 5,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "weird",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Burgers named after metal bands, served loud. Not a quiet date — that's the point.",
+   "lat": 41.93951,
+   "lng": -87.70044,
+   "addr": "2900 West Belmont Avenue",
+   "site": "https://kumascorner.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/392722753",
+   "src": "osm"
+  },
+  {
+   "id": "la-chaparrita",
+   "name": "La Chaparrita",
+   "hood": "Little Village",
+   "geom": "Little Village",
+   "cat": "Taqueria",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A grocery-store taqueria slinging some of the city's best suadero and tripas. Trust the salsa bar with your life.",
+   "lat": 41.84629,
+   "lng": -87.70156,
+   "addr": "2500 S Whipple St 1",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "src": "chi-license"
+  },
+  {
+   "id": "lao-peng-you",
+   "name": "Lao Peng You",
+   "nameOsm": "Lao Peng You 老朋友",
+   "hood": "West Town",
+   "geom": "Ukrainian Village",
+   "cat": "Noodle shop",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Hand-pulled noodles and dumplings from two brothers who treat dough like a craft. Small menu, no wrong answers.",
+   "lat": 41.8961,
+   "lng": -87.67793,
+   "addr": "2020 West Chicago Avenue",
+   "site": "https://www.oldfriendchicago.com",
+   "hours": "Th-Su 11:00-21:00",
+   "hoursChecked": null,
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/8094461261",
+   "src": "osm"
+  },
+  {
+   "id": "le-bouchon",
+   "name": "Le Bouchon",
+   "hood": "Bucktown",
+   "geom": "Bucktown",
+   "cat": "French bistro",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Twenty seats of unapologetic French bistro — duck, candlelight, elbows almost touching. Romance without the fuss.",
+   "lat": 41.91757,
+   "lng": -87.67776,
+   "addr": "1958 North Damen Avenue",
+   "site": "http://www.lebouchonofchicago.com/",
+   "hours": null,
+   "hoursChecked": "2024-04-14",
+   "osm": "node/1699464583",
+   "src": "osm"
+  },
+  {
+   "id": "lems-bbq",
+   "name": "Lem's Bar-B-Q",
+   "hood": "Chatham",
+   "geom": "Grand Crossing",
+   "cat": "BBQ shack",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "classic",
+    "cheap"
+   ],
+   "indoor": false,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Aquarium-smoker rib tips and hot links that define South Side barbecue. Takeout only — eat on the hood of the car like you're supposed to.",
+   "lat": 41.75821,
+   "lng": -87.61764,
+   "addr": "311 East 75th Street",
+   "site": "http://www.lemsbarbq.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/210862949",
+   "src": "osm"
+  },
+  {
+   "id": "lily-pool",
+   "name": "Alfred Caldwell Lily Pool",
+   "hood": "Lincoln Park",
+   "geom": "Lincoln Park",
+   "cat": "Hidden garden",
+   "vibes": [
+    "chill",
+    "new",
+    "active"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A Prairie School stone lagoon hiding in plain sight off Fullerton. Most Chicagoans have never found it; now you have.",
+   "lat": 41.92486,
+   "lng": -87.63404,
+   "addr": "125 West Fullerton Parkway",
+   "site": "https://lincolnparkconservancy.org/projects/alfred-caldwell-lily-pool/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/23986661",
+   "src": "osm"
+  },
+  {
+   "id": "lincoln-conservatory",
+   "name": "Lincoln Park Conservatory",
+   "hood": "Lincoln Park",
+   "geom": "Lincoln Park",
+   "cat": "Victorian glasshouse",
+   "vibes": [
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A Victorian fern paradise next to the free zoo. Small, warm, and quietly transporting — pair with a lakefront walk.",
+   "lat": 41.9244,
+   "lng": -87.63505,
+   "addr": "2391 North Stockton Drive",
+   "site": "https://www.chicagoparkdistrict.com/parks-facilities/lincoln-park-conservatory/",
+   "hours": "09:00-17:00; PH off",
+   "hoursChecked": null,
+   "osm": "way/23986733",
+   "src": "osm"
+  },
+  {
+   "id": "lincoln-hall",
+   "name": "Lincoln Hall",
+   "hood": "Lincoln Park",
+   "geom": "Sheffield & DePaul",
+   "cat": "Music venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Arguably the best-sounding mid-size room in the city. If a band you half-know is playing, that's the plan.",
+   "lat": 41.92592,
+   "lng": -87.64981,
+   "addr": "2424 North Lincoln Avenue",
+   "site": "https://www.lh-st.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/210321368",
+   "src": "osm"
+  },
+  {
+   "id": "lincoln-square-chill",
+   "name": "The Book Cellar",
+   "hood": "Lincoln Square",
+   "geom": "Lincoln Square",
+   "cat": "Bookstore & wine",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "solo",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A bookstore that pours wine while you browse. Lincoln Square's coziest first-stop before dinner on Giddings Plaza.",
+   "lat": 41.96763,
+   "lng": -87.68804,
+   "addr": "4736-4738 North Lincoln Avenue",
+   "site": "https://www.bookcellarinc.com/",
+   "hours": "Mo-Fr 10:00-20:00; Sa 10:00-18:00; Su 10:00-16:00",
+   "hoursChecked": null,
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "node/12292475117",
+   "src": "osm"
+  },
+  {
+   "id": "logan-arcade",
+   "name": "Logan Arcade",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Arcade bar",
+   "vibes": [
+    "new",
+    "active"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "weird",
+    "cheap",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Row after row of lovingly maintained pinball. Bring quarters and a competitive streak; lose track of two hours.",
+   "lat": 41.92522,
+   "lng": -87.68813,
+   "addr": "2410 West Fullerton Avenue",
+   "site": null,
+   "hours": "Mo-Fr 00:00-02:00, 18:00-24:00; Sa 00:00-02:00, 15:00-24:00; Su 00:00-03:00, 15:00-24:00",
+   "hoursChecked": null,
+   "osm": "way/209454070",
+   "src": "osm"
+  },
+  {
+   "id": "longman-eagle",
+   "name": "Longman & Eagle",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Whiskey inn",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A roadside inn with a whiskey wall and serious cooking. Walk-ins only — come hungry, stay for one more pour.",
+   "lat": 41.93006,
+   "lng": -87.70724,
+   "addr": "2657 North Kedzie Avenue",
+   "site": "https://www.longmanandeagle.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6320612692",
+   "src": "osm"
+  },
+  {
+   "id": "loyalist",
+   "name": "The Loyalist",
+   "hood": "West Loop",
+   "geom": "West Loop",
+   "cat": "Basement bistro",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "The clubby downstairs sibling of Smyth — dim, buzzy, and home to a burger people argue about nationally. Late seatings reward the patient.",
+   "lat": 41.88497,
+   "lng": -87.66041,
+   "addr": "177 North Ada Street",
+   "site": "https://www.smythandtheloyalist.com/",
+   "hours": "Mo-Sa 17:00-22:00; Su 10:00-14:00",
+   "hoursChecked": null,
+   "osm": "node/5460625911",
+   "src": "osm"
+  },
+  {
+   "id": "lula-cafe",
+   "name": "Lula Cafe",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Farm-to-table dining",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The neighborhood farm-to-table that started it all — seasonal, unhurried, and still the safest great-night bet in Logan Square.",
+   "lat": 41.92769,
+   "lng": -87.70681,
+   "addr": "2537 North Kedzie Boulevard",
+   "site": "https://www.lulacafe.com/",
+   "hours": "Mo,We-Su 09:00-15:00,16:30-22:00",
+   "hoursChecked": null,
+   "tips": [
+    "Patio",
+    "Wheelchair accessible"
+   ],
+   "osm": "node/1700855300",
+   "src": "osm"
+  },
+  {
+   "id": "maggie-daley",
+   "name": "Maggie Daley Park",
+   "hood": "The Loop",
+   "geom": "Millenium Park",
+   "cat": "Park & skating ribbon",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "winter",
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "In winter the skating ribbon snakes between the towers — skating a loop through downtown light is peak Chicago romance.",
+   "lat": 41.88272,
+   "lng": -87.61761,
+   "addr": "337 East Randolph Street",
+   "site": "https://maggiedaleypark.com/",
+   "hours": "Mo-Su 06:00-22:00",
+   "hoursChecked": null,
+   "osm": "way/224231352",
+   "src": "osm"
+  },
+  {
+   "id": "map-room",
+   "name": "Map Room",
+   "nameOsm": "The Map Room",
+   "hood": "Bucktown",
+   "geom": "Bucktown",
+   "cat": "Beer bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "solo",
+    "cheap",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A travelers' tavern papered in maps with one of the city's great beer lists. Come early, claim the corner table.",
+   "lat": 41.91759,
+   "lng": -87.67982,
+   "addr": "1949 North Hoyne Avenue",
+   "site": "https://www.maproom.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6315663847",
+   "src": "osm"
+  },
+  {
+   "id": "marias-bridgeport",
+   "name": "Maria's Packaged Goods & Community Bar",
+   "hood": "Bridgeport",
+   "geom": "Bridgeport",
+   "cat": "Slashie",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A liquor-store-front, bar-in-back 'slashie' that became the South Side's cultural embassy. Start or end every Bridgeport night here.",
+   "lat": 41.83813,
+   "lng": -87.65114,
+   "addr": "960 West 31st Street",
+   "site": "https://community-bar.com/",
+   "hours": "Mo 17:00-24:00; Tu-We 15:00-24:00; Th-Fr 15:00-02:00; Sa 13:00-02:00; Su 13:00-24:00",
+   "hoursChecked": "2025-05-16",
+   "osm": "node/4642697041",
+   "src": "osm"
+  },
+  {
+   "id": "mario-italian-lemonade",
+   "name": "Mario's Italian Lemonade",
+   "hood": "Little Italy",
+   "geom": "Little Italy, UIC",
+   "cat": "Italian ice stand",
+   "vibes": [
+    "new",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "date"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "summer"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A summer-only lemonade shack that's been an institution since 1954. The line is part of the ritual; the watermelon ice is the reward.",
+   "lat": 41.86958,
+   "lng": -87.65373,
+   "addr": "1068 West Taylor Street",
+   "site": "http://www.marioslemonade.com/",
+   "hours": "10:00-23:00",
+   "hoursChecked": "2025-09-15",
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "way/1294780459",
+   "src": "osm"
+  },
+  {
+   "id": "marty-martini",
+   "name": "Marty's Martini Bar",
+   "hood": "Andersonville",
+   "geom": "Uptown",
+   "cat": "Martini bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A closet-sized room pouring oversized martinis. Squeeze in, order a classic, act like it's 1962.",
+   "lat": 41.97326,
+   "lng": -87.66765,
+   "addr": "1477 West Winnemac Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/12346616962",
+   "src": "osm"
+  },
+  {
+   "id": "mca",
+   "name": "Museum of Contemporary Art",
+   "hood": "Streeterville",
+   "geom": "Streeterville",
+   "cat": "Contemporary art",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Big-swing contemporary shows a block off Michigan Ave. Tuesday evenings often run late and cheap — the thinking person's happy hour.",
+   "lat": 41.89722,
+   "lng": -87.62122,
+   "addr": "220 East Chicago Avenue",
+   "site": "https://mcachicago.org/",
+   "hours": null,
+   "hoursChecked": null,
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "way/24800223",
+   "src": "osm"
+  },
+  {
+   "id": "metro-chicago",
+   "name": "Metro",
+   "hood": "Lakeview",
+   "geom": "Wrigleyville",
+   "cat": "Rock venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Four decades of career-making rock shows in a room that still feels like a secret club. Check who's on tonight.",
+   "lat": 41.94978,
+   "lng": -87.659,
+   "addr": "3730 North Clark Street",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/368069209",
+   "src": "osm"
+  },
+  {
+   "id": "mi-tocaya",
+   "name": "Mi Tocaya Antojería",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Mexican",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Personal, loud-hearted Mexican cooking that swings between comfort and surprise. Order beyond the things you recognize.",
+   "lat": 41.92891,
+   "lng": -87.69771,
+   "addr": "2800 West Logan Boulevard",
+   "site": "https://www.mitocaya.com/",
+   "hours": "Mo off; Tu-Su 17:00-22:00",
+   "hoursChecked": "2024-10-04",
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "node/6322602685",
+   "src": "osm"
+  },
+  {
+   "id": "middle-brow",
+   "name": "Middle Brow Bungalow",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Brewery & pizza",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Naturally leavened pizza and house beer in a sunlit corner room. Casual on purpose, careful underneath.",
+   "lat": 41.91772,
+   "lng": -87.69888,
+   "addr": "2840 West Armitage Avenue",
+   "site": "https://www.middlebrowbeer.com",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6459363596",
+   "src": "osm"
+  },
+  {
+   "id": "millennium-park",
+   "name": "Millennium Park",
+   "hood": "The Loop",
+   "geom": "Millenium Park",
+   "cat": "Park & lawn",
+   "vibes": [
+    "active",
+    "chill",
+    "show"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "date"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The Bean, the Pritzker lawn, and free summer concerts under the skyline. Pack a blanket; check the summer film and music calendar.",
+   "lat": 41.88262,
+   "lng": -87.62252,
+   "addr": "201 East Randolph Street",
+   "site": "https://www.cityofchicago.org/city/en/depts/dca/supp_info/millennium_park.html",
+   "hours": "Mo-Su 06:00-23:00",
+   "hoursChecked": null,
+   "osm": "way/23888253",
+   "src": "osm"
+  },
+  {
+   "id": "millers-pub",
+   "name": "Miller's Pub",
+   "nameOsm": "Miller’s Pub",
+   "hood": "The Loop",
+   "geom": "Loop",
+   "cat": "Late-night tavern",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "late",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Ribs and Manhattans under the L tracks until the small hours. The Loop's dependable old friend.",
+   "lat": 41.87982,
+   "lng": -87.62636,
+   "addr": "134 South Wabash Avenue",
+   "site": "http://millerspub.com",
+   "hours": null,
+   "hoursChecked": "2024-10-20",
+   "osm": "node/2308952640",
+   "src": "osm"
+  },
+  {
+   "id": "minghin",
+   "name": "MingHin Cuisine",
+   "hood": "Chinatown",
+   "geom": "Chinatown",
+   "cat": "Cantonese & dim sum",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "The reliable giant of Chinatown — dim sum by day, lacquered ducks and clay pots late. Bring a crowd and order wide.",
+   "lat": 41.85336,
+   "lng": -87.63483,
+   "addr": "2168 South Archer Avenue",
+   "site": "https://www.minghincuisine.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6164622585",
+   "src": "osm"
+  },
+  {
+   "id": "monteverde",
+   "name": "Monteverde",
+   "nameOsm": "Monteverde Restaurant & Pastificio",
+   "hood": "West Loop",
+   "geom": "West Loop",
+   "cat": "Pasta",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Pasta made in the window, cacio whey pepe on the table. Book ahead or charm the bar — either way, go.",
+   "lat": 41.88196,
+   "lng": -87.65302,
+   "addr": "1020 West Madison Street",
+   "site": "https://monteverdechicago.com/",
+   "hours": "Mo,Su off; Tu-Th 11:00-22:00; Fr-Sa 11:00-22:30",
+   "hoursChecked": "2026-06-18",
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "node/4934342974",
+   "src": "osm"
+  },
+  {
+   "id": "montrose-beach",
+   "name": "Montrose Beach",
+   "hood": "Uptown",
+   "geom": "Uptown",
+   "cat": "Beach & dunes",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "view",
+    "date",
+    "group"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "summer"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The city's biggest beach, plus dunes, birds, and a bar on the sand. Stay for the skyline turning pink over the water.",
+   "lat": 41.96612,
+   "lng": -87.63689,
+   "addr": "4400 North Lake Shore Drive",
+   "site": "https://www.chicagoparkdistrict.com/parks-facilities/montrose-beach",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "relation/17834016",
+   "src": "osm"
+  },
+  {
+   "id": "moody-tongue",
+   "name": "Moody Tongue",
+   "nameOsm": "Moody Tongue Brewing Company",
+   "hood": "South Loop",
+   "geom": "Lower West Side",
+   "cat": "Brewery & tasting room",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 2,
+   "price": 4,
+   "bestFor": [
+    "splurge",
+    "date",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A brewery with Michelin ambitions — beer pairings treated like grand cru. The strangest fancy night in town, in the best way.",
+   "lat": 41.85328,
+   "lng": -87.64834,
+   "addr": "2136 South Peoria Street",
+   "site": "https://moodytongue.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/5792383125",
+   "src": "osm"
+  },
+  {
+   "id": "music-box",
+   "name": "Music Box Theatre",
+   "hood": "Lakeview",
+   "geom": "Wrigleyville",
+   "cat": "Movie palace",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A 1929 movie palace with clouds on the ceiling and a real organ. Any film here becomes an occasion — check the late shows.",
+   "lat": 41.94977,
+   "lng": -87.66372,
+   "addr": "3733 North Southport Avenue",
+   "site": "https://www.musicboxtheatre.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "way/939671372",
+   "src": "osm"
+  },
+  {
+   "id": "myopic-books",
+   "name": "Myopic Books",
+   "hood": "Wicker Park",
+   "geom": "Wicker Park",
+   "cat": "Used bookstore",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "solo",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Three creaking floors of used books, open late. The rare first-date test both people can pass.",
+   "lat": 41.90981,
+   "lng": -87.67685,
+   "addr": "1564 North Milwaukee Avenue",
+   "site": "https://www.myopicbookstore.com/",
+   "hours": "Mo-Su 12:00-20:00",
+   "hoursChecked": "2025-07-19",
+   "osm": "node/3575354970",
+   "src": "osm"
+  },
+  {
+   "id": "nat-museum-mexican-art",
+   "name": "National Museum of Mexican Art",
+   "hood": "Pilsen",
+   "geom": "Lower West Side",
+   "cat": "Museum",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Free, gorgeous, and the beating heart of Pilsen — folk art to contemporary, plus the city's best Día de Muertos show. Go before dinner.",
+   "lat": 41.85617,
+   "lng": -87.67299,
+   "addr": "1852 West 19th Street",
+   "site": "https://www.nationalmuseumofmexicanart.org/",
+   "hours": "Tu-Su 10:00-17:00; We[1] 10:00-20:00; PH off",
+   "hoursChecked": "2026-06-15",
+   "osm": "way/202372249",
+   "src": "osm"
+  },
+  {
+   "id": "neo-futurists",
+   "name": "The Neo-Futurists",
+   "nameOsm": "Neofuturists",
+   "hood": "Andersonville",
+   "geom": "Uptown",
+   "cat": "Experimental theater",
+   "vibes": [
+    "show",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "weird",
+    "date",
+    "late",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Thirty plays in sixty minutes, order set by the audience, price set by a dice roll. The best late-night theater experiment in America.",
+   "lat": 41.97579,
+   "lng": -87.66933,
+   "addr": null,
+   "site": "https://neofuturists.org/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/311438932",
+   "src": "osm"
+  },
+  {
+   "id": "north-ave-beach",
+   "name": "North Avenue Beach",
+   "hood": "Lincoln Park",
+   "geom": null,
+   "cat": "Beach",
+   "vibes": [
+    "active"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "view",
+    "classic"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "summer"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Volleyball, the boathouse deck, and the classic skyline-from-the-sand view. Chicago summer's front porch.",
+   "lat": 41.91853,
+   "lng": -87.62517,
+   "addr": null,
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "relation/12788474",
+   "src": "osm"
+  },
+  {
+   "id": "north-pond",
+   "name": "North Pond",
+   "hood": "Lincoln Park",
+   "geom": "Lincoln Park",
+   "cat": "Pond-side dining",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 1,
+   "price": 4,
+   "bestFor": [
+    "splurge",
+    "date",
+    "view"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "An Arts-and-Crafts pavilion on a pond, skyline over the reeds. The most scenic tasting menu in the city.",
+   "lat": 41.9298,
+   "lng": -87.63751,
+   "addr": "2610 North Cannon Drive",
+   "site": "https://northpondrestaurant.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6323209548",
+   "src": "osm"
+  },
+  {
+   "id": "northerly-island",
+   "name": "Northerly Island",
+   "hood": "Museum Campus",
+   "geom": "Museum Campus",
+   "cat": "Lakefront prairie",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "view",
+    "cheap",
+    "date"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A prairie loop on the lake with the skyline stacked behind the water. Bring a picnic; watch the planes and sailboats trade places.",
+   "lat": 41.8602,
+   "lng": -87.6092,
+   "addr": "1521 South Lynn White Drive",
+   "site": "https://www.chicagoparkdistrict.com/parks-facilities/northerly-island-park",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "relation/2914325",
+   "src": "osm"
+  },
+  {
+   "id": "old-town-ale-house",
+   "name": "Old Town Ale House",
+   "hood": "Old Town",
+   "geom": "Old Town",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "late",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Scandalous paintings, a jukebox of standards, and bartenders who've seen everything. Roger Ebert called it the best bar in the world; who are we to argue.",
+   "lat": 41.91099,
+   "lng": -87.63553,
+   "addr": "219 West North Avenue",
+   "site": "https://theoldtownalehouse.com/",
+   "hours": "Mo-Fr 15:00-04:00; Sa 12:00-05:00; Su 12:00-04:00",
+   "hoursChecked": null,
+   "osm": "node/6261019535",
+   "src": "osm"
+  },
+  {
+   "id": "olive-park",
+   "name": "Milton Lee Olive Park",
+   "hood": "Streeterville",
+   "geom": "Streeterville",
+   "cat": "Secret lakefront park",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "view",
+    "date",
+    "cheap",
+    "weird"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A tree-lined promenade jutting into the lake beside Navy Pier that somehow nobody knows. Skyline, water, quiet — a hidden-in-plain-sight stunner.",
+   "lat": 41.89446,
+   "lng": -87.6107,
+   "addr": null,
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/211039472",
+   "src": "osm"
+  },
+  {
+   "id": "oriole",
+   "name": "Oriole",
+   "hood": "West Loop",
+   "geom": "West Loop",
+   "cat": "Tasting menu",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 1,
+   "price": 4,
+   "bestFor": [
+    "splurge",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Through a freight elevator into one of America's warmest fine-dining rooms. Special-occasion cooking without the stiffness.",
+   "lat": 41.88612,
+   "lng": -87.64514,
+   "addr": "661 West Walnut Street",
+   "site": "https://www.oriolechicago.com/",
+   "hours": "Tu-Sa 17:30-21:30",
+   "hoursChecked": "2024-11-14",
+   "osm": "node/5460575190",
+   "src": "osm"
+  },
+  {
+   "id": "ostios-tap",
+   "name": "Osito's Tap",
+   "hood": "Little Village",
+   "geom": "Little Village",
+   "cat": "Hidden cocktail bar",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A speakeasy behind a candy shop pouring mezcal with pride and skill. La Villita's best-kept not-so-secret.",
+   "lat": 41.8446,
+   "lng": -87.71829,
+   "addr": "2655 South Ridgeway Avenue",
+   "site": "https://www.ositostap.com",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/7037143701",
+   "src": "osm"
+  },
+  {
+   "id": "oz-park",
+   "name": "Oz Park",
+   "hood": "Lincoln Park",
+   "geom": "Lincoln Park",
+   "cat": "Storybook park",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "date"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A neighborhood park guarded by statues of Dorothy, the Tin Man, and friends. A gentle stroll with a wink — pair it with ice cream.",
+   "lat": 41.9206,
+   "lng": -87.64566,
+   "addr": "2021 North Burling Street",
+   "site": "https://www.chicagoparkdistrict.com/parks-facilities/oz-park",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/28292473",
+   "src": "osm"
+  },
+  {
+   "id": "palmisano-park",
+   "name": "Palmisano Park",
+   "nameOsm": "Palmisano (Henry) Park",
+   "hood": "Bridgeport",
+   "geom": "Bridgeport",
+   "cat": "Quarry park",
+   "vibes": [
+    "active",
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "view",
+    "cheap",
+    "weird"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A limestone quarry turned hilltop park with a skyline view most rooftops would kill for. Golden hour here is a cheat code.",
+   "lat": 41.84294,
+   "lng": -87.64906,
+   "addr": "2700 South Halsted Street",
+   "site": "https://www.chicagoparkdistrict.com/parks-facilities/Palmisano-Park/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/108637610",
+   "src": "osm"
+  },
+  {
+   "id": "pequods",
+   "name": "Pequod's Pizza",
+   "nameOsm": "Pequod’s Pizzeria",
+   "hood": "Lincoln Park",
+   "geom": "Lincoln Park",
+   "cat": "Pan pizza",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group",
+    "cheap",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Caramelized-crust pan pizza with a cult that grows by the year. Order ahead or embrace the wait with a pitcher.",
+   "lat": 41.92195,
+   "lng": -87.66434,
+   "addr": "2207 North Clybourn Avenue",
+   "site": "https://pequodspizza.com",
+   "hours": null,
+   "hoursChecked": "2024-12-30",
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/6300393195",
+   "src": "osm"
+  },
+  {
+   "id": "phyllis-musical-inn",
+   "name": "Phyllis' Musical Inn",
+   "hood": "Wicker Park",
+   "geom": "Wicker Park",
+   "cat": "Dive & beer garden",
+   "vibes": [
+    "chill",
+    "show"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "warm",
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A former polka hall with the neighborhood's best-hidden beer garden and bands that play for the door. Division Street's soul survivor.",
+   "lat": 41.9035,
+   "lng": -87.67256,
+   "addr": "1800 West Division Street",
+   "site": null,
+   "hours": null,
+   "hoursChecked": "2025-07-18",
+   "osm": "way/209853881",
+   "src": "osm"
+  },
+  {
+   "id": "pilsen-murals",
+   "name": "16th Street murals",
+   "hood": "Pilsen",
+   "geom": "Little Italy, UIC",
+   "cat": "Street art walk",
+   "vibes": [
+    "new",
+    "active"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "cheap",
+    "weird",
+    "solo"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Blocks of murals along 16th Street's rail embankment — an open-air gallery that changes every season. Walk it, then eat in the neighborhood.",
+   "lat": 41.8603,
+   "lng": -87.6585,
+   "addr": null,
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "src": "editorial-approx",
+   "approx": true
+  },
+  {
+   "id": "ping-tom",
+   "name": "Ping Tom Memorial Park",
+   "hood": "Chinatown",
+   "geom": "Chinatown",
+   "cat": "Riverfront park",
+   "vibes": [
+    "active",
+    "new",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "view",
+    "cheap"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A riverfront park with pagoda pavilions and trains rumbling across the water. Chinatown's quiet showstopper at dusk.",
+   "lat": 41.85749,
+   "lng": -87.63438,
+   "addr": "300 West 19th Street",
+   "site": "https://www.chicagoparkdistrict.com/parks/Ping-Tom-Memorial-Park/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "relation/5240880",
+   "src": "osm"
+  },
+  {
+   "id": "pizza-lobo",
+   "name": "Pizza Lobo",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Pizza & patio",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Foldable New York slices, frozen drinks, and a patio that hums all summer. Zero occasion required.",
+   "lat": 41.92516,
+   "lng": -87.70253,
+   "addr": "3000 West Fullerton Avenue",
+   "site": "https://www.pizzalobo.com",
+   "hours": null,
+   "hoursChecked": null,
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/6052896090",
+   "src": "osm"
+  },
+  {
+   "id": "podhalanka",
+   "name": "Podhalanka",
+   "hood": "Noble Square",
+   "geom": "West Town",
+   "cat": "Polish diner",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The last old-Polonia diner standing — pierogi and borscht served like your babcia is watching. Cash, and go before it's gone.",
+   "lat": 41.90305,
+   "lng": -87.66705,
+   "addr": "1549 West Division Street",
+   "site": "https://www.podhalankachicago.com/",
+   "hours": "Mo-Sa 09:00-20:00; Su 10:00-19:00",
+   "hoursChecked": null,
+   "osm": "way/209847822",
+   "src": "osm"
+  },
+  {
+   "id": "pompei",
+   "name": "Pompei",
+   "hood": "Little Italy",
+   "geom": "Little Italy, UIC",
+   "cat": "Italian bakery-café",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Taylor Street's century-old bakery-café. Get the strudel pizza and a table by the window before a Little Italy stroll.",
+   "lat": 41.86912,
+   "lng": -87.66554,
+   "addr": "1531 West Taylor Street",
+   "site": "https://www.pompeiusa.com",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6300477487",
+   "src": "osm"
+  },
+  {
+   "id": "pops-for-champagne",
+   "name": "Pops for Champagne",
+   "nameOsm": "Pops For Champagne",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Champagne bar",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A round bar devoted entirely to bubbles, decades before that was a trend. Celebrate something — or invent something to celebrate.",
+   "lat": 41.89259,
+   "lng": -87.62794,
+   "addr": "601 North State Street",
+   "site": "https://www.popsforchampagne.com/",
+   "hours": "Su-Fr 15:00-02:00; Sa 13:00-02:00",
+   "hoursChecked": null,
+   "osm": "node/1668871728",
+   "src": "osm"
+  },
+  {
+   "id": "promontory-point",
+   "name": "Promontory Point",
+   "hood": "Hyde Park",
+   "geom": "Hyde Park",
+   "cat": "Lakefront point",
+   "vibes": [
+    "active",
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "view",
+    "date",
+    "cheap",
+    "classic"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Limestone steps into the lake and the full skyline floating to the north. The most romantic free real estate in Chicago.",
+   "lat": 41.79588,
+   "lng": -87.57724,
+   "addr": null,
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "relation/15772175",
+   "src": "osm"
+  },
+  {
+   "id": "publican",
+   "name": "The Publican",
+   "hood": "Fulton Market",
+   "geom": "West Loop",
+   "cat": "Beer hall dining",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A beer-hall cathedral to pork, oysters, and Belgian ale. Communal tables, zero quiet, maximum joy.",
+   "lat": 41.88661,
+   "lng": -87.64886,
+   "addr": "837 West Fulton Market",
+   "site": "https://thepublicanrestaurant.com",
+   "hours": "Mo-Th 11:00-14:00,16:00-22:00; Fr 11:00-14:00,16:00-23:00; Sa 10:00-14:00,16:00-23:00; Su 10:00-14:00,16:00-22:00",
+   "hoursChecked": "2024-11-17",
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "node/4076939309",
+   "src": "osm"
+  },
+  {
+   "id": "punch-house",
+   "name": "Punch House",
+   "hood": "Pilsen",
+   "geom": "Lower West Side",
+   "cat": "Basement lounge",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A wood-paneled '70s basement pouring communal punch bowls under a fish tank. Bring three friends and split a bowl.",
+   "lat": 41.8578,
+   "lng": -87.65739,
+   "addr": "1227 West 18th Street",
+   "site": "https://www.punchhousechicago.com/",
+   "hours": null,
+   "hoursChecked": "2025-05-21",
+   "osm": "node/6300537487",
+   "src": "osm"
+  },
+  {
+   "id": "qxy-dumplings",
+   "name": "Qing Xiang Yuan Dumpling",
+   "nameOsm": "Qing Xiang Yuan Dumplings",
+   "hood": "Chinatown",
+   "geom": "Chinatown",
+   "cat": "Dumpling house",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Handmade dumplings in flavors from classic to curious, folded to order. Cheap, fast, quietly perfect.",
+   "lat": 41.8552,
+   "lng": -87.63201,
+   "addr": "2002 South Wentworth Avenue",
+   "site": "https://qxydumplings.com/",
+   "hours": "Mo-Su 11:30-21:00",
+   "hoursChecked": "2025-08-27",
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "node/6320260910",
+   "src": "osm"
+  },
+  {
+   "id": "rainbo-club",
+   "name": "Rainbo Club",
+   "hood": "Ukrainian Village",
+   "geom": "Ukrainian Village",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The artists' dive: cheap drinks, a photo booth, and more Chicago history per stool than anywhere on Division.",
+   "lat": 41.90282,
+   "lng": -87.6774,
+   "addr": "1150 North Damen Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": "2023-10-20",
+   "osm": "node/3570113238",
+   "src": "osm"
+  },
+  {
+   "id": "ramova",
+   "name": "Ramova Theatre",
+   "hood": "Bridgeport",
+   "geom": "Bridgeport",
+   "cat": "Revived theater",
+   "vibes": [
+    "show",
+    "new"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A 1929 neighborhood palace brought back from thirty years of dust — shows, a brewery, and Bridgeport pride in every seat.",
+   "lat": 41.83026,
+   "lng": -87.64649,
+   "addr": "3518 South Halsted Street",
+   "site": "https://www.ramovachicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/210170884",
+   "src": "osm"
+  },
+  {
+   "id": "reggies",
+   "name": "Reggies",
+   "nameOsm": "Reggies Music Joint",
+   "hood": "South Loop",
+   "geom": "Near South Side",
+   "cat": "Rock club & grill",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Punk and metal most nights, rooftop grill upstairs, zero attitude about any of it. The South Loop's loudest good time.",
+   "lat": 41.85399,
+   "lng": -87.62678,
+   "addr": "2105 South State Street",
+   "site": "https://www.reggieslive.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6301056429",
+   "src": "osm"
+  },
+  {
+   "id": "richard-driehaus",
+   "name": "Driehaus Museum",
+   "nameOsm": "Richard H. Driehaus Museum",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Gilded Age mansion",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A marble-and-onyx Gilded Age palace frozen in 1883. Wander it slowly and feel wildly underdressed in the best way.",
+   "lat": 41.89428,
+   "lng": -87.6265,
+   "addr": "50 East Erie Street",
+   "site": "https://driehausmuseum.org/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/4060205627",
+   "src": "osm"
+  },
+  {
+   "id": "richards-bar",
+   "name": "Richard's Bar",
+   "hood": "River West",
+   "geom": "West Town",
+   "cat": "Old-man bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "weird",
+    "late",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Sinatra on the speakers, Malört on the rail, decades in the wood paneling. An old-school Chicago bar experience, no theme-park version.",
+   "lat": 41.89104,
+   "lng": -87.647,
+   "addr": "491 North Milwaukee Avenue",
+   "site": null,
+   "hours": "Mo-Fr 08:00-02:00; Sa 09:00-03:00; Su 12:00-02:00",
+   "hoursChecked": "2025-01-21",
+   "tips": [
+    "Cash only"
+   ],
+   "osm": "node/3575231495",
+   "src": "osm"
+  },
+  {
+   "id": "ricobenes",
+   "name": "Ricobene's",
+   "hood": "Bridgeport",
+   "geom": "Armour Square",
+   "cat": "Italian counter",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Home of the breaded-steak sandwich — a gloriously excessive Chicago original. Napkins are not optional.",
+   "lat": 41.8456,
+   "lng": -87.63394,
+   "addr": "252 West 26th Street",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6497042936",
+   "src": "osm"
+  },
+  {
+   "id": "riverwalk",
+   "name": "Chicago Riverwalk",
+   "hood": "The Loop",
+   "geom": "Loop",
+   "cat": "Riverfront promenade",
+   "vibes": [
+    "active",
+    "chill",
+    "new"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "view",
+    "cheap"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A mile and a half of river, wine kiosks, and architecture lit up overhead. The city's best free evening stroll.",
+   "lat": 41.88723,
+   "lng": -87.62582,
+   "addr": null,
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/504093803",
+   "src": "osm"
+  },
+  {
+   "id": "riviera",
+   "name": "Riviera Theatre",
+   "hood": "Uptown",
+   "geom": "Uptown",
+   "cat": "Concert hall",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A faded-gold former movie palace that makes every show feel bigger. Check the marquee before you plan anything else.",
+   "lat": 41.96858,
+   "lng": -87.65993,
+   "addr": "4746 North Racine Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": "2025-01-17",
+   "osm": "way/210382263",
+   "src": "osm"
+  },
+  {
+   "id": "robust-coffee",
+   "name": "Build Coffee",
+   "hood": "Woodlawn",
+   "geom": "Woodlawn",
+   "cat": "Bookstore café",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "solo",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A bookstore-café inside the Experimental Station — zines, used paperbacks, and serious neighborhood roots. Daytime-into-dusk energy.",
+   "lat": 41.78423,
+   "lng": -87.59042,
+   "addr": "6100 South Blackstone Avenue",
+   "site": "https://buildcoffee.org/",
+   "hours": "Tu-Fr 07:30-15:00; Sa 09:00-15:00",
+   "hoursChecked": null,
+   "osm": "node/5080599200",
+   "src": "osm"
+  },
+  {
+   "id": "rootstock",
+   "name": "Rootstock",
+   "nameOsm": "Rootstock Wine & Beer Bar",
+   "hood": "Humboldt Park",
+   "geom": "Humboldt Park",
+   "cat": "Wine bar",
+   "vibes": [
+    "chill",
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Natural wine and a kitchen that outperforms the room's humility. Late pours for the after-something crowd.",
+   "lat": 41.89904,
+   "lng": -87.69695,
+   "addr": "954 North California Avenue",
+   "site": "https://www.rootstockbar.com/",
+   "hours": null,
+   "hoursChecked": "2025-08-12",
+   "osm": "node/6301042528",
+   "src": "osm"
+  },
+  {
+   "id": "rosas-lounge",
+   "name": "Rosa's Lounge",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Blues lounge",
+   "vibes": [
+    "show"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "classic",
+    "date",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A family-run blues room far from the tourist strip, where the players come to actually play. Mama Rosa's legacy is the real thing.",
+   "lat": 41.91753,
+   "lng": -87.71278,
+   "addr": "3420 West Armitage Avenue",
+   "site": "https://rosaslounge.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/163885473",
+   "src": "osm"
+  },
+  {
+   "id": "rose-mary",
+   "name": "Rose Mary",
+   "hood": "Fulton Market",
+   "geom": "West Loop",
+   "cat": "Adriatic",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "splurge"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Croatian-Italian 'Adriatic drinking food' with serious fire behind it. Book early; the room earns its hype.",
+   "lat": 41.88694,
+   "lng": -87.65119,
+   "addr": "932 West Fulton Market",
+   "site": "https://www.rosemarychicago.com/",
+   "hours": "Su-Th 16:30-22:00; Fr-Sa 16:30-23:00",
+   "hoursChecked": "2025-06-04",
+   "tips": [
+    "Patio",
+    "Wheelchair accessible"
+   ],
+   "osm": "node/11673118022",
+   "src": "osm"
+  },
+  {
+   "id": "royal-palms",
+   "name": "The Royal Palms Shuffleboard Club",
+   "hood": "Bucktown",
+   "geom": "Wicker Park",
+   "cat": "Shuffleboard club",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "date",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A warehouse of full-size shuffleboard courts, tropical drinks, and instant friendly rivalry. The easiest 'we did something' night there is.",
+   "lat": 41.91315,
+   "lng": -87.68197,
+   "addr": "1750 North Milwaukee Avenue",
+   "site": "https://www.royalpalmschicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/5597509423",
+   "src": "osm"
+  },
+  {
+   "id": "salt-shed",
+   "name": "The Salt Shed",
+   "hood": "Goose Island",
+   "geom": "West Town",
+   "cat": "Landmark venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 3,
+   "bestFor": [
+    "group",
+    "view",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The old Morton Salt factory reborn as the city's most striking concert hall — riverside, neon-crowned, instantly iconic. Summer shows outside are magic.",
+   "lat": 41.90671,
+   "lng": -87.65924,
+   "addr": "1357 North Elston Avenue",
+   "site": "https://www.saltshedchicago.com/",
+   "hours": null,
+   "hoursChecked": "2026-04-24",
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "way/210307434",
+   "src": "osm"
+  },
+  {
+   "id": "san-soo-gab-san",
+   "name": "San Soo Gab San",
+   "hood": "West Ridge",
+   "geom": "Lincoln Square",
+   "cat": "Korean BBQ",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "late",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Charcoal Korean BBQ with a table full of banchan at hours when almost nothing else is open. The 1 a.m. feast of champions.",
+   "lat": 41.97757,
+   "lng": -87.68875,
+   "addr": "5247 North Western Avenue",
+   "site": "https://sansoogabsan.com/",
+   "hours": "Su-Th 11:00-23:00; Fr-Sa 11:00-01:00",
+   "hoursChecked": null,
+   "osm": "node/757813580",
+   "src": "osm"
+  },
+  {
+   "id": "schubas",
+   "name": "Schubas Tavern",
+   "hood": "Lakeview",
+   "geom": "Lake View",
+   "cat": "Music hall",
+   "vibes": [
+    "show",
+    "chill"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A wood-paneled back room built for songwriters. Intimate enough to hear the lyrics, tavern up front for after.",
+   "lat": 41.93962,
+   "lng": -87.66344,
+   "addr": "3159 North Southport Avenue",
+   "site": "https://www.schubastavern.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/209885842",
+   "src": "osm"
+  },
+  {
+   "id": "scofflaw",
+   "name": "Scofflaw",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Gin bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Gin drinks, a fireplace, and armchairs you sink into. Built for the night the wind comes off the lake sideways.",
+   "lat": 41.91728,
+   "lng": -87.7072,
+   "addr": "3201 West Armitage Avenue",
+   "site": "https://www.scofflawchicago.com/",
+   "hours": null,
+   "hoursChecked": "2025-12-27",
+   "osm": "node/3551845150",
+   "src": "osm"
+  },
+  {
+   "id": "second-city",
+   "name": "The Second City",
+   "hood": "Old Town",
+   "geom": "Old Town",
+   "cat": "Comedy theater",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The comedy factory that built SNL's bench. The mainstage revue is the safe bet; the late-night improv sets are the loose cannon.",
+   "lat": 41.91161,
+   "lng": -87.63489,
+   "addr": "1628 North Wells Street",
+   "site": "https://www.secondcity.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/2110031965",
+   "src": "osm"
+  },
+  {
+   "id": "sidetrack",
+   "name": "Sidetrack",
+   "hood": "Northalsted",
+   "geom": "Boystown",
+   "cat": "Video bar",
+   "vibes": [
+    "dance",
+    "new"
+   ],
+   "energy": 5,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "late",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Showtunes night at this sprawling video bar is a Chicago institution — a thousand people belting Sondheim. Surrender to it.",
+   "lat": 41.94327,
+   "lng": -87.64924,
+   "addr": "3349 North Halsted Street",
+   "site": "https://www.sidetrackchicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "node/6297839310",
+   "src": "osm"
+  },
+  {
+   "id": "simons-tavern",
+   "name": "Simon's Tavern",
+   "hood": "Andersonville",
+   "geom": "Andersonville",
+   "cat": "Swedish dive",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "winter",
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A Prohibition-era Swedish dive that serves warm glögg all winter. The neon fish sign alone deserves a landmark plaque.",
+   "lat": 41.9766,
+   "lng": -87.66856,
+   "addr": "5210 North Clark Street",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/3015683270",
+   "src": "osm"
+  },
+  {
+   "id": "skylark",
+   "name": "Skylark",
+   "hood": "Pilsen",
+   "geom": "Lower West Side",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "late",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Tater tots, stiff pours, a photo booth, cash only. The Pilsen dive every other dive quietly measures itself against.",
+   "lat": 41.85282,
+   "lng": -87.64627,
+   "addr": "2149 South Halsted Street",
+   "site": "https://www.skylarkchicago.com/",
+   "hours": null,
+   "hoursChecked": "2024-10-24",
+   "tips": [
+    "Cash only",
+    "Wheelchair accessible"
+   ],
+   "osm": "node/691850892",
+   "src": "osm"
+  },
+  {
+   "id": "sleeping-village",
+   "name": "Sleeping Village",
+   "hood": "Avondale",
+   "geom": "Avondale",
+   "cat": "Bar & venue",
+   "vibes": [
+    "show",
+    "chill",
+    "dance"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Tap wall up front, great bookings in back, string lights over the patio. The rare venue that's also just a good bar.",
+   "lat": 41.93929,
+   "lng": -87.72125,
+   "addr": "3734 West Belmont Avenue",
+   "site": "https://sleeping-village.com/",
+   "hours": null,
+   "hoursChecked": "2025-08-17",
+   "tips": [
+    "Patio",
+    "Wheelchair accessible"
+   ],
+   "osm": "node/6050593221",
+   "src": "osm"
+  },
+  {
+   "id": "slippery-slope",
+   "name": "The Slippery Slope",
+   "nameOsm": "Slippery Slope",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Dance bar",
+   "vibes": [
+    "dance"
+   ],
+   "energy": 5,
+   "price": 1,
+   "bestFor": [
+    "late",
+    "group",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Skee-ball up front, a packed no-cover dance floor in back. Sweaty, unserious, reliably fun past midnight.",
+   "lat": 41.92421,
+   "lng": -87.69897,
+   "addr": "2357 North Milwaukee Avenue",
+   "site": "https://www.slipperyslopechicago.com/",
+   "hours": "Th-Fr 20:00-02:00; Sa 20:00-03:00",
+   "hoursChecked": "2026-05-17",
+   "osm": "node/6298848604",
+   "src": "osm"
+  },
+  {
+   "id": "smartbar",
+   "name": "Smartbar",
+   "nameOsm": "Smart Bar",
+   "hood": "Lakeview",
+   "geom": "Wrigleyville",
+   "cat": "Dance club",
+   "vibes": [
+    "dance"
+   ],
+   "energy": 5,
+   "price": 2,
+   "bestFor": [
+    "late",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "The city's serious dance floor since the '80s — world-class DJs, zero bottle service. Go after midnight or don't go.",
+   "lat": 41.94984,
+   "lng": -87.65891,
+   "addr": "3730 North Clark Street",
+   "site": "https://smartbarchicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6298884587",
+   "src": "osm"
+  },
+  {
+   "id": "smith-museum",
+   "name": "International Museum of Surgical Science",
+   "hood": "Gold Coast",
+   "geom": "Gold Coast",
+   "cat": "Odd museum",
+   "vibes": [
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "weird",
+    "date",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Four floors of antique surgical tools and murals in a lakefront mansion. Macabre, fascinating, and a guaranteed conversation generator.",
+   "lat": 41.91022,
+   "lng": -87.62674,
+   "addr": "1524 North Lake Shore Drive",
+   "site": "https://imss.org/",
+   "hours": "Mo-Fr 09:30-17:00; Sa,Su 10:00-17:00",
+   "hoursChecked": null,
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "way/210686215",
+   "src": "osm"
+  },
+  {
+   "id": "sound-bar",
+   "name": "Sound-Bar",
+   "nameOsm": "Sound Bar",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Nightclub",
+   "vibes": [
+    "dance"
+   ],
+   "energy": 5,
+   "price": 3,
+   "bestFor": [
+    "late",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A proper multi-room club with a serious system when you want lasers-and-bass maximalism. Dress code applies; naps beforehand advised.",
+   "lat": 41.89341,
+   "lng": -87.63541,
+   "addr": "226 West Ontario Street",
+   "site": "https://sound-bar.com/",
+   "hours": "Mo-Su 22:00-04:00",
+   "hoursChecked": "2024-11-10",
+   "osm": "node/5457978313",
+   "src": "osm"
+  },
+  {
+   "id": "spacca-napoli",
+   "name": "Spacca Napoli",
+   "hood": "Ravenswood",
+   "geom": "Uptown",
+   "cat": "Neapolitan pizza",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Pizza napoletana made with near-religious devotion — the owner studied in Naples and it shows in every blistered crust.",
+   "lat": 41.9632,
+   "lng": -87.67373,
+   "addr": "1769 West Sunnyside Avenue",
+   "site": "https://www.spaccanapolipizzeria.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6300281117",
+   "src": "osm"
+  },
+  {
+   "id": "steppenwolf",
+   "name": "Steppenwolf Theatre",
+   "hood": "Lincoln Park",
+   "geom": "Lincoln Park",
+   "cat": "Theater",
+   "vibes": [
+    "show"
+   ],
+   "energy": 2,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "The ensemble that put Chicago acting on the map, still swinging hard. Check what's on; rush seats reward the spontaneous.",
+   "lat": 41.91257,
+   "lng": -87.64868,
+   "addr": "1650 North Halsted Street",
+   "site": "https://www.steppenwolf.org/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/210315491",
+   "src": "osm"
+  },
+  {
+   "id": "stony-island-arts",
+   "name": "Stony Island Arts Bank",
+   "hood": "South Shore",
+   "geom": "South Shore",
+   "cat": "Arts archive",
+   "vibes": [
+    "new",
+    "show"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "weird",
+    "solo",
+    "date",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "A rescued 1920s bank turned archive of Black culture — Frankie Knuckles' records, Johnson Publishing's library. Unlike anywhere else in America.",
+   "lat": 41.77169,
+   "lng": -87.58666,
+   "addr": "6760 South Stony Island Avenue",
+   "site": "https://www.rebuild-foundation.org/",
+   "hours": "Su 14:00-19:00",
+   "hoursChecked": null,
+   "osm": "way/211174717",
+   "src": "osm"
+  },
+  {
+   "id": "subterranean",
+   "name": "Subterranean",
+   "hood": "Wicker Park",
+   "geom": "Wicker Park",
+   "cat": "Music venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "cheap",
+    "late"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A tall skinny room at the six corners where you're never more than forty feet from the band.",
+   "lat": 41.91028,
+   "lng": -87.678,
+   "addr": "2011 West North Avenue",
+   "site": null,
+   "hours": null,
+   "hoursChecked": "2025-03-30",
+   "osm": "way/209868231",
+   "src": "osm"
+  },
+  {
+   "id": "sultans-market",
+   "name": "Sultan's Market",
+   "hood": "Wicker Park",
+   "geom": "Wicker Park",
+   "cat": "Middle Eastern counter",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "Falafel sandwiches and lentil soup that have rescued a thousand budgets. Order at the counter, grab the window ledge.",
+   "lat": 41.91033,
+   "lng": -87.67975,
+   "addr": "2057 West North Avenue",
+   "site": "https://chicagofalafel.com/",
+   "hours": null,
+   "hoursChecked": "2025-03-30",
+   "osm": "node/1666244561",
+   "src": "osm"
+  },
+  {
+   "id": "sun-wah",
+   "name": "Sun Wah BBQ",
+   "nameOsm": "Sun Wah Bar-B-Que",
+   "hood": "Uptown",
+   "geom": "Uptown",
+   "cat": "Hong Kong BBQ",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "cheap",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Ducks in the window, the Beijing duck feast on the table. Order it, watch the carving, thank yourself later.",
+   "lat": 41.97396,
+   "lng": -87.65957,
+   "addr": "5041 North Broadway",
+   "site": "https://sunwahbbq.com/",
+   "hours": "Su-We 09:00-21:00; Fr-Sa 09:00-22:00",
+   "hoursChecked": null,
+   "osm": "node/4932746033",
+   "src": "osm"
+  },
+  {
+   "id": "superdawg",
+   "name": "Superdawg",
+   "hood": "Norwood Park",
+   "geom": "Norwood Park",
+   "cat": "Drive-in",
+   "vibes": [
+    "dinner",
+    "new"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "classic",
+    "cheap",
+    "weird",
+    "date"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A 1948 drive-in with flirting hot dogs on the roof and carhops at your window. Milkshakes, neon, pure Americana.",
+   "lat": 41.99678,
+   "lng": -87.78705,
+   "addr": "6363 North Milwaukee Avenue",
+   "site": "https://www.superdawg.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/163239290",
+   "src": "osm"
+  },
+  {
+   "id": "thalia-hall",
+   "name": "Thalia Hall",
+   "hood": "Pilsen",
+   "geom": "Lower West Side",
+   "cat": "Historic venue",
+   "vibes": [
+    "show"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "An 1892 opera house modeled on Prague's, now booking the best mid-size shows in the city. Balcony seats feel like time travel.",
+   "lat": 41.85772,
+   "lng": -87.6573,
+   "addr": "1805 South Allport Street",
+   "site": "https://www.thaliahallchicago.com/",
+   "hours": null,
+   "hoursChecked": "2025-05-21",
+   "osm": "way/210222291",
+   "src": "osm"
+  },
+  {
+   "id": "the-606",
+   "name": "Bloomingdale Trail",
+   "nameOsm": "Bloomingdale Trail Park",
+   "hood": "Wicker Park",
+   "geom": "Logan Square",
+   "cat": "Elevated trail",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date",
+    "solo"
+   ],
+   "indoor": false,
+   "outdoor": true,
+   "seasons": [
+    "warm"
+   ],
+   "late": false,
+   "inst": false,
+   "take": "An old rail line turned 2.7-mile elevated promenade over the Northwest Side. Walk it at dusk, drop down wherever dinner smells best.",
+   "lat": 41.91396,
+   "lng": -87.69406,
+   "addr": "1600-3750 West Bloomingdale Avenue",
+   "site": "https://www.chicagoparkdistrict.com/parks-facilities/bloomingdale-trail-park",
+   "hours": "Mo-Su 06:00-23:00",
+   "hoursChecked": null,
+   "osm": "relation/13360336",
+   "src": "osm"
+  },
+  {
+   "id": "the-charleston",
+   "name": "Charleston",
+   "hood": "Bucktown",
+   "geom": "Bucktown",
+   "cat": "Corner bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "date",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "A warm corner tavern with occasional bluegrass in the window and no screens worth watching. Conversation wins here.",
+   "lat": 41.91988,
+   "lng": -87.68048,
+   "addr": "2076 North Hoyne Avenue",
+   "site": "https://www.charlestonchicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/1685093555",
+   "src": "osm"
+  },
+  {
+   "id": "the-promontory",
+   "name": "The Promontory",
+   "hood": "Hyde Park",
+   "geom": "Hyde Park",
+   "cat": "Hearth & venue",
+   "vibes": [
+    "dinner",
+    "show",
+    "dance"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Hearth-fired dinners downstairs, concerts and dance parties upstairs. Hyde Park's all-in-one night out.",
+   "lat": 41.79909,
+   "lng": -87.58766,
+   "addr": "5311 South Lake Park Avenue West",
+   "site": "https://www.promontorychicago.com/",
+   "hours": null,
+   "hoursChecked": null,
+   "tips": [
+    "Patio"
+   ],
+   "osm": "node/3218813269",
+   "src": "osm"
+  },
+  {
+   "id": "three-dots",
+   "name": "Three Dots and a Dash",
+   "hood": "River North",
+   "geom": "River North",
+   "cat": "Tiki bar",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 4,
+   "price": 2,
+   "bestFor": [
+    "group",
+    "date",
+    "weird"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Down an alley, under the skulls, into a rum-soaked grotto. Order the flaming bowl; make the night ridiculous.",
+   "lat": 41.89043,
+   "lng": -87.63059,
+   "addr": "435 North Clark Street",
+   "site": "http://threedotschicago.com/",
+   "hours": "Su-Fr 16:00-02:00; Sa 14:00-03:00",
+   "hoursChecked": "2025-09-08",
+   "osm": "node/2578985158",
+   "src": "osm"
+  },
+  {
+   "id": "timber-lanes",
+   "name": "Timber Lanes",
+   "hood": "North Center",
+   "geom": "North Center",
+   "cat": "Hand-set bowling",
+   "vibes": [
+    "active",
+    "new"
+   ],
+   "energy": 3,
+   "price": 1,
+   "bestFor": [
+    "group",
+    "weird",
+    "cheap",
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "Eight lanes, paper scoring, a cash bar, and pins set by hand like it's 1945. Bowling stripped to its charming essentials.",
+   "lat": 41.9539,
+   "lng": -87.67612,
+   "addr": "1851 West Irving Park Road",
+   "site": "https://www.timberlanesbowl.com/",
+   "hours": "Mo-Th 14:00-24:00, Fr 12:00-01:00, Sa,Su 10:00-01:00",
+   "hoursChecked": null,
+   "osm": "way/209918852",
+   "src": "osm"
+  },
+  {
+   "id": "twin-anchors",
+   "name": "Twin Anchors",
+   "nameOsm": "Twin Anchors Restaurant & Tavern",
+   "hood": "Old Town",
+   "geom": "Old Town",
+   "cat": "Rib tavern",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "classic",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Ribs in a 1930s tavern where Sinatra held court. No reservations — put your name in and have an Old Style.",
+   "lat": 41.91272,
+   "lng": -87.63838,
+   "addr": "1655 North Sedgwick Street",
+   "site": "https://twinanchorsribs.com/",
+   "hours": "Mo-Tu 17:00-22:30; We-Th 17:00-23:00; Fr 17:00-00:00; Sa 12:00-00:00; Su 12:00-22:30",
+   "hoursChecked": null,
+   "osm": "node/347160446",
+   "src": "osm"
+  },
+  {
+   "id": "vincent",
+   "name": "Vincent",
+   "hood": "Andersonville",
+   "geom": "Andersonville",
+   "cat": "Dutch bistro",
+   "vibes": [
+    "dinner",
+    "chill"
+   ],
+   "energy": 2,
+   "price": 2,
+   "bestFor": [
+    "date"
+   ],
+   "indoor": true,
+   "outdoor": true,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": false,
+   "take": "Moules-frites and gin in a dark-wooded corner bistro. The late-ish kitchen makes it the neighborhood's best second act.",
+   "lat": 41.97974,
+   "lng": -87.66774,
+   "addr": "1475 W Balmoral Ave 1",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "src": "chi-license"
+  },
+  {
+   "id": "virtue",
+   "name": "Virtue",
+   "hood": "Hyde Park",
+   "geom": "Hyde Park",
+   "cat": "Southern",
+   "vibes": [
+    "dinner"
+   ],
+   "energy": 3,
+   "price": 3,
+   "bestFor": [
+    "date",
+    "classic",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "Southern cooking with white-tablecloth care and South Side soul. The cauliflower and short rib are already classics.",
+   "lat": 41.79967,
+   "lng": -87.5893,
+   "addr": "1462 East 53rd Street",
+   "site": "https://www.virtuerestaurant.com",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/5706244256",
+   "src": "osm"
+  },
+  {
+   "id": "whirlaway",
+   "name": "Whirlaway Lounge",
+   "hood": "Logan Square",
+   "geom": "Logan Square",
+   "cat": "Dive bar",
+   "vibes": [
+    "chill"
+   ],
+   "energy": 2,
+   "price": 1,
+   "bestFor": [
+    "cheap",
+    "classic",
+    "solo"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A living-room dive where the jukebox and the regulars do the decorating. Cheap, warm, and utterly itself.",
+   "lat": 41.92487,
+   "lng": -87.70853,
+   "addr": "3224 West Fullerton Avenue",
+   "site": "https://www.whirlaway.net/",
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "node/6316862751",
+   "src": "osm"
+  },
+  {
+   "id": "womens-and-childrens-first",
+   "name": "Women & Children First",
+   "hood": "Andersonville",
+   "geom": "Andersonville",
+   "cat": "Bookstore",
+   "vibes": [
+    "chill",
+    "new"
+   ],
+   "energy": 1,
+   "price": 1,
+   "bestFor": [
+    "date",
+    "solo",
+    "cheap"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": false,
+   "inst": true,
+   "take": "A feminist bookstore that's anchored Andersonville for decades — readings, staff picks with teeth, browsing that turns into hours.",
+   "lat": 41.97724,
+   "lng": -87.66824,
+   "addr": "5233 North Clark Street",
+   "site": "https://www.womenandchildrenfirst.com",
+   "hours": "Tu-Su 11:00-18:00; Mo 00:00-18:00",
+   "hoursChecked": null,
+   "tips": [
+    "Wheelchair accessible"
+   ],
+   "osm": "node/8034608679",
+   "src": "osm"
+  },
+  {
+   "id": "zanies",
+   "name": "Zanies Comedy Club",
+   "nameOsm": "Zanies",
+   "hood": "Old Town",
+   "geom": "Old Town",
+   "cat": "Comedy club",
+   "vibes": [
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "group"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A low-ceilinged classic where touring headliners work close enough to see you check your phone. Don't.",
+   "lat": 41.91053,
+   "lng": -87.63502,
+   "addr": "1548 North Wells Street",
+   "site": null,
+   "hours": null,
+   "hoursChecked": null,
+   "osm": "way/206585435",
+   "src": "osm"
+  },
+  {
+   "id": "zebra-lounge",
+   "name": "Zebra Lounge",
+   "hood": "Gold Coast",
+   "geom": "Gold Coast",
+   "cat": "Piano lounge",
+   "vibes": [
+    "chill",
+    "show"
+   ],
+   "energy": 3,
+   "price": 2,
+   "bestFor": [
+    "date",
+    "weird",
+    "late",
+    "classic"
+   ],
+   "indoor": true,
+   "outdoor": false,
+   "seasons": [
+    "all"
+   ],
+   "late": true,
+   "inst": true,
+   "take": "A tiny zebra-striped piano bar that's been enabling singalongs since 1929. Absurd, intimate, unkillable.",
+   "lat": 41.90453,
+   "lng": -87.62916,
+   "addr": "1220 North State Parkway",
+   "site": "https://www.thezebralounge.net/",
+   "hours": null,
+   "hoursChecked": "2025-05-22",
+   "osm": "node/6317115432",
+   "src": "osm"
+  }
+ ]
+}

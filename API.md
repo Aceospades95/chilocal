@@ -72,3 +72,55 @@ Add two route handlers (e.g. `app/api/neighborhoods/route.ts`,
 `app/api/venues/route.ts`) running the queries above against your PostGIS pool,
 return JSON, set `contentSource:"api"` and `apiBase` to your app origin. The map
 component can be dropped in as-is (it's framework-agnostic vanilla JS/SVG).
+
+---
+
+# Night engine data contract (v2, 2026-07)
+
+The decide-our-night app (`site/index.html`) reads two static files; both can
+later be served by the Next.js + PostGIS stack without touching the front end.
+
+## `data/venues.json`
+
+```jsonc
+{
+  "generated": "2026-07-01",
+  "note": "…provenance + license…",
+  "venues": [{
+    "id": "green-mill",
+    "name": "Green Mill",              // editorial display name
+    "nameOsm": "Green Mill Cocktail Lounge", // OSM canonical, when different
+    "hood": "Uptown",                  // editorial neighborhood label
+    "geom": "Uptown",                  // polygon name in neighborhoods.min.geojson (map highlight)
+    "cat": "Jazz club",
+    "vibes": ["show", "chill"],        // dinner|dance|new|show|chill|active
+    "energy": 3,                        // 1 hushed … 5 rowdy
+    "price": 2,                         // 1..4, editorial estimate (display with ~)
+    "bestFor": ["date", "classic", "late"],
+    "indoor": true, "outdoor": false,
+    "seasons": ["all"],                // all|warm|summer|winter
+    "late": true,                       // soft signal; open/closed claims come from hours only
+    "inst": true,                       // institution quality prior
+    "take": "…one-line editorial opinion…",
+    "lat": 41.96918, "lng": -87.65989,
+    "addr": "4802 North Broadway",
+    "site": "https://www.greenmilljazz.com/",
+    "hours": "Mo-Fr 12:00-04:00; …",   // raw OSM opening_hours or null (UNKNOWN, never guess)
+    "hoursChecked": "2025-01-17",       // OSM check_date when present
+    "tips": ["Cash only"],              // derived from OSM tags (payment, outdoor_seating…)
+    "osm": "node/1370035488",
+    "src": "osm"                        // osm | chi-license | editorial-approx
+  }]
+}
+```
+
+Serving the same shape from `GET /api/venues` (PostGIS: one row per venue,
+`hours` as raw opening_hours text, provenance columns) lets the app go live
+by changing one fetch URL in `js/night/app.js` → `boot()`.
+
+## Rebuild pipeline
+
+`scripts/seed-venues.json` (opinion) × Overpass dump × active Chicago business
+licenses → `node scripts/build-venues.mjs <dump> [licenses]` →
+`site/data/venues.json`. Unverifiable seeds are dropped and reported. See
+PRODUCT.md → "Where the effort went".
