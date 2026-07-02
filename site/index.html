@@ -6,7 +6,7 @@
 <title>ChiLocal — tell us the vibe, we'll decide your night</title>
 <meta name="description" content="One plan for tonight in Chicago: where to go, why it fits, how to get there. Built for two."/>
 <meta name="theme-color" content="#070c16"/>
-<link rel="stylesheet" href="css/night.css?v=n1"/>
+<link rel="stylesheet" href="css/night.css?v=n2"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='19' font-size='19'%3E%F0%9F%8C%83%3C/text%3E%3C/svg%3E"/>
 </head>
 <body data-screen="ask">
@@ -14,6 +14,10 @@
 
   <header>
     <div id="wordmark" class="wordmark" role="button" tabindex="0">Chi<span class="dot">·</span>Local <span class="wm-sub">tonight</span></div>
+    <nav id="mode-seg" class="seg mode" aria-label="mode">
+      <button data-m="tonight" class="on">Tonight</button>
+      <button data-m="explore">Explore</button>
+    </nav>
     <div class="head-right">
       <button id="nights-chip" class="chip-btn" style="display:none"></button>
       <span id="ctx-chip" class="ctx"></span>
@@ -126,6 +130,11 @@
       </div>
     </section>
 
+    <!-- EXPLORE: the 2.5D catalog --------------------------------------------- -->
+    <section class="screen" id="screen-explore">
+      <div class="ex-sheet" id="ex-sheet"></div>
+    </section>
+
     <!-- LOCKED ---------------------------------------------------------------- -->
     <section class="screen" id="screen-locked">
       <div class="panel center locked">
@@ -177,6 +186,6 @@
   </footer>
 </div>
 
-<script type="module" src="js/night/app.js?v=n1"></script>
+<script type="module" src="js/night/app.js?v=n2"></script>
 </body>
 </html>

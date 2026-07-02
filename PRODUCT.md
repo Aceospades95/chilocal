@@ -35,6 +35,19 @@ Decide together (2P) ─────┘        1.9s, on the map        one hero 
 - **Lock it in** — "Date #14. It's decided." Directions deep-link, canvas
   share card (built-in distribution), and the night is logged.
 
+## Explore — the book of the city
+
+The second half of the product (header toggle: **Tonight / Explore**). The map
+tilts into a 2.5D night diorama — every one of the 98 official neighborhoods
+is extruded, lifts toward you on hover with its name on the plane, and glows
+amber when selected, its verified venues appearing as lights on the raised
+tile. The panel is the catalog: browse neighborhoods by venue count, filter by
+vibe, search everything, read the editorial take per neighborhood, then per
+venue. Explore always bridges back to the engine: **"⚡ Make it tonight's
+plan"** adopts any browsed venue as the hero (with honest why-line + paired
+second stop), and **"🎲 Surprise us — but here"** runs the full decision loop
+confined to that neighborhood. Browse feeds decide; decide stays the product.
+
 ## Where the effort went: pick quality
 
 A generic pick kills the product, so the picks are defended three ways:

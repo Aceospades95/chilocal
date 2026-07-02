@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n1";
-import { buildContext } from "./context.js?v=n1";
-import { loadMemory, memoryView, setHome, toggleSaved, lockDate, habitNudge } from "./memory.js?v=n1";
-import { NightMap } from "./nightmap.js?v=n1";
-import { sharePlan } from "./share.js?v=n1";
+import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n2";
+import { buildContext } from "./context.js?v=n2";
+import { loadMemory, memoryView, setHome, toggleSaved, lockDate, habitNudge } from "./memory.js?v=n2";
+import { NightMap } from "./nightmap.js?v=n2";
+import { sharePlan } from "./share.js?v=n2";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -22,7 +22,9 @@ const S = {
   mode: "out", vibe: null, budget: 2, dial: "hop", party: "couple",
   p1: null, p2: null, twoStep: null,
   plan: null, session: null, vetoes: { p1: 1, p2: 1 },
-  screen: "ask",
+  screen: "ask", view: "tonight",
+  ex: { hood: null, venue: null, vibe: "all", q: "" },
+  exIndex: null,
 };
 
 /* ------------------------------ boot ------------------------------------- */
@@ -43,6 +45,14 @@ async function boot() {
   S.ctx = ctx;
   S.map = new NightMap($("#nm"), geo);
 
+  buildExploreIndex();
+  S.map.onHoodClick = (name) => {
+    if (S.view !== "explore") return;
+    S.ex.venue = null;
+    S.ex.hood = S.exIndex.groups.has(name) ? name : name; // select even empty hoods
+    exSelectHood(name);
+  };
+
   renderContextChip();
   renderAsk();
   wireStatic();
@@ -59,10 +69,32 @@ function newSession() {
 function show(name) {
   S.screen = name;
   for (const sec of $$(".screen")) sec.classList.toggle("active", sec.id === "screen-" + name);
-  const mapMode = name === "deciding" || name === "reveal";
+  const mapMode = name === "deciding" || name === "reveal" || name === "explore";
   $("#mapwrap").classList.toggle("on", mapMode);
   $("#mapwrap").classList.toggle("deciding", name === "deciding");
   document.body.dataset.screen = name;
+}
+
+/* ------------------------------ mode switch ------------------------------- */
+function setView(view) {
+  if (S.view === view) return;
+  if (S.screen === "deciding") return; // don't yank the wheel mid-decision
+  S.view = view;
+  $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === view));
+  if (view === "explore") {
+    S.map.clearReveal();
+    S.map.setExplore(true);
+    if (S.ex.hood) S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
+    else S.exCam = S.map.cityView(exInset());
+    renderExplore();
+    show("explore");
+  } else {
+    S.map.setExplore(false);
+    S.map.clearSpot?.();
+    S.map.resetView(700);
+    renderAsk();
+    show("ask");
+  }
 }
 
 function renderContextChip() {
@@ -254,7 +286,11 @@ async function runDecision() {
   };
   const memv = memoryView(S.mem);
   let venues = S.venues;
-  if (S.avoidHood) venues = venues.filter((v) => v.hood !== S.avoidHood);
+  if (S.avoidHood && !S.session.onlyGeom) venues = venues.filter((v) => v.hood !== S.avoidHood);
+  if (S.session.onlyGeom) {
+    venues = venues.filter((v) => (v.geom || v.hood) === S.session.onlyGeom);
+    input.maxMi = 20; // the neighborhood was chosen on purpose — distance is moot
+  }
 
   let plan = decide(venues, input, S.ctx, memv, S.session);
   // graceful widening: never come back empty-handed
@@ -274,6 +310,7 @@ async function runDecision() {
   clearInterval(timer);
   S.map.stopScan();
 
+  if (S.view !== "tonight") return; // user walked away mid-decision
   if (plan.empty) {
     show("ask");
     toast("Even we couldn't make that work tonight. Loosen a dial?");
@@ -370,15 +407,12 @@ function promoteAlt(i) {
   S.plan.alts[i] = oldHero;
   S.plan.hero = alt;
   S.session.excluded.add(alt.v.id);
-  const memv = memoryView(S.mem);
   const input = { vibe: S.mode === "out" ? S.vibe : null, budget: S.budget };
   // recompute pairing + why for the new hero
-  import("./engine.js?v=n1").then(({ pickSecond, whyLine }) => {
-    S.plan.second = pickSecond(alt.v, S.venues.filter((x) =>
-      haversineMi(origin(), x) <= DIST_DIALS.find((d) => d.id === S.dial).mi + 1), { vibe: input.vibe, budget: S.budget }, S.ctx);
-    S.plan.why = whyLine(alt.v, alt.reasons, input, S.ctx, alt.extra);
-    renderReveal();
-  });
+  S.plan.second = pickSecond(alt.v, S.venues.filter((x) =>
+    haversineMi(origin(), x) <= DIST_DIALS.find((d) => d.id === S.dial).mi + 1), { vibe: input.vibe, budget: S.budget }, S.ctx);
+  S.plan.why = whyLine(alt.v, alt.reasons, input, S.ctx, alt.extra);
+  renderReveal();
 }
 
 function useVeto(who) {
@@ -534,6 +568,10 @@ function toast(msg) {
 }
 
 function resetToAsk() {
+  S.view = "tonight";
+  $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === "tonight"));
+  S.map.setExplore(false);
+  S.map.clearSpot?.();
   $("#mapwrap").classList.remove("on");
   S.plan = null; S.session = null; S.vibe = null; S.mode = "out";
   S.avoidHood = null;
@@ -554,6 +592,7 @@ function wireStatic() {
   $("#home-chip").onclick = () => openWhere();
   $("#nights-chip").onclick = openNights;
   $("#wordmark").onclick = resetToAsk;
+  $$("#mode-seg button").forEach((b) => b.onclick = () => setView(b.dataset.m));
   $$(".back-ask").forEach((b) => b.onclick = resetToAsk);
 
   $$("#party-seg button").forEach((b) => b.onclick = () => {
@@ -577,6 +616,257 @@ function wireStatic() {
   $("#lk-again").onclick = resetToAsk;
   $$("dialog .x").forEach((b) => b.onclick = () => b.closest("dialog").close());
   $("#stayin-out").onclick = () => { $("#stayin").close(); S.mode = "out"; S.vibe = null; newSession(); runDecision(); };
+}
+
+
+/* ================================ EXPLORE ================================= */
+/* The catalog half of the product: the 2.5D map is the menu, the panel is
+ * the index. Editorial takes stay short and sharp; every venue offers a
+ * bridge back to the engine ("make it tonight's plan"). */
+
+const HOOD_TAKES = {
+  "Logan Square": "The creative-class homestead: boulevards, natural wine, and the city's best run of bars that don't try too hard.",
+  "Wicker Park": "Got famous, got expensive, kept its record stores and its six-corners people-watching.",
+  "Bucktown": "Wicker's quieter sibling — old taverns and white-tablecloth rooms hiding on side streets.",
+  "West Town": "A catch-all that quietly collects some of the city's most serious kitchens and least serious bars.",
+  "Ukrainian Village": "Dive-bar royalty and pierogi heritage, holding the line against the condo tide.",
+  "East Village": "Small blocks, big kitchens — the tasting menus snuck in while nobody was looking.",
+  "Pilsen": "Murals, carnitas, and galleries that open late — Mexican heritage and art on the same walls.",
+  "Bridgeport": "The South Side's unexpected cool: slashies, a revived movie palace, and a quarry with a skyline view.",
+  "Chinatown": "Dumplings till late, a riverfront pagoda park, and the best food-per-dollar math in the city.",
+  "Uptown": "Faded-marquee glamour: century-old jazz rooms, honky-tonks, and Argyle Street's kitchens.",
+  "Andersonville": "Swedish bones, queer heart, magic lounge — a main street that still feels like a main street.",
+  "Lincoln Park": "Blues bars and fondue dens between the zoo and the lake — date-night classics live here.",
+  "Lakeview": "Rock clubs, a movie palace, and showtunes at full volume — the North Side at play.",
+  "Northalsted": "The rainbow-pyloned main drag where every night can end in a singalong.",
+  "Wrigleyville": "You know what this is. Go for the marquee venues, stay clear on game days — or don't.",
+  "Lincoln Square": "Giddings Plaza charm, steins of pilsner, and a bookstore that pours wine.",
+  "North Center": "Hand-set pins, slow-brewed lagers — old hobbies done properly.",
+  "Roscoe Village": "A village-sized strip with jazz couches and adventurous little rooms.",
+  "Ravenswood": "Brewery corridor by the Metra tracks, pizza worth a pilgrimage.",
+  "Avondale": "The next Logan Square, still priced like the last one — venues, beer gardens, metal burgers.",
+  "West Loop": "Restaurant row and its splurges — where Chicago goes to celebrate something.",
+  "Fulton Market": "Meatpacking sheds turned rooftops and tasting rooms. Dress code: whatever, confidently.",
+  "River North": "Steakhouse-and-gallery country with tiki bars and jazz clubs in the cracks.",
+  "River West": "Old-man bars and candlelit baths — the in-between zone that rewards knowing one address.",
+  "The Loop": "After the offices empty: symphony halls, rooftop glasshouses, and taverns under the L.",
+  "Old Town": "Comedy's company town, plus taverns older than your grandparents' marriage.",
+  "Gold Coast": "Hotel-bar hour: piano lounges, Manhattans, and a museum of surgical oddities.",
+  "Streeterville": "Contemporary art and a secret lakefront park hiding beside the pier.",
+  "South Loop": "Blues legends and rock rooms in the shadow of the old printing houses.",
+  "Museum Campus": "Planetarium skyline views — the city's best free panorama.",
+  "Hyde Park": "University gravity: serious theater, Southern-table dining, and limestone steps into the lake.",
+  "Woodlawn": "Bookstore-café roots and neighborhood pride south of the Midway.",
+  "South Shore": "Home of the Arts Bank — an archive of Black culture unlike anywhere else in America.",
+  "Chatham": "Aquarium-smoker barbecue that defines the South Side canon.",
+  "Little Italy": "Taylor Street's old guard: beef stands, lemonade ice, century-old bakeries.",
+  "Near West Side": "Maxwell Street's last echoes — polish sausage at 3 a.m. is a birthright.",
+  "Little Village": "La Villita: the Mexican Midwest's kitchen, with a speakeasy behind a candy shop.",
+  "Archer Heights": "Worth the drive for one perfect thing: goat birria done one way, forever.",
+  "Humboldt Park": "Lagoon sunsets, jibaritos, and lounges that look like movie sets.",
+  "Noble Square": "A legendary shack between the factories books the strangest, warmest nights out.",
+  "Goose Island": "The salt shed became the show — industrial riverfront, neon crown.",
+  "West Ridge": "Devon's curry houses and charcoal Korean BBQ at hours nothing else keeps.",
+  "Norwood Park": "Neon, carhops, and hot dogs with personalities. The drive-in that outlived the century.",
+  "Edgewater": "Lakefront porches and Granville's quiet charms north of the marquees.",
+  "East Garfield Park": "Two acres of jungle under glass — the West Side's warmest secret, especially in February.",
+};
+
+function buildExploreIndex() {
+  const groups = new Map(); // polygon/geom key -> { venues, display }
+  for (const v of S.venues) {
+    const key = v.geom || v.hood;
+    if (!groups.has(key)) groups.set(key, { venues: [], names: {} });
+    const g = groups.get(key);
+    g.venues.push(v);
+    g.names[v.hood] = (g.names[v.hood] || 0) + 1;
+  }
+  for (const [key, g] of groups) {
+    g.display = Object.entries(g.names)
+      .sort((a, b) => (b[1] - a[1]) || (b[0] === key) - (a[0] === key))[0][0];
+    g.venues.sort((a, b) => (b.inst - a.inst) || a.name.localeCompare(b.name));
+  }
+  S.exIndex = { groups };
+}
+
+const exInset = () => matchMedia("(min-width: 920px)").matches
+  ? { right: 430 / innerWidth } : { bottom: Math.min(0.47, 420 / innerHeight) };
+
+function exSelectHood(key) {
+  S.ex.hood = key; S.ex.venue = null;
+  S.ex.vibe = "all"; // a fresh room, a fresh menu
+  S.map.clearSpot?.();
+  S.exCam = S.map.selectHood(key, { inset: exInset() });
+  renderExplore();
+  const g = S.exIndex.groups.get(key);
+  if (g) exAfterCam(() => { if (S.ex.hood === key && !S.ex.venue) S.map.markSpots(g.venues); });
+}
+
+/* run fn once the last camera move settles (markers size from the final box) */
+function exAfterCam(fn) {
+  (S.exCam?.then ? S.exCam : Promise.resolve()).then(fn);
+}
+
+function exBadges(v) {
+  const b = [];
+  if (v.inst) b.push("★ institution");
+  if (v.late) b.push("open late");
+  if (v.outdoor) b.push("outdoors");
+  return b.join(" · ");
+}
+
+function renderExplore() {
+  const el = $("#ex-sheet");
+  const { groups } = S.exIndex;
+
+  /* ---- venue detail ---- */
+  if (S.ex.venue) {
+    const v = S.venues.find((x) => x.id === S.ex.venue);
+    const saved = S.mem.saved.includes(v.id);
+    el.innerHTML = `
+      <button class="ex-back" id="ex-back">← ${esc(groups.get(S.ex.hood)?.display || "back")}</button>
+      <p class="ex-kicker">${esc(v.cat).toUpperCase()}</p>
+      <h2 class="ex-title">${esc(v.name)}</h2>
+      <p class="ex-meta">${esc(v.hood)} · ${"$".repeat(v.price)} · ${esc(travelLabel(haversineMi(origin(), v)))}</p>
+      <p class="ex-venue-take">${esc(v.take)}</p>
+      <p class="rv-hours">${hoursLine(v)}${v.tips?.length ? ` <span class="tips">· ${v.tips.map(esc).join(" · ")}</span>` : ""}${v.approx ? ` <span class="tips">· location approximate</span>` : ""}</p>
+      <div class="ex-actions">
+        <button class="btn primary" id="ex-adopt">⚡ Make it tonight's plan</button>
+        <div style="display:flex;gap:9px">
+          <button class="btn ghost heart ${saved ? "on" : ""}" id="ex-save" style="flex:1">${saved ? "♥ Saved" : "♡ Save"}</button>
+          ${v.addr ? `<a class="btn ghost" style="flex:1" target="_blank" rel="noopener"
+            href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.name + " " + v.addr + " Chicago")}">Map ↗</a>` : ""}
+          ${v.site ? `<a class="btn ghost" style="flex:1" href="${esc(v.site)}" target="_blank" rel="noopener">Site ↗</a>` : ""}
+        </div>
+      </div>`;
+    $("#ex-back").onclick = () => { S.ex.venue = null; S.map.clearSpot?.(); renderExplore(); };
+    $("#ex-adopt").onclick = () => adoptAsPlan(v);
+    $("#ex-save").onclick = () => {
+      const on = toggleSaved(S.mem, v.id);
+      $("#ex-save").classList.toggle("on", on);
+      $("#ex-save").textContent = on ? "♥ Saved" : "♡ Save";
+    };
+    exAfterCam(() => { if (S.ex.venue === v.id) S.map.markSpot(v); });
+    return;
+  }
+
+  /* ---- hood view ---- */
+  if (S.ex.hood) {
+    const g = groups.get(S.ex.hood);
+    const display = g?.display || S.ex.hood;
+    const take = HOOD_TAKES[display] || HOOD_TAKES[S.ex.hood] ||
+      (g ? Object.keys(g.names).map((n) => HOOD_TAKES[n]).find(Boolean) : null);
+    const list = (g?.venues || []).filter((v) => S.ex.vibe === "all" || v.vibes.includes(S.ex.vibe));
+    el.innerHTML = `
+      <button class="ex-back" id="ex-back">← the whole city</button>
+      <h2 class="ex-title">${esc(display)}</h2>
+      ${display !== S.ex.hood ? `<p class="ex-sub">officially “${esc(S.ex.hood)}”</p>` : ""}
+      ${take ? `<p class="ex-take">${esc(take)}</p>` : ""}
+      ${g ? `
+        <div class="fchips" id="ex-vchips">
+          <button data-v="all" class="${S.ex.vibe === "all" ? "on" : ""}">All (${g.venues.length})</button>
+          ${VIBES.filter((vb) => g.venues.some((v) => v.vibes.includes(vb.id)))
+            .map((vb) => `<button data-v="${vb.id}" class="${S.ex.vibe === vb.id ? "on" : ""}">${vb.icon} ${esc(vb.name)}</button>`).join("")}
+        </div>
+        ${list.map((v) => `
+          <button class="ex-row" data-id="${esc(v.id)}">
+            <span class="n">${esc(v.name)}</span>
+            <span class="m">${esc(v.cat)} · ${"$".repeat(v.price)}</span>
+            <span class="ven-badges">${exBadges(v)}</span>
+          </button>`).join("")}
+        <div class="ex-actions"><button class="btn ghost" id="ex-surprise">🎲 Surprise us — but here</button></div>`
+      : `<p class="ex-empty">No picks here yet — the engine is still eating its way across the city. Tell Jacob what deserves the first pin.</p>`}`;
+    $("#ex-back").onclick = () => {
+      S.ex.hood = null;
+      S.map.clearSpot?.();
+      S.map.selectHood(null, { camera: false });
+      S.exCam = S.map.cityView(exInset());
+      renderExplore();
+    };
+    $$("#ex-vchips button", el).forEach((b) => b.onclick = () => { S.ex.vibe = b.dataset.v; renderExplore(); });
+    $$(".ex-row", el).forEach((b) => b.onclick = () => { S.ex.venue = b.dataset.id; renderExplore(); });
+    $("#ex-surprise") && ($("#ex-surprise").onclick = () => {
+      newSession();
+      S.session.onlyGeom = S.ex.hood;
+      S.mode = "out"; S.vibe = null;
+      setView("tonight");
+      runDecision();
+    });
+    return;
+  }
+
+  /* ---- city view ---- */
+  el.innerHTML = `
+    <p class="ex-kicker">THE BOOK OF THE CITY</p>
+    <h2 class="ex-title">Browse <em>Chicago</em></h2>
+    <p class="ex-sub">${S.venues.length} places we'd stand behind · tap the map or the list</p>
+    <input class="ex-search" id="ex-q" placeholder="Search spots or neighborhoods…" value="${esc(S.ex.q)}" autocomplete="off"/>
+    <div class="fchips" id="ex-vchips">
+      <button data-v="all" class="${S.ex.vibe === "all" ? "on" : ""}">All</button>
+      ${VIBES.map((vb) => `<button data-v="${vb.id}" class="${S.ex.vibe === vb.id ? "on" : ""}">${vb.icon} ${esc(vb.name)}</button>`).join("")}
+    </div>
+    <div id="ex-results"></div>`;
+
+  const renderResults = () => {
+    const box = $("#ex-results");
+    const q = S.ex.q.trim().toLowerCase();
+    if (q) {
+      const hoodHits = [...groups.entries()]
+        .filter(([key, g]) => g.display.toLowerCase().includes(q) || key.toLowerCase().includes(q))
+        .slice(0, 4);
+      const venueHits = S.venues.filter((v) =>
+        v.name.toLowerCase().includes(q) || v.cat.toLowerCase().includes(q)).slice(0, 12);
+      box.innerHTML = hoodHits.map(([key, g]) => `
+          <button class="ex-row" data-hood="${esc(key)}">
+            <span class="n">${esc(g.display)}</span><span class="c">${g.venues.length} spots →</span>
+          </button>`).join("") +
+        venueHits.map((v) => `
+          <button class="ex-row" data-id="${esc(v.id)}">
+            <span class="n">${esc(v.name)}</span><span class="m">${esc(v.cat)} · ${esc(v.hood)}</span>
+          </button>`).join("") ||
+        `<p class="ex-empty">Nothing by that name in the book yet.</p>`;
+    } else {
+      const hoods = [...groups.entries()]
+        .map(([key, g]) => ({ key, ...g }))
+        .filter((g) => S.ex.vibe === "all" || g.venues.some((v) => v.vibes.includes(S.ex.vibe)))
+        .sort((a, b) => b.venues.length - a.venues.length);
+      box.innerHTML = hoods.map((g) => `
+        <button class="ex-row" data-hood="${esc(g.key)}">
+          <span class="n">${esc(g.display)}</span>
+          <span class="c">${(S.ex.vibe === "all" ? g.venues : g.venues.filter((v) => v.vibes.includes(S.ex.vibe))).length} spots →</span>
+        </button>`).join("");
+    }
+    $$(".ex-row[data-hood]", box).forEach((b) => b.onclick = () => exSelectHood(b.dataset.hood));
+    $$(".ex-row[data-id]", box).forEach((b) => b.onclick = () => {
+      const v = S.venues.find((x) => x.id === b.dataset.id);
+      S.ex.hood = v.geom || v.hood; S.ex.venue = v.id;
+      S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
+      renderExplore();
+    });
+  };
+
+  // typing only re-renders the results — the input (and its caret) survive
+  $("#ex-q").oninput = (e) => { S.ex.q = e.target.value; renderResults(); };
+  $$("#ex-vchips button", el).forEach((b) => b.onclick = () => { S.ex.vibe = b.dataset.v; renderResults();
+    $$("#ex-vchips button", el).forEach((x) => x.classList.toggle("on", x === b)); });
+  renderResults();
+}
+
+/* Browse → tonight: adopt a venue as the plan, honestly justified. */
+function adoptAsPlan(v) {
+  newSession();
+  const memv = memoryView(S.mem);
+  const rand = mulberry32(hashStr(S.ctx.nightKey + "|adopt|" + v.id));
+  const budget = Math.max(S.budget, v.price);
+  const { reasons } = scoreVenue(v, { vibe: null, budget, party: S.party }, S.ctx, memv, rand);
+  const second = pickSecond(v, S.venues, { vibe: null, budget }, S.ctx);
+  const why = "Your pick — we just did the homework. " +
+    whyLine(v, reasons, { vibe: null, budget }, S.ctx, {});
+  S.mode = "out"; S.vibe = null;
+  S.plan = { hero: { v, score: 0, reasons, extra: {} }, second, alts: [], why };
+  S.session.excluded.add(v.id);
+  setView("tonight");
+  renderReveal();
 }
 
 boot();
