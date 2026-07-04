@@ -6,7 +6,7 @@
 <title>ChiLocal — tell us the vibe, we'll decide your night</title>
 <meta name="description" content="One plan for tonight in Chicago: where to go, why it fits, how to get there. Built for two."/>
 <meta name="theme-color" content="#070c16"/>
-<link rel="stylesheet" href="css/night.css?v=n4"/>
+<link rel="stylesheet" href="css/night.css?v=n6"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='19' font-size='19'%3E%F0%9F%8C%83%3C/text%3E%3C/svg%3E"/>
 </head>
 <body data-screen="ask">
@@ -29,6 +29,7 @@
     <svg id="nm"></svg>
     <div class="nm-sweep"></div>
     <div class="nm-vignette"></div>
+    <div class="nm-attrib">detail © OpenStreetMap contributors © CARTO</div>
   </div>
 
   <!-- explore map controls -->
@@ -41,6 +42,7 @@
     <div class="ov-chips">
       <button id="ov-transit">🚇 L lines</button>
       <button id="ov-streets">🛣 Streets</button>
+      <button id="ov-locate">📍 Find me</button>
     </div>
     <span class="hint">drag to pan · scroll to zoom</span>
   </div>
@@ -132,6 +134,7 @@
         <p class="rv-take" id="rv-take"></p>
         <p class="rv-why" id="rv-why"></p>
         <p class="rv-hours" id="rv-hours"></p>
+        <details class="risks" id="rv-risks" hidden></details>
         <div class="then" id="rv-second" hidden></div>
         <div class="actions">
           <button id="rv-lock" class="btn primary">Lock it in</button>
@@ -216,6 +219,6 @@
   </footer>
 </div>
 
-<script type="module" src="js/night/app.js?v=n4"></script>
+<script type="module" src="js/night/app.js?v=n6"></script>
 </body>
 </html>

@@ -355,7 +355,9 @@ export function decide(venues, input, ctx, mem, session) {
   const pool = scored.map((s) => s.v);
   const second = pickSecond(hero.v, pool, input, ctx);
   const why = whyLine(hero.v, hero.reasons, input, ctx, hero.extra);
-  return { hero, second, alts, why, filtered };
+  // debug: the top of the leaderboard, with reason codes — surfaced only
+  // behind ?debug=1 so the engine can always be interrogated
+  return { hero, second, alts, why, filtered, debug: scored.slice(0, 10) };
 }
 
 /* Pre-parse hours once at load. */
