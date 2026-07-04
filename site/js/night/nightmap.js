@@ -389,14 +389,53 @@ export class NightMap {
 
   setLabelWeights(weights) {
     this._labelWeights = weights; // polygonName -> venue count
-    // venue-dense hoods glow a shade lighter — the city's light map
-    for (const [name, g] of this.hoodGroups) {
-      const t = Math.sqrt(Math.min(1, (weights.get(name) || 0) / 12));
-      const ch = (a, b) => Math.round(a + (b - a) * t);
-      g.style.setProperty("--face",
-        `rgb(${ch(15, 27)} ${ch(24, 40)} ${ch(48, 76)})`); // #0f1830 → #1b284c
-    }
+    this._paintFaces();
     this._queueCull();
+  }
+
+  /* Every neighborhood gets a hue from WHERE it sits around the Loop —
+   * North Side teal, Northwest indigo, West violet, Southwest plum, South
+   * coral, downtown gold — so regions cohere, neighbors differ, and the
+   * color means something. Venue density still drives brightness (the
+   * city's light map); hover/select brighten a hood in its own hue. */
+  _paintFaces() {
+    const weights = this._labelWeights || new Map();
+    const Lx = this.px(-87.628), Ly = this.py(41.8785); // the Loop
+    // angle (deg) around downtown -> hue stops, muted night jewel tones
+    const STOPS = [[-180, 285], [-120, 230], [-70, 190], [-15, 160],
+                   [30, 45], [80, 18], [130, 340], [180, 285]];
+    const hueAt = (a) => {
+      for (let i = 0; i < STOPS.length - 1; i++) {
+        const [a0, h0] = STOPS[i], [a1, h1] = STOPS[i + 1];
+        if (a >= a0 && a <= a1) {
+          const t = (a - a0) / (a1 - a0);
+          let d = h1 - h0; // wrap-aware hue lerp
+          if (d > 180) d -= 360; if (d < -180) d += 360;
+          return (h0 + d * t + 360) % 360;
+        }
+      }
+      return 220;
+    };
+    for (const [name, g] of this.hoodGroups) {
+      const l = this.hoodLabels.get(name);
+      const cx = +l.getAttribute("x"), cy = +l.getAttribute("y");
+      const dist = Math.hypot(cx - Lx, cy - Ly);
+      let hue = hueAt(Math.atan2(cy - Ly, cx - Lx) * 180 / Math.PI);
+      // downtown glows gold no matter the compass — and the blend walks
+      // UP the wheel (teal→violet→pink→gold), never through olive mud
+      if (dist < 70) {
+        const w = (1 - dist / 70) * 0.85;
+        const d = ((42 - hue) % 360 + 360) % 360;
+        hue = (hue + d * w) % 360;
+      }
+      const t = Math.sqrt(Math.min(1, (weights.get(name) || 0) / 12));
+      const S = 28 + t * 10, L = 15.5 + t * 5.5;
+      const h = Math.round(hue);
+      g.style.setProperty("--face", `hsl(${h} ${S.toFixed(0)}% ${L.toFixed(1)}%)`);
+      g.style.setProperty("--edge", `hsl(${h} ${(S + 8).toFixed(0)}% ${(L + 14).toFixed(1)}%)`);
+      g.style.setProperty("--face-hov", `hsl(${h} ${(S + 9).toFixed(0)}% ${(L + 9).toFixed(1)}%)`);
+      g.style.setProperty("--face-sel", `hsl(${h} ${(S + 11).toFixed(0)}% ${(L + 13).toFixed(1)}%)`);
+    }
   }
 
   _cullLabels() {

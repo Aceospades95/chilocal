@@ -95,7 +95,8 @@ body.map-dragging, body.map-dragging * {
 #mapwrap.explore .nm-hit { pointer-events: fill; cursor: pointer; }
 
 .nm-hood {
-  fill: var(--face, #0f1830); stroke: #24365c; stroke-width: 1;
+  fill: var(--face, #0f1830); stroke: var(--edge, #24365c); stroke-width: 1;
+  stroke-opacity: .55;
   vector-effect: non-scaling-stroke;
   transition: fill .25s ease, stroke .25s ease;
 }
@@ -141,14 +142,14 @@ body.map-dragging, body.map-dragging * {
 #mapwrap.explore .nm-hoodg.hov { transform: translateY(calc(-1 * var(--lift, 12px))); filter: drop-shadow(0 10px 14px rgba(0,0,0,.55)); }
 #mapwrap.explore .nm-hoodg.hov .nm-wall { transform: translateY(calc(var(--wd, 8px) + var(--lift, 12px))); }
 #mapwrap.explore .nm-hoodg.hov .nm-hood {
-  fill: #223354; stroke: #5f80c0;
+  fill: var(--face-hov, #223354); stroke: var(--edge, #5f80c0); stroke-opacity: 1; stroke-width: 1.2;
 }
 
 /* selected: clearly stronger than hover — higher, warmer, rimmed in amber */
 #mapwrap.explore .nm-hoodg.sel { transform: translateY(calc(-1.5 * var(--lift, 12px))); filter: drop-shadow(0 18px 26px rgba(0,0,0,.65)); }
 #mapwrap.explore .nm-hoodg.sel .nm-wall { transform: translateY(calc(var(--wd, 8px) + 1.5 * var(--lift, 12px))); }
 #mapwrap.explore .nm-hoodg.sel .nm-hood {
-  fill: #2b3554; stroke: var(--amber); stroke-width: 1.5;
+  fill: var(--face-sel, #2b3554); stroke: var(--amber); stroke-width: 1.5; stroke-opacity: 1;
 }
 /* the amber rim glow is LAYERED VECTOR STROKES, not a filter — CSS
  * drop-shadows rasterize at a capped resolution and turn into a blurry,
