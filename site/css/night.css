@@ -470,6 +470,29 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .rv-hours .dot.unk { background: var(--muted); }
 .rv-hours .tips { color: #b8c2d4; }
 
+/* the honesty section — collapsed by default, never alarmist */
+.risks { margin: -4px 0 14px; }
+.risks summary {
+  cursor: pointer; font-size: 12px; color: var(--warn); letter-spacing: .06em;
+  list-style: none; user-select: none; -webkit-user-select: none;
+}
+.risks summary::before { content: "⚠ "; }
+.risks ul { margin: 8px 0 0; padding-left: 18px; }
+.risks li { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 3px; }
+
+.alt-tag {
+  font-family: var(--sans); font-weight: 400; font-style: italic;
+  font-size: 11px; color: var(--amber); margin-left: 6px; white-space: nowrap;
+}
+
+/* engine debug (?debug=1 only) */
+.dbg { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.dbg summary { font-size: 11px; letter-spacing: .18em; color: var(--skyblue); cursor: pointer; }
+.dbg table { width: 100%; border-collapse: collapse; margin: 8px 0 4px; font-size: 11px; }
+.dbg th, .dbg td { text-align: left; padding: 3px 6px 3px 0; border-bottom: 1px solid var(--line-soft); color: var(--muted); }
+.dbg tr.win td { color: var(--amber); }
+.dbg p { font-size: 11px; color: var(--muted); margin: 6px 0 0; }
+
 .then {
   border-left: 2px solid var(--amber); padding: 4px 0 6px 14px; margin: 0 0 16px;
 }
@@ -604,6 +627,9 @@ dialog h3 + .night-row { margin-top: 4px; }
 .ex-title em { font-style: italic; color: var(--amber); }
 .ex-take { font-family: var(--serif); font-style: italic; font-size: 14.5px; color: var(--muted); line-height: 1.5; margin: 2px 0 12px; }
 .ex-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+.ex-passport { font-size: 12.5px; color: var(--muted); margin: -4px 0 12px; }
+.ex-passport b { color: var(--amber); }
+.ex-hint { font-size: 11.5px; color: var(--muted); font-style: italic; margin: -6px 0 10px; }
 .ex-search {
   width: 100%; background: rgba(7,12,22,.85); color: var(--text);
   border: 1px solid var(--line); border-radius: 11px; padding: 10px 13px;
