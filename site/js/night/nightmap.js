@@ -272,7 +272,7 @@ export class NightMap {
       st.setProperty("--lift", (12 * z).toFixed(2) + "px");
       st.setProperty("--uz", z.toFixed(4) + "px"); // 1 screen-ish px in map units
       const host = this.svg.parentElement;
-      host.classList.toggle("zoomed", z < 0.78);
+      host.classList.toggle("zoomed", z < 0.74);
       host.classList.toggle("zoomed2", z < 0.32);
       if (z < 0.85) { // close enough that detail matters — fetch it once
         this.loadStreets("data/streets.min.geojson");
@@ -472,7 +472,7 @@ export class NightMap {
       // svg, which silently killed every neighborhood tap for real pointers.
       // Window-level move/up listeners keep the pan alive outside the svg.
       this._stopGlide();
-      if (this._anim) { cancelAnimationFrame(this._anim); this._anim = null; }
+      this._cancelAnim();
       if (ptrs.size === 1) {
         start = { x: e.clientX, y: e.clientY, box: { ...this.box } };
         this._dragMoved = false;
@@ -558,7 +558,7 @@ export class NightMap {
     svg.addEventListener("wheel", (e) => {
       if (!active()) return;
       e.preventDefault();
-      if (this._anim) { cancelAnimationFrame(this._anim); this._anim = null; }
+      this._cancelAnim();
       // trackpad pinch arrives as ctrl+wheel — give it a stronger gear
       const k = e.ctrlKey ? 0.0042 : 0.0016;
       const f = Math.exp(e.deltaY * k);
@@ -603,7 +603,11 @@ export class NightMap {
     this._glideRaf = requestAnimationFrame(step);
   }
   _stopGlide() {
-    if (this._glideRaf) { cancelAnimationFrame(this._glideRaf); this._glideRaf = null; }
+    if (this._glideRaf) {
+      cancelAnimationFrame(this._glideRaf);
+      this._glideRaf = null;
+      this._endMoveSoon(); // interrupted glide must not leave 'moving' stuck
+    }
     this._glideTarget = null;
   }
 
@@ -649,13 +653,27 @@ export class NightMap {
     el.classList.add("show");
   }
 
+  /* a canceled animation resolves its promise anyway — callers chaining
+   * "after the camera settles" (venue dots, markers) must still run even
+   * when the user grabs the camera mid-flight */
+  _cancelAnim() {
+    if (this._anim) {
+      cancelAnimationFrame(this._anim);
+      this._anim = null;
+      this._endMoveSoon(); // interrupted flight must not leave 'moving' stuck
+    }
+    const r = this._animDone; this._animDone = null;
+    if (r) r();
+  }
+
   animateTo(target, ms = 1400) {
     return new Promise((res) => {
-      if (this._anim) cancelAnimationFrame(this._anim);
+      this._cancelAnim();
       this._stopGlide();
       if (this._reduced) ms = 0;
       if (!ms) { this._setBox({ ...target }); this._endMoveSoon(); res(); return; }
       this._beginMove();
+      this._animDone = res;
       const from = { ...this.box }, t0 = performance.now();
       const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
       const step = (now) => {
@@ -667,7 +685,7 @@ export class NightMap {
           h: from.h + (target.h - from.h) * e,
         });
         if (t < 1) this._anim = requestAnimationFrame(step);
-        else { this._anim = null; this._endMoveSoon(); res(); }
+        else { this._anim = null; this._animDone = null; this._endMoveSoon(); res(); }
       };
       this._anim = requestAnimationFrame(step);
     });
@@ -885,6 +903,7 @@ export class NightMap {
   }
 
   clearReveal() {
+    this._revealGen = (this._revealGen || 0) + 1; // kill any in-flight reveal
     this.setLabel(null);
     this.svg.querySelector("#nm-route").innerHTML = "";
     this.svg.querySelector("#nm-pins").innerHTML = "";
@@ -907,6 +926,9 @@ export class NightMap {
   /* ----------------------------- the reveal ------------------------------ */
   async reveal(origin, dest, opts = {}) {
     this.clearReveal();
+    // if the user walks away mid-reveal (mode switch, reroll), a later
+    // clearReveal bumps the generation and this run dies at its next await
+    const gen = this._revealGen;
     const o = { x: this.px(origin.lng), y: this.py(origin.lat) };
     const d = { x: this.px(dest.lng), y: this.py(dest.lat) };
     const second = opts.second ? { x: this.px(opts.second.lng), y: this.py(opts.second.lat) } : null;
@@ -953,6 +975,7 @@ export class NightMap {
     }
 
     await this.animateTo(box, opts.fast ? 800 : 1500);
+    if (gen !== this._revealGen) return;
 
     const u = box.w / 150; // sizing unit relative to zoom level
     const routeG = this.svg.querySelector("#nm-route");
@@ -984,6 +1007,7 @@ export class NightMap {
     path.style.strokeDashoffset = "0";
 
     await new Promise((r) => setTimeout(r, opts.fast ? 380 : 700));
+    if (gen !== this._revealGen) return;
 
     // destination pin: glow halo + star pulse + dot
     const g = document.createElementNS(NS, "g");

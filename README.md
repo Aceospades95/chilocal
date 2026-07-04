@@ -4,8 +4,8 @@
 in Chicago — where to go, why it fits, how to get there — in under a minute.
 Built for two: pass-the-phone date-night roulette with vetoes. Never a list.
 
-Live: **https://chilocal.omnia-house.com** · the original neighborhood
-boundary atlas is preserved at **`/explore.html`**.
+Live: **https://chilocal.omnia-house.com** — Tonight (the decision engine)
+and Explore (the 2.5D city catalog) in one page, toggled in the header.
 
 → Product thinking, matching-engine design, data provenance, and roadmap:
 **[PRODUCT.md](PRODUCT.md)** · Live-API migration path: **[API.md](API.md)**

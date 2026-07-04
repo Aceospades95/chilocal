@@ -91,10 +91,8 @@ async function boot() {
   };
   S.map.onBackgroundClick = () => {
     if (S.view !== "explore") return;
-    if (S.ex.venue) { S.ex.venue = null; S.map.clearSpot?.(); renderExplore();
-      const g = S.exIndex.groups.get(S.ex.hood);
-      if (g) S.map.markSpots(g.venues);
-    } else if (S.ex.hood) exBackToCity();
+    if (S.ex.venue) { S.ex.venue = null; S.map.clearSpot?.(); renderExplore(); }
+    else if (S.ex.hood) exBackToCity();
   };
   S.map.onSpotClick = (id) => {
     if (S.view !== "explore") return;
@@ -517,7 +515,10 @@ function renderReveal() {
 
   show("reveal");
   const desktop = matchMedia("(min-width: 920px)").matches;
-  const inset = desktop ? { right: 470 / innerWidth } : { bottom: Math.min(0.58, 520 / innerHeight) };
+  // layout viewport, not innerWidth/Height — the visual viewport lies on
+  // mobile (browser chrome, pinch state) and would mis-frame the camera
+  const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+  const inset = desktop ? { right: 470 / vw } : { bottom: Math.min(0.58, 520 / vh) };
   requestAnimationFrame(() => {
     S.map.reveal(origin(), v, { second: second?.venue || null, fast: S.session.roll > 0, inset, label: v.hood });
   });
@@ -796,8 +797,6 @@ function wireStatic() {
     if (e.key !== "Escape" || S.view !== "explore" || document.querySelector("dialog[open]")) return;
     if (S.ex.venue) {
       S.ex.venue = null; S.map.clearSpot?.(); renderExplore();
-      const g = S.exIndex.groups.get(S.ex.hood);
-      if (g) S.map.markSpots(g.venues);
     } else if (S.ex.hood) exBackToCity();
   });
   $("#stayin-out").onclick = () => { $("#stayin").close(); S.mode = "out"; S.vibe = null; newSession(); runDecision(); };
@@ -875,7 +874,8 @@ function buildExploreIndex() {
 }
 
 const exInset = () => matchMedia("(min-width: 920px)").matches
-  ? { right: 430 / innerWidth } : { bottom: Math.min(0.47, 420 / innerHeight) };
+  ? { right: 430 / document.documentElement.clientWidth }
+  : { bottom: Math.min(0.47, 420 / document.documentElement.clientHeight) };
 const tiltZoom = () => (S.map?.tilt === "full" ? 0.78 : S.map?.tilt === "mid" ? 0.85 : 0.97);
 
 /* the one filter gate for explore lists: vibe, price ceiling, verified-open */
@@ -925,9 +925,7 @@ function exSelectHood(key) {
   S.ex.vibe = "all"; S.ex.price = null; S.ex.open = false; // a fresh room, a fresh menu
   S.map.clearSpot?.();
   S.exCam = S.map.selectHood(key, { inset: exInset() });
-  renderExplore();
-  const g = S.exIndex.groups.get(key);
-  if (g) exAfterCam(() => { if (S.ex.hood === key && !S.ex.venue) S.map.markSpots(g.venues); });
+  renderExplore(); // draws the venue lights synchronously — they ride the camera
 }
 
 function exBackToCity() {
@@ -1069,8 +1067,8 @@ function renderExplore() {
     $("#ex-clearf") && ($("#ex-clearf").onclick = () => {
       S.ex.vibe = "all"; S.ex.price = null; S.ex.open = false; renderExplore();
     });
-    // the lights on the tile mirror the filtered list
-    if (g && exFiltersOn()) S.map.markSpots(list);
+    // the lights on the tile always mirror the visible list
+    if (g) S.map.markSpots(list);
     $$(".ex-row", el).forEach((b) => b.onclick = () => { S.ex.venue = b.dataset.id; renderExplore(); });
     $("#ex-addhere") && ($("#ex-addhere").onclick = () => openAddPlace(S.ex.hood));
     $("#ex-surprise") && ($("#ex-surprise").onclick = () => {

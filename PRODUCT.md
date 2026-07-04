@@ -55,6 +55,21 @@ tier fades in automatically — major streets with arterial names, parks, water
 (OSM, simplified, ~500 KB total gzipped ~120 KB) — under the Tonight route
 too. CTA L lines in official colors stay a toggle.
 
+**How the map stays glitch-free (v4 interaction core):** all zoom lives in
+the SVG viewBox and the CSS 3D tilt is rotation-only; screen↔map math goes
+through the computed transform matrix (inverted analytically), so
+cursor-anchored zoom, pan-under-the-finger, and tap-to-place are exact under
+any tilt. Interaction lives on an invisible, immobile **hit layer** — one
+twin path per neighborhood — so a lifting tile can never slide out from
+under the cursor (the old hover-flicker class of bug is structurally
+impossible). Continuous camera motion is rAF-driven and suspends tile
+transitions (`moving` class) so walls can't smear; hover is suppressed while
+panning and re-derived when the camera rests; text selection is disabled on
+map surfaces and globally while a pan is live (panel copy stays selectable).
+Venue-dense neighborhoods shade a step lighter — the city's light map —
+and walls carry a vertical gradient for the diorama read. Reduced-motion
+users get camera jumps instead of flights.
+
 **The personal layer:** ♡ wishlist anywhere; "✓ been here" from any profile
 (feeds the engine's novelty memory); **add your own places** (pin-on-map
 picker, on-device, `◆ yours`, instantly pickable) with **"Suggest to
@@ -92,6 +107,22 @@ A generic pick kills the product, so the picks are defended three ways:
 2 AM — double-check ↗"), otherwise "Hours unverified — check before you go ↗".
 Prices are marked as estimates. The murals walk is labeled
 "location approximate". The why-line only cites factors that actually scored.
+Every reveal also carries a collapsible **"What could go wrong"** section
+built only from claims the data supports: unverified hours (hero or second
+stop), rain probability vs outdoor-only picks, weather-fetch failure
+disclosure, long hauls from home base. Alternates are labeled by how they
+differ (different neighborhood / cheaper / closer / calmer / the classic /
+the wildcard) — never presented as interchangeable clones. And the whole
+engine can be interrogated: **`?debug=1`** shows the top-10 leaderboard with
+scores, reason codes, hours-verified flags, and per-filter drop counts under
+the alternates.
+
+**Explore filters + passport:** beyond vibes, the catalog filters by budget
+ceiling and a verified-hours-only "Open now" toggle (with honest microcopy
+about what it can't know); the venue lights on a selected tile always mirror
+the filtered list. A **neighborhood passport** ("7 of 98 neighborhoods
+lived") tracks the date log + been-theres and offers "stamp somewhere new" —
+a jump to a venue-rich neighborhood you haven't touched.
 
 ## Memory (the repeat-use engine)
 
