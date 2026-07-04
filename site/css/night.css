@@ -107,10 +107,14 @@ body.map-dragging, body.map-dragging * {
 #mapwrap.moving .nm-wall,
 #mapwrap.moving #nm-spot { transition: none !important; }
 .nm-hoodlabel {
-  font-family: var(--sans); font-weight: 600; font-size: var(--lbl, 12px);
+  font-family: var(--sans); font-weight: 600; font-size: 13px;
   letter-spacing: .1em; fill: #e2ecff; opacity: 0; pointer-events: none;
   paint-order: stroke; stroke: rgba(3,6,13,.72); stroke-width: .12em; stroke-linejoin: round;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.9));
+  /* fixed font + counter-scale: font-size below ~2px wrecks Chrome's glyph
+   * geometry (blurry blobs at deep zoom); no drop-shadow either — filter
+   * blur is in user units and smears when magnified. Stroke is the halo. */
+  transform-box: fill-box; transform-origin: center;
+  transform: scale(var(--zf, 1));
   transition: opacity .25s ease;
 }
 .nm-hoodlabel.show { opacity: 1 !important; }
@@ -145,8 +149,20 @@ body.map-dragging, body.map-dragging * {
 #mapwrap.explore .nm-hoodg.sel .nm-wall { transform: translateY(calc(var(--wd, 8px) + 1.5 * var(--lift, 12px))); }
 #mapwrap.explore .nm-hoodg.sel .nm-hood {
   fill: #2b3554; stroke: var(--amber); stroke-width: 1.5;
-  filter: drop-shadow(0 0 9px rgba(255,180,92,.55));
 }
+/* the amber rim glow is LAYERED VECTOR STROKES, not a filter — CSS
+ * drop-shadows rasterize at a capped resolution and turn into a blurry,
+ * glitching band once you zoom deep into a selected neighborhood */
+.nm-rim, .nm-rim-soft {
+  fill: none; stroke: var(--amber); vector-effect: non-scaling-stroke;
+  pointer-events: none; stroke-linejoin: round;
+}
+.nm-rim { stroke-width: 2.6; opacity: .55; }
+.nm-rim-soft { stroke-width: 7; opacity: .16; }
+/* the big soft filters are only safe at city scale — kill them once the
+ * rasterized area would exceed the browser's filter budget and blur */
+#mapwrap.zoomed .nm-hoodg.sel,
+#mapwrap.zoomed .nm-hoodg.hov { filter: none; }
 /* venue lights ride the raised tile */
 #mapwrap.explore.hood-sel #nm-spot {
   transform: translateY(calc(-1.5 * var(--lift, 12px)));
@@ -160,7 +176,12 @@ body.map-dragging, body.map-dragging * {
 .nm-hood-glow {
   fill: rgba(255, 200, 130, .04); stroke: #ffb45c;
   stroke-width: 1.6; vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 6px rgba(255, 180, 92, .5));
+  animation: hood-breathe 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.nm-hood-glow-soft {
+  fill: none; stroke: #ffb45c; stroke-width: 6; opacity: .18;
+  vector-effect: non-scaling-stroke; stroke-linejoin: round;
   animation: hood-breathe 3.2s ease-in-out infinite;
   pointer-events: none;
 }
@@ -179,14 +200,17 @@ body.map-dragging, body.map-dragging * {
   fill: var(--amber); opacity: .92;
   r: calc(var(--uz, 1px) * 4.6);
   stroke: rgba(6,10,18,.85); stroke-width: calc(var(--uz, 1px) * 1.4);
-  filter: drop-shadow(0 0 4px rgba(255,180,92,.9));
+  /* glow radius in --uz so it scales WITH the dot instead of ballooning
+   * into a soft orb at deep zoom (filter units are user units) */
+  filter: drop-shadow(0 0 calc(var(--uz, 1px) * 3) rgba(255,180,92,.9));
 }
 .nm-spot-hit { fill: transparent; cursor: pointer; r: calc(var(--uz, 1px) * 13); }
 .nm-spotlabel {
-  font-family: var(--sans); font-weight: 600; font-size: calc(var(--lbl, 12px) * .68);
+  font-family: var(--sans); font-weight: 600; font-size: 9px;
   letter-spacing: .04em; fill: #ffd9a8; opacity: 0; pointer-events: none;
   paint-order: stroke; stroke: rgba(3,6,13,.75); stroke-width: .14em; stroke-linejoin: round;
-  transform: translateY(calc(var(--uz, 1px) * -6));
+  transform-box: fill-box; transform-origin: center;
+  transform: translateY(calc(var(--uz, 1px) * -6)) scale(var(--zf, 1));
   transition: opacity .3s;
 }
 #mapwrap.zoomed2 .nm-spotlabel.vis { opacity: .95; }
@@ -196,6 +220,47 @@ body.map-dragging, body.map-dragging * {
 .nm-waterbody { fill: #0b1d36; stroke: #16305a; stroke-width: .5; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity .5s; }
 #mapwrap.zoomed .nm-park { opacity: .55; }
 #mapwrap.zoomed .nm-waterbody { opacity: .9; }
+
+/* real-map tile tier: fades in past neighborhood zoom; the schematic
+ * neighborhood layer thins to a tinted overlay so streets/buildings read */
+#nm-tiles { opacity: 0; transition: opacity .5s ease; pointer-events: none; }
+#mapwrap.tiles-on #nm-tiles { opacity: 1; }
+/* per-IMAGE brightness lift (a filter on the whole group would blow the
+ * browser's filter-raster budget at deep zoom; single tiles are small) */
+.nm-tile { filter: brightness(1.5) saturate(1.08); }
+#mapwrap.tiles-on .nm-hood { fill-opacity: .10; }
+#mapwrap.tiles-on .nm-hoodg.hov .nm-hood { fill-opacity: .26; }
+#mapwrap.tiles-on .nm-hoodg.sel .nm-hood { fill-opacity: .10; }
+#mapwrap.tiles-on .nm-wall { opacity: .35; }
+#mapwrap.tiles-on #nm-streets, #mapwrap.tiles-on #nm-detail { opacity: 0 !important; }
+.nm-attrib {
+  position: absolute; left: 8px; bottom: 6px; z-index: 4; pointer-events: none;
+  font-size: 10px; letter-spacing: .02em; color: #8b96ab;
+  background: rgba(4, 7, 14, .55); padding: 2px 8px; border-radius: 7px;
+  opacity: 0; transition: opacity .4s;
+}
+#mapwrap.tiles-on .nm-attrib { opacity: 1; }
+
+/* "find me": device position + the accuracy circle it reports */
+.nm-user-acc {
+  fill: rgba(100, 216, 255, .09); stroke: rgba(100, 216, 255, .45);
+  stroke-width: 1; vector-effect: non-scaling-stroke; stroke-dasharray: 4 4;
+}
+.nm-user-dot {
+  fill: var(--skyblue); r: calc(var(--uz, 1px) * 5);
+  stroke: rgba(6, 10, 18, .9); stroke-width: calc(var(--uz, 1px) * 1.6);
+}
+.nm-user-ring {
+  fill: none; stroke: var(--skyblue); stroke-width: 1.4;
+  vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
+  r: calc(var(--uz, 1px) * 5);
+  animation: user-pulse 2.4s ease-out infinite;
+}
+@keyframes user-pulse {
+  0% { transform: scale(1); opacity: .9; }
+  75% { transform: scale(3.2); opacity: 0; }
+  100% { opacity: 0; }
+}
 
 /* add-a-place placement mode */
 #mapwrap.placing #nm { cursor: crosshair !important; }
@@ -213,13 +278,14 @@ body.map-dragging, body.map-dragging * {
 .nm-rail {
   fill: none; stroke-width: 2.2; opacity: .9; stroke-linecap: round;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 3px rgba(120,160,255,.25));
+  /* no filter: a drop-shadow over city-spanning paths rasterizes huge */
 }
 .nm-streetlabel {
-  font-family: var(--sans); font-weight: 500; font-size: calc(var(--lbl, 12px) * .72);
+  font-family: var(--sans); font-weight: 500; font-size: 9.4px;
   letter-spacing: .08em; fill: #8fa3c8; opacity: 0; pointer-events: none;
   paint-order: stroke; stroke: rgba(3,6,13,.7); stroke-width: .12em; stroke-linejoin: round;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.85));
+  transform-box: fill-box; transform-origin: center;
+  transform: scale(var(--zf, 1));
   transition: opacity .3s;
 }
 #mapwrap.zoomed .nm-streetlabel { opacity: .95; }

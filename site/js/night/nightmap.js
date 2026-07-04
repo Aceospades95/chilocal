@@ -31,6 +31,7 @@ export class NightMap {
     this.onHoodClick = null;   // (polygonName) => void — wired by the app
     this.selected = null;
     this._hovName = null;
+    this._tiles = new Map(); // "z/x/y" -> <image> (real-map detail tier)
     this._reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this._build();
   }
@@ -49,6 +50,8 @@ export class NightMap {
     const k = Math.cos(((mny + mxy) / 2) * Math.PI / 180);
     const H = Math.round(((mxy - mny) / ((mxx - mnx) * k)) * W);
     this.H = H;
+    this._pxPerLng = W / (mxx - mnx);          // map units per degree longitude
+    this.unitsPerMeter = H / ((mxy - mny) * 111320); // for accuracy circles
     this.px = (lng) => ((lng - mnx) * k / ((mxx - mnx) * k)) * W;
     this.py = (lat) => H - ((lat - mny) / (mxy - mny)) * H;
     this.unproject = (ux, uy) => ({
@@ -78,6 +81,7 @@ export class NightMap {
         </filter>
       </defs>
       <rect id="nm-water-rect" x="${-W}" y="${-H}" width="${W * 3}" height="${H * 3}" fill="url(#nm-water)"/>
+      <g id="nm-tiles"></g>
       <g id="nm-hoods"></g>
       <g id="nm-detail"></g>
       <g id="nm-streets"></g>
@@ -267,13 +271,19 @@ export class NightMap {
     if (this.cityBox) {
       const z = b.w / this.cityBox.w;
       const st = this.svg.style;
-      st.setProperty("--lbl", (13 * z).toFixed(2) + "px");
+      // labels keep a FIXED font-size and counter-scale via transform:
+      // sub-2px font-size destroys Chrome's glyph geometry (blurry blobs)
+      st.setProperty("--zf", z.toFixed(4));
       st.setProperty("--wd", (DEPTH * z).toFixed(2) + "px");
       st.setProperty("--lift", (12 * z).toFixed(2) + "px");
       st.setProperty("--uz", z.toFixed(4) + "px"); // 1 screen-ish px in map units
       const host = this.svg.parentElement;
       host.classList.toggle("zoomed", z < 0.74);
       host.classList.toggle("zoomed2", z < 0.32);
+      // past hood-level zoom the schematic map hands over to the real one:
+      // OSM/CARTO raster tiles with actual streets and buildings
+      host.classList.toggle("tiles-on", z < 0.34);
+      if (z < 0.34) this._queueTiles();
       if (z < 0.85) { // close enough that detail matters — fetch it once
         this.loadStreets("data/streets.min.geojson");
         this.loadDetail("data/detail.min.geojson");
@@ -300,6 +310,81 @@ export class NightMap {
       if (this._labelPt) this.setLabel(this._labelPt, this._labelText);
       this._syncHover();
     }, ms);
+  }
+
+  /* ------------- real-map detail tier: OSM/CARTO dark raster tiles --------
+   * Past neighborhood zoom the hand-drawn schematic can't carry the detail
+   * ("zooming into a picture"), so actual map tiles — streets, buildings,
+   * names — fade in underneath the neighborhood layer. Web-mercator tiles
+   * are placed by projecting each tile's corner coordinates through the
+   * map's own projection; over Chicago's latitude span the per-tile error
+   * is sub-pixel. Keyless, © OpenStreetMap contributors © CARTO. */
+  _queueTiles() {
+    clearTimeout(this._tileT);
+    this._tileT = setTimeout(() => this._updateTiles(), 140);
+  }
+  _updateTiles() {
+    if (!this.svg.parentElement.classList.contains("tiles-on")) return;
+    const g = this.svg.querySelector("#nm-tiles");
+    const f = this._frame();
+    const b = this.box, pad = 0.15;
+    const tl = this.unproject(b.x - b.w * pad, b.y - b.h * pad);
+    const br = this.unproject(b.x + b.w * (1 + pad), b.y + b.h * (1 + pad));
+    // choose z so one 256-unit tile paints at roughly 300–600 screen px
+    const zt = Math.max(12, Math.min(17,
+      Math.ceil(Math.log2((360 * this._pxPerLng * f.scale) / 520))));
+    const n = 2 ** zt;
+    const xOf = (lng) => Math.floor(((lng + 180) / 360) * n);
+    const yOf = (lat) => Math.floor(((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2) * n);
+    const latOf = (y) => Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / n))) * 180 / Math.PI;
+    const x0 = xOf(tl.lng), x1 = xOf(br.lng);
+    const y0 = yOf(tl.lat), y1 = yOf(br.lat);
+    const want = new Set();
+    for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+      const key = `${zt}/${x}/${y}`;
+      want.add(key);
+      if (this._tiles.has(key)) continue;
+      const lng0 = (x / n) * 360 - 180, lng1 = ((x + 1) / n) * 360 - 180;
+      const la0 = latOf(y), la1 = latOf(y + 1);
+      const img = document.createElementNS(NS, "image");
+      const X = this.px(lng0), Y = this.py(la0);
+      img.setAttribute("x", X.toFixed(2));
+      img.setAttribute("y", Y.toFixed(2));
+      img.setAttribute("width", (this.px(lng1) - X).toFixed(2));
+      img.setAttribute("height", (this.py(la1) - Y).toFixed(2));
+      img.setAttribute("preserveAspectRatio", "none");
+      img.setAttribute("class", "nm-tile");
+      img.setAttribute("href",
+        `https://${"abcd"[(x + y) % 4]}.basemaps.cartocdn.com/dark_all/${zt}/${x}/${y}@2x.png`);
+      img.addEventListener("error", () => { img.remove(); this._tiles.delete(key); });
+      g.appendChild(img);
+      this._tiles.set(key, img);
+    }
+    for (const [key, el] of this._tiles)
+      if (!want.has(key)) { el.remove(); this._tiles.delete(key); }
+  }
+
+  /* ---------------- "find me": device location + honest accuracy ---------- */
+  /* Draws the position and, crucially, the ACCURACY circle the device
+   * reports — so you can see exactly how much to trust the blue dot.
+   * Returns true when the point is on the map. */
+  showUser(ll, accuracyM = 0) {
+    this.clearUser();
+    const g = document.createElementNS(NS, "g");
+    g.setAttribute("id", "nm-user");
+    const x = this.px(ll.lng), y = this.py(ll.lat);
+    const rAcc = Math.max(accuracyM * this.unitsPerMeter, 0.5);
+    g.innerHTML = `
+      <circle class="nm-user-acc" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rAcc.toFixed(2)}"/>
+      <circle class="nm-user-ring" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"/>
+      <circle class="nm-user-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"/>`;
+    this.svg.querySelector("#nm-labels").before(g);
+    const inMap = x > -W * 0.1 && x < W * 1.1 && y > -this.H * 0.1 && y < this.H * 1.1;
+    if (inMap) this.focusOn(ll, Math.max(rAcc * 7, 110));
+    return inMap;
+  }
+  clearUser() {
+    this.svg.querySelector("#nm-user")?.remove();
   }
 
   setLabelWeights(weights) {
@@ -459,7 +544,7 @@ export class NightMap {
 
     const active = () => svg.parentElement.classList.contains("explore");
     const clampBox = (b) => {
-      const minW = this.cityBox.w / 16, maxW = this.cityBox.w * 1.7;
+      const minW = this.cityBox.w / 36, maxW = this.cityBox.w * 1.7;
       if (b.w < minW) { const f = minW / b.w; b = this._scaleBox(b, f, .5, .5); }
       if (b.w > maxW) { const f = maxW / b.w; b = this._scaleBox(b, f, .5, .5); }
       // keep the city loosely on stage
@@ -475,7 +560,7 @@ export class NightMap {
     // over-limit box re-centers it, which reads as the map sliding sideways
     // while the user is pinned at min/max zoom
     const clampFactor = (b, f) => {
-      const minW = this.cityBox.w / 16, maxW = this.cityBox.w * 1.7;
+      const minW = this.cityBox.w / 36, maxW = this.cityBox.w * 1.7;
       return Math.max(minW / b.w, Math.min(maxW / b.w, f));
     };
     this._clampFactor = clampFactor;
@@ -776,6 +861,7 @@ export class NightMap {
     if (this.selected && this.hoodGroups.has(this.selected) && this.selected !== name) {
       const prev = this.hoodGroups.get(this.selected);
       prev.classList.remove("sel");
+      prev.querySelectorAll(".nm-rim, .nm-rim-soft").forEach((r) => r.remove());
       if (this.selected !== this._hovName) this._scheduleReslot(prev);
     }
     for (const [n, l] of this.hoodLabels) if (n !== name) l.classList.remove("show");
@@ -790,6 +876,16 @@ export class NightMap {
     if (!g) return;
     this._promote(g); // before the class flip so the lift transition survives
     g.classList.add("sel");
+    // amber rim as layered VECTOR strokes — CSS drop-shadow filters
+    // rasterize at a capped resolution and turn to mush at deep zoom
+    this.svg.querySelectorAll(".nm-rim, .nm-rim-soft").forEach((r) => r.remove());
+    const face = this.hoodPaths.get(name);
+    for (const cls of ["nm-rim-soft", "nm-rim"]) {
+      const rim = document.createElementNS(NS, "path");
+      rim.setAttribute("d", face.getAttribute("d"));
+      rim.setAttribute("class", cls);
+      g.appendChild(rim);
+    }
     if (opts.camera === false) return;
     const bb = this.hoodBBoxes.get(name);
     const aspect = this._aspect();
@@ -1021,9 +1117,12 @@ export class NightMap {
 
     if (dest.geom && this.hoodPaths.has(dest.geom)) {
       const src = this.hoodPaths.get(dest.geom);
-      const glow = src.cloneNode();
-      glow.setAttribute("class", "nm-hood-glow");
-      this.svg.querySelector("#nm-fx").appendChild(glow);
+      const fx = this.svg.querySelector("#nm-fx");
+      for (const cls of ["nm-hood-glow-soft", "nm-hood-glow"]) {
+        const glow = src.cloneNode();
+        glow.setAttribute("class", cls);
+        fx.appendChild(glow);
+      }
     }
 
     await this.animateTo(box, opts.fast ? 800 : 1500);

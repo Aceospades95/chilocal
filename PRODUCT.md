@@ -70,6 +70,19 @@ Venue-dense neighborhoods shade a step lighter — the city's light map —
 and walls carry a vertical gradient for the diorama read. Reduced-motion
 users get camera jumps instead of flights.
 
+**The real-map tier (v4.1):** past neighborhood zoom the schematic hands
+over to actual OSM cartography — CARTO dark raster tiles (streets,
+buildings, names) fade in under the neighborhood layer, which thins to a
+tinted overlay; zoom now goes deep enough to read a single block. Keyless,
+attributed on-map ("© OpenStreetMap contributors © CARTO"). Every glow at
+depth is layered vector strokes, never a CSS filter — filters rasterize in
+user units and turn into blurry, glitching bands when magnified (same for
+label drop-shadows and fixed-size text: labels keep a fixed font and
+counter-scale via transform so glyphs never degrade). **📍 Find me** drops
+the device position with its reported accuracy circle — the honest answer
+to "how much should I trust this dot." A 4-second timeout on the weather
+fetch means a hung API can never hold boot hostage.
+
 **The personal layer:** ♡ wishlist anywhere; "✓ been here" from any profile
 (feeds the engine's novelty memory); **add your own places** (pin-on-map
 picker, on-device, `◆ yours`, instantly pickable) with **"Suggest to

@@ -26,7 +26,9 @@ export async function getWeather() {
       `&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m` +
       `&hourly=precipitation_probability,temperature_2m&forecast_hours=8` +
       `&daily=sunset&forecast_days=1&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FChicago`;
-    const r = await fetch(url);
+    // hard timeout: a hanging weather API must never hold the whole app
+    // hostage at boot — degrade to season defaults instead
+    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
     if (!r.ok) throw new Error("wx " + r.status);
     const d = await r.json();
     const probs = d.hourly?.precipitation_probability || [];

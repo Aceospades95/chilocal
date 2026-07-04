@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n5";
-import { buildContext } from "./context.js?v=n5";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n5";
-import { NightMap } from "./nightmap.js?v=n5";
-import { sharePlan } from "./share.js?v=n5";
+import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n6";
+import { buildContext } from "./context.js?v=n6";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n6";
+import { NightMap } from "./nightmap.js?v=n6";
+import { sharePlan } from "./share.js?v=n6";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -782,6 +782,28 @@ function wireStatic() {
   });
   $("#ov-transit").onclick = () => toggleOverlay("transit");
   $("#ov-streets").onclick = () => toggleOverlay("streets");
+  $("#ov-locate").onclick = () => {
+    const btn = $("#ov-locate");
+    if (btn.classList.contains("on")) { // second tap clears the marker
+      btn.classList.remove("on");
+      S.map.clearUser();
+      return;
+    }
+    if (!navigator.geolocation) { toast("This device won't share a location."); return; }
+    btn.textContent = "📍 Locating…";
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+      btn.textContent = "📍 Find me";
+      btn.classList.add("on");
+      const onMap = S.map.showUser({ lat, lng }, accuracy);
+      toast(onMap
+        ? `That's you — accurate to about ±${Math.round(accuracy)} m (the dashed circle).`
+        : "Your device puts you outside the Chicago map.");
+    }, () => {
+      btn.textContent = "📍 Find me";
+      toast("Couldn't get a location — check the browser's permission.");
+    }, { enableHighAccuracy: true, timeout: 8000 });
+  };
   $$(".back-ask").forEach((b) => b.onclick = resetToAsk);
 
   $$("#party-seg button").forEach((b) => b.onclick = () => {
