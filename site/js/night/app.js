@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n5";
-import { buildContext } from "./context.js?v=n5";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n5";
-import { NightMap } from "./nightmap.js?v=n5";
-import { sharePlan } from "./share.js?v=n5";
+import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n7";
+import { buildContext } from "./context.js?v=n7";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n7";
+import { NightMap } from "./nightmap.js?v=n7";
+import { sharePlan } from "./share.js?v=n7";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -26,9 +26,12 @@ const S = {
   p1: null, p2: null, twoStep: null,
   plan: null, session: null, vetoes: { p1: 1, p2: 1 },
   screen: "ask", view: "tonight",
-  ex: { hood: null, venue: null, vibe: "all", q: "" },
+  ex: { hood: null, venue: null, vibe: "all", q: "", price: null, open: false },
   exIndex: null,
 };
+
+/* ?debug=1 → the engine shows its work (scores, reason codes, filter drops) */
+const DEBUG = new URLSearchParams(location.search).has("debug");
 
 /* place my-places into the live pool (engine + explore see them as venues) */
 function refreshVenues() {
@@ -82,19 +85,28 @@ async function boot() {
   buildExploreIndex();
   S.map.onHoodClick = (name) => {
     if (S.view !== "explore") return;
-    if (S.ex.hood === name && !S.ex.venue) { exBackToCity(); return; } // click again = step out
+    const now = performance.now();
+    const isDbl = S._hoodClickN === name && now - (S._hoodClickT || 0) < 450;
+    S._hoodClickN = name; S._hoodClickT = now;
+    if (S.ex.hood === name && !S.ex.venue) {
+      // click again = step out — but the 2nd click of a double-click is a
+      // zoom gesture, not a step-out; the svg dblclick handler owns it
+      if (!isDbl) exBackToCity();
+      return;
+    }
     S.ex.venue = null;
     exSelectHood(name);
   };
   S.map.onBackgroundClick = () => {
     if (S.view !== "explore") return;
-    if (S.ex.venue) { S.ex.venue = null; S.map.clearSpot?.(); renderExplore();
-      const g = S.exIndex.groups.get(S.ex.hood);
-      if (g) S.map.markSpots(g.venues);
-    } else if (S.ex.hood) exBackToCity();
+    if (S.ex.venue) { S.ex.venue = null; S.map.clearSpot?.(); renderExplore(); }
+    else if (S.ex.hood) exBackToCity();
   };
   S.map.onSpotClick = (id) => {
     if (S.view !== "explore") return;
+    // a dot that spawned under the cursor an instant ago (hood just
+    // selected) shouldn't hijack the second click of a double-click
+    if (performance.now() - (S._hoodClickT || 0) < 450) return;
     S.ex.venue = id;
     renderExplore();
   };
@@ -411,6 +423,48 @@ function metaLine(v) {
   return bits.map(esc).join(" · ");
 }
 
+/* one honest word on how each alternate differs from the hero */
+function altTag(a, hero) {
+  if (a.v.hood !== hero.v.hood) return "different neighborhood";
+  if (a.v.price < hero.v.price) return "cheaper";
+  if (haversineMi(origin(), a.v) < haversineMi(origin(), hero.v) - 0.7) return "closer";
+  if (a.v.energy <= hero.v.energy - 2) return "calmer";
+  if (a.v.energy >= hero.v.energy + 2) return "rowdier";
+  if (a.v.inst && !hero.v.inst) return "the classic";
+  if (!a.v.inst && hero.v.inst) return "the wildcard";
+  return "same lane, different room";
+}
+
+/* "what could go wrong" — only risks the data can actually support */
+function planRisks(plan) {
+  const v = plan.hero.v;
+  const risks = [];
+  if (!v._hours) risks.push("Hours unverified — check before you head out.");
+  if (plan.second && !plan.second.venue._hours)
+    risks.push(`${plan.second.venue.name}'s hours are unverified too.`);
+  if (!S.ctx.ok) risks.push("Weather didn't load, so this pick ignores tonight's sky.");
+  else if (v.outdoor && !v.indoor && S.ctx.precipProb != null && S.ctx.precipProb >= 40)
+    risks.push(`${S.ctx.precipProb}% rain risk tonight and this one lives outdoors.`);
+  if (haversineMi(origin(), v) > 8)
+    risks.push("It's a real trek from your base — budget the ride.");
+  if (v.approx) risks.push("Location is approximate — it's a stroll, not one door.");
+  return risks;
+}
+
+function debugPanel(plan) {
+  if (!DEBUG || !plan.debug) return "";
+  const rows = plan.debug.map((c, i) => `
+    <tr class="${c === plan.hero ? "win" : ""}">
+      <td>${i + 1}</td><td>${esc(c.v.name)}</td><td>${c.score.toFixed(1)}</td>
+      <td>${esc(c.reasons.join(",") || "—")}</td><td>${c.v._hours ? "✓" : "?"}</td>
+    </tr>`).join("");
+  const dropped = Object.entries(plan.filtered || {})
+    .map(([k, n]) => `${k}:${n}`).join(" · ");
+  return `<details class="dbg" open><summary>engine debug</summary>
+    <table><tr><th>#</th><th>venue</th><th>score</th><th>reason codes</th><th>hrs</th></tr>${rows}</table>
+    <p>dropped — ${esc(dropped || "none")}</p></details>`;
+}
+
 function renderReveal() {
   const { hero, second, alts, why } = S.plan;
   const v = hero.v;
@@ -427,6 +481,16 @@ function renderReveal() {
     (v.tips?.length ? ` <span class="tips">· ${v.tips.map(esc).join(" · ")}</span>` : "") +
     (v.approx ? ` <span class="tips">· location approximate — it's a stroll, not one door</span>` : "");
 
+  // honesty section: collapsible, only when there's something real to flag
+  const risks = planRisks(S.plan);
+  const riskEl = $("#rv-risks");
+  if (risks.length) {
+    riskEl.hidden = false;
+    riskEl.innerHTML = `<summary>What could go wrong</summary>
+      <ul>${risks.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>`;
+    riskEl.open = false;
+  } else riskEl.hidden = true;
+
   const sec = $("#rv-second");
   if (second) {
     sec.hidden = false;
@@ -440,14 +504,14 @@ function renderReveal() {
   $("#rv-save").classList.toggle("on", S.mem.saved.includes(v.id));
   $("#rv-save").textContent = S.mem.saved.includes(v.id) ? "♥ Saved" : "♡ Save";
 
-  // alternates
-  $("#rv-alts").innerHTML = alts.length ? `
+  // alternates — each labeled by how it differs, never a clone
+  $("#rv-alts").innerHTML = (alts.length ? `
     <div class="alts-k">If you dare say no:</div>
     ${alts.map((a, i) => `
       <button class="alt" data-i="${i}">
-        <span class="alt-name">${esc(a.v.name)}</span>
+        <span class="alt-name">${esc(a.v.name)} <span class="alt-tag">${esc(altTag(a, S.plan.hero))}</span></span>
         <span class="alt-meta">${esc(a.v.cat)} · ${esc(a.v.hood)} · ${"$".repeat(a.v.price)}</span>
-      </button>`).join("")}` : "";
+      </button>`).join("")}` : "") + debugPanel(S.plan);
   $$("#rv-alts .alt").forEach((b) => b.onclick = () => promoteAlt(+b.dataset.i));
 
   // two-player vetoes
@@ -463,7 +527,10 @@ function renderReveal() {
 
   show("reveal");
   const desktop = matchMedia("(min-width: 920px)").matches;
-  const inset = desktop ? { right: 470 / innerWidth } : { bottom: Math.min(0.58, 520 / innerHeight) };
+  // layout viewport, not innerWidth/Height — the visual viewport lies on
+  // mobile (browser chrome, pinch state) and would mis-frame the camera
+  const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+  const inset = desktop ? { right: 470 / vw } : { bottom: Math.min(0.58, 520 / vh) };
   requestAnimationFrame(() => {
     S.map.reveal(origin(), v, { second: second?.venue || null, fast: S.session.roll > 0, inset, label: v.hood });
   });
@@ -716,6 +783,28 @@ function wireStatic() {
   });
   $("#ov-transit").onclick = () => toggleOverlay("transit");
   $("#ov-streets").onclick = () => toggleOverlay("streets");
+  $("#ov-locate").onclick = () => {
+    const btn = $("#ov-locate");
+    if (btn.classList.contains("on")) { // second tap clears the marker
+      btn.classList.remove("on");
+      S.map.clearUser();
+      return;
+    }
+    if (!navigator.geolocation) { toast("This device won't share a location."); return; }
+    btn.textContent = "📍 Locating…";
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+      btn.textContent = "📍 Find me";
+      btn.classList.add("on");
+      const onMap = S.map.showUser({ lat, lng }, accuracy);
+      toast(onMap
+        ? `That's you — accurate to about ±${Math.round(accuracy)} m (the dashed circle).`
+        : "Your device puts you outside the Chicago map.");
+    }, () => {
+      btn.textContent = "📍 Find me";
+      toast("Couldn't get a location — check the browser's permission.");
+    }, { enableHighAccuracy: true, timeout: 8000 });
+  };
   $$(".back-ask").forEach((b) => b.onclick = resetToAsk);
 
   $$("#party-seg button").forEach((b) => b.onclick = () => {
@@ -742,8 +831,6 @@ function wireStatic() {
     if (e.key !== "Escape" || S.view !== "explore" || document.querySelector("dialog[open]")) return;
     if (S.ex.venue) {
       S.ex.venue = null; S.map.clearSpot?.(); renderExplore();
-      const g = S.exIndex.groups.get(S.ex.hood);
-      if (g) S.map.markSpots(g.venues);
     } else if (S.ex.hood) exBackToCity();
   });
   $("#stayin-out").onclick = () => { $("#stayin").close(); S.mode = "out"; S.vibe = null; newSession(); runDecision(); };
@@ -821,17 +908,58 @@ function buildExploreIndex() {
 }
 
 const exInset = () => matchMedia("(min-width: 920px)").matches
-  ? { right: 430 / innerWidth } : { bottom: Math.min(0.47, 420 / innerHeight) };
-const tiltZoom = () => (S.map?.tilt === "full" ? 0.8 : S.map?.tilt === "mid" ? 0.88 : 1);
+  ? { right: 430 / document.documentElement.clientWidth }
+  : { bottom: Math.min(0.47, 420 / document.documentElement.clientHeight) };
+const tiltZoom = () => (S.map?.tilt === "full" ? 0.78 : S.map?.tilt === "mid" ? 0.85 : 0.97);
+
+/* the one filter gate for explore lists: vibe, price ceiling, verified-open */
+function exPasses(v) {
+  if (S.ex.vibe !== "all" && !v.vibes.includes(S.ex.vibe)) return false;
+  if (S.ex.price && v.price > S.ex.price) return false;
+  if (S.ex.open && !openState(v._hours, S.ctx.day, S.ctx.minutes)?.open) return false;
+  return true;
+}
+const exFiltersOn = () => S.ex.vibe !== "all" || S.ex.price || S.ex.open;
+
+/* second chip row: budget ceiling + verified-open-now */
+function exFilterChips2() {
+  return `
+    <div class="fchips" id="ex-fchips2">
+      ${[1, 2, 3, 4].map((n) => `<button data-p="${n}" class="${S.ex.price === n ? "on" : ""}">≤ ${"$".repeat(n)}</button>`).join("")}
+      <button data-open="1" class="${S.ex.open ? "on" : ""}">● Open now</button>
+    </div>
+    ${S.ex.open ? `<p class="ex-hint">“Open now” trusts listed hours only — spots without verified hours are hidden.</p>` : ""}`;
+}
+function wireFilterChips2(el, rerender) {
+  $$("#ex-fchips2 [data-p]", el).forEach((b) => b.onclick = () => {
+    S.ex.price = S.ex.price === +b.dataset.p ? null : +b.dataset.p;
+    rerender();
+  });
+  const ob = $("#ex-fchips2 [data-open]", el);
+  if (ob) ob.onclick = () => { S.ex.open = !S.ex.open; rerender(); };
+}
+
+/* passport: how much of the book has actually been lived */
+function passportStats() {
+  const visited = new Set();
+  for (const [id, n] of Object.entries(S.mem.been)) {
+    if (n > 0) { const v = S.venues.find((x) => x.id === id); if (v) visited.add(v.geom || v.hood); }
+  }
+  for (const [hood, n] of Object.entries(S.mem.hoodVisits)) {
+    if (n > 0) { const v = S.venues.find((x) => x.hood === hood); if (v) visited.add(v.geom || v.hood); }
+  }
+  const unvisited = [...S.exIndex.groups.entries()]
+    .filter(([key, g]) => !visited.has(key) && g.venues.length >= 3)
+    .sort((a, b) => b[1].venues.length - a[1].venues.length);
+  return { count: visited.size, total: S.geo.features.length, unvisited };
+}
 
 function exSelectHood(key) {
   S.ex.hood = key; S.ex.venue = null;
-  S.ex.vibe = "all"; // a fresh room, a fresh menu
+  S.ex.vibe = "all"; S.ex.price = null; S.ex.open = false; // a fresh room, a fresh menu
   S.map.clearSpot?.();
   S.exCam = S.map.selectHood(key, { inset: exInset() });
-  renderExplore();
-  const g = S.exIndex.groups.get(key);
-  if (g) exAfterCam(() => { if (S.ex.hood === key && !S.ex.venue) S.map.markSpots(g.venues); });
+  renderExplore(); // draws the venue lights synchronously — they ride the camera
 }
 
 function exBackToCity() {
@@ -945,7 +1073,7 @@ function renderExplore() {
     const display = g?.display || S.ex.hood;
     const take = HOOD_TAKES[display] || HOOD_TAKES[S.ex.hood] ||
       (g ? Object.keys(g.names).map((n) => HOOD_TAKES[n]).find(Boolean) : null);
-    const list = (g?.venues || []).filter((v) => S.ex.vibe === "all" || v.vibes.includes(S.ex.vibe));
+    const list = (g?.venues || []).filter(exPasses);
     el.innerHTML = `
       <button class="ex-back" id="ex-back">← the whole city</button>
       <h2 class="ex-title">${esc(display)}</h2>
@@ -957,17 +1085,25 @@ function renderExplore() {
           ${VIBES.filter((vb) => g.venues.some((v) => v.vibes.includes(vb.id)))
             .map((vb) => `<button data-v="${vb.id}" class="${S.ex.vibe === vb.id ? "on" : ""}">${vb.icon} ${esc(vb.name)}</button>`).join("")}
         </div>
+        ${exFilterChips2()}
         ${list.map((v) => `
           <button class="ex-row" data-id="${esc(v.id)}">
             <span class="n">${S.mem.saved.includes(v.id) ? `<span class="rowheart">♥</span> ` : ""}${esc(v.name)}</span>
             <span class="m">${esc(v.cat)} · ${"$".repeat(v.price)}</span>
             <span class="ven-badges">${exBadges(v)}</span>
           </button>`).join("")}
+        ${!list.length && exFiltersOn() ? `<p class="ex-empty">Nothing here matches those filters. <button class="linkish" id="ex-clearf">Clear filters</button></p>` : ""}
         <div class="ex-actions"><button class="btn ghost" id="ex-surprise">🎲 Surprise us — but here</button></div>`
       : `<p class="ex-empty">No picks here yet — the engine is still eating its way across the city.</p>
          <div class="ex-actions"><button class="btn ghost" id="ex-addhere">+ Put a place here yourself</button></div>`}`;
     $("#ex-back").onclick = exBackToCity;
     $$("#ex-vchips button", el).forEach((b) => b.onclick = () => { S.ex.vibe = b.dataset.v; renderExplore(); });
+    wireFilterChips2(el, renderExplore);
+    $("#ex-clearf") && ($("#ex-clearf").onclick = () => {
+      S.ex.vibe = "all"; S.ex.price = null; S.ex.open = false; renderExplore();
+    });
+    // the lights on the tile always mirror the visible list
+    if (g) S.map.markSpots(list);
     $$(".ex-row", el).forEach((b) => b.onclick = () => { S.ex.venue = b.dataset.id; renderExplore(); });
     $("#ex-addhere") && ($("#ex-addhere").onclick = () => openAddPlace(S.ex.hood));
     $("#ex-surprise") && ($("#ex-surprise").onclick = () => {
@@ -981,17 +1117,26 @@ function renderExplore() {
   }
 
   /* ---- city view ---- */
+  const pass = passportStats();
   el.innerHTML = `
     <p class="ex-kicker">THE BOOK OF THE CITY</p>
     <h2 class="ex-title">Browse <em>Chicago</em></h2>
     <p class="ex-sub">${S.venues.length} places we'd stand behind · tap the map or the list</p>
-    <input class="ex-search" id="ex-q" placeholder="Search spots or neighborhoods…" value="${esc(S.ex.q)}" autocomplete="off"/>
+    ${pass.count ? `<p class="ex-passport">🗺 Passport: <b>${pass.count} of ${pass.total}</b> neighborhoods lived${
+      pass.unvisited.length ? ` · <button class="linkish" id="ex-stamp">stamp somewhere new →</button>` : ""}</p>` : ""}
+    <input class="ex-search" id="ex-q" placeholder="Search spots, neighborhoods, vibes…" value="${esc(S.ex.q)}" autocomplete="off"/>
     <div class="fchips" id="ex-vchips">
       <button data-v="all" class="${S.ex.vibe === "all" ? "on" : ""}">All</button>
       ${VIBES.map((vb) => `<button data-v="${vb.id}" class="${S.ex.vibe === vb.id ? "on" : ""}">${vb.icon} ${esc(vb.name)}</button>`).join("")}
     </div>
+    ${exFilterChips2()}
     <div id="ex-results"></div>
     <button class="linkish" id="ex-addplace" style="margin-top:12px">+ Add your own spot</button>`;
+  $("#ex-stamp") && ($("#ex-stamp").onclick = () => {
+    const pool = pass.unvisited.slice(0, 10);
+    const [key] = pool[(Math.random() * pool.length) | 0];
+    exSelectHood(key);
+  });
 
   const renderResults = () => {
     const box = $("#ex-results");
@@ -1001,7 +1146,10 @@ function renderExplore() {
         .filter(([key, g]) => g.display.toLowerCase().includes(q) || key.toLowerCase().includes(q))
         .slice(0, 4);
       const venueHits = S.venues.filter((v) =>
-        v.name.toLowerCase().includes(q) || v.cat.toLowerCase().includes(q)).slice(0, 12);
+        (v.name.toLowerCase().includes(q) || v.cat.toLowerCase().includes(q) ||
+         v.vibes.some((vb) => vibeName(vb).includes(q))) &&
+        (!S.ex.price || v.price <= S.ex.price) &&
+        (!S.ex.open || openState(v._hours, S.ctx.day, S.ctx.minutes)?.open)).slice(0, 12);
       box.innerHTML = hoodHits.map(([key, g]) => `
           <button class="ex-row" data-hood="${esc(key)}">
             <span class="n">${esc(g.display)}</span><span class="c">${g.venues.length} spots →</span>
@@ -1013,14 +1161,18 @@ function renderExplore() {
         `<p class="ex-empty">Nothing by that name in the book yet.</p>`;
     } else {
       const hoods = [...groups.entries()]
-        .map(([key, g]) => ({ key, ...g }))
-        .filter((g) => S.ex.vibe === "all" || g.venues.some((v) => v.vibes.includes(S.ex.vibe)))
-        .sort((a, b) => b.venues.length - a.venues.length);
+        .map(([key, g]) => ({ key, ...g, matching: g.venues.filter(exPasses).length }))
+        .filter((g) => g.matching > 0)
+        .sort((a, b) => b.matching - a.matching);
       box.innerHTML = hoods.map((g) => `
         <button class="ex-row" data-hood="${esc(g.key)}">
           <span class="n">${esc(g.display)}</span>
-          <span class="c">${(S.ex.vibe === "all" ? g.venues : g.venues.filter((v) => v.vibes.includes(S.ex.vibe))).length} spots →</span>
-        </button>`).join("");
+          <span class="c">${g.matching} spots →</span>
+        </button>`).join("") ||
+        `<p class="ex-empty">No neighborhood matches those filters tonight. <button class="linkish" id="ex-clearf2">Clear filters</button></p>`;
+      $("#ex-clearf2") && ($("#ex-clearf2").onclick = () => {
+        S.ex.vibe = "all"; S.ex.price = null; S.ex.open = false; renderExplore();
+      });
     }
     $$(".ex-row[data-hood]", box).forEach((b) => b.onclick = () => exSelectHood(b.dataset.hood));
     $$(".ex-row[data-id]", box).forEach((b) => b.onclick = () => {
@@ -1036,6 +1188,7 @@ function renderExplore() {
   $("#ex-q").oninput = (e) => { S.ex.q = e.target.value; renderResults(); };
   $$("#ex-vchips button", el).forEach((b) => b.onclick = () => { S.ex.vibe = b.dataset.v; renderResults();
     $$("#ex-vchips button", el).forEach((x) => x.classList.toggle("on", x === b)); });
+  wireFilterChips2(el, renderExplore);
   renderResults();
 }
 

@@ -42,6 +42,7 @@ header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 20px 10px;
   pointer-events: none; /* the map runs underneath — only controls catch taps */
+  user-select: none; -webkit-user-select: none;
 }
 header > * { pointer-events: auto; }
 .wordmark {
@@ -74,74 +75,114 @@ header > * { pointer-events: auto; }
     radial-gradient(1.5px 1.5px at 97% 41%, rgba(207,228,255,.6), transparent 100%);
 }
 #mapwrap {
-  position: absolute; inset: 0; z-index: 0; overflow: hidden;
+  position: absolute; inset: 0; z-index: 0;
   transition: opacity .8s ease, filter .8s ease;
   opacity: .48; filter: saturate(.85);
+  user-select: none; -webkit-user-select: none;
 }
 #mapwrap.on { opacity: 1; filter: none; }
-/* The svg renders at 2x layout size and every transform ends in scale(.5):
- * the GPU layer holds a supersampled raster, so the 3D tilt and mid-zoom
- * frames always MINIFY the texture — crisp at every moment, never stretched. */
-#nm {
-  width: 200%; height: 200%; display: block;
-  transform: scale(.5); transform-origin: 0 0;
+#nm { width: 100%; height: 100%; display: block; -webkit-tap-highlight-color: transparent; }
+
+/* while a pan is live, nothing anywhere may start a text selection —
+ * and the cursor reads "grabbing" even over the hit layer's pointer */
+body.map-dragging, body.map-dragging * {
+  user-select: none !important; -webkit-user-select: none !important;
+  cursor: grabbing !important;
 }
 
+/* the interaction twin of every hood: invisible, immobile, owns the pointer */
+.nm-hit { fill: none; stroke: none; pointer-events: none; }
+#mapwrap.explore .nm-hit { pointer-events: fill; cursor: pointer; }
+
 .nm-hood {
-  fill: #101a30; stroke: #24365c; stroke-width: 1;
+  fill: var(--face, #0f1830); stroke: var(--edge, #24365c); stroke-width: 1;
+  stroke-opacity: .55;
   vector-effect: non-scaling-stroke;
   transition: fill .25s ease, stroke .25s ease;
 }
-.nm-hoodg { transition: transform .3s cubic-bezier(.2,.85,.3,1); }
-.nm-wall { fill: #04070f; stroke: none; display: none; transition: transform .3s cubic-bezier(.2,.85,.3,1); transform: translateY(var(--wd, 6px)); }
+.nm-hoodg { transition: transform .25s cubic-bezier(.2,.85,.3,1), filter .25s ease; }
+.nm-wall { fill: url(#nm-wallgrad); stroke: none; display: none; transition: transform .25s cubic-bezier(.2,.85,.3,1); transform: translateY(var(--wd, 8px)); }
+
+/* camera in motion: geometry moves every frame — transitions would smear */
+#mapwrap.moving .nm-hoodg,
+#mapwrap.moving .nm-wall,
+#mapwrap.moving #nm-spot { transition: none !important; }
 .nm-hoodlabel {
-  font-family: var(--sans); font-weight: 600; font-size: var(--lbl, 12px);
+  font-family: var(--sans); font-weight: 600; font-size: 13px;
   letter-spacing: .1em; fill: #e2ecff; opacity: 0; pointer-events: none;
   paint-order: stroke; stroke: rgba(3,6,13,.72); stroke-width: .12em; stroke-linejoin: round;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.9));
+  /* fixed font + counter-scale: font-size below ~2px wrecks Chrome's glyph
+   * geometry (blurry blobs at deep zoom); no drop-shadow either — filter
+   * blur is in user units and smears when magnified. Stroke is the halo. */
+  transform-box: fill-box; transform-origin: center;
+  transform: scale(var(--zf, 1));
   transition: opacity .25s ease;
 }
 .nm-hoodlabel.show { opacity: 1 !important; }
-#mapwrap.explore .nm-hoodlabel.vis { opacity: .42; }
+#mapwrap.explore .nm-hoodlabel.vis { opacity: .55; }
 
 /* -------- explore: the 2.5D diorama (three view presets) -------- */
-/* translate(p) · perspective · rotateX · translate(-p) · scale(.5):
- * tilt pivots around the container point p while the 2x raster shrinks
- * into place. (p is in element %, i.e. half the container %.) */
 #nm { transition: transform .9s cubic-bezier(.3,.8,.3,1); }
 #mapwrap.explore.tilt-mid #nm {
-  transform: translate(25%, 27.5%) perspective(1500px) rotateX(16deg) translate(-25%, -27.5%) scale(.5);
+  transform: perspective(1500px) rotateX(16deg);
+  transform-origin: 50% 55%;
 }
 #mapwrap.explore.tilt-full #nm {
-  transform: translate(25%, 31%) perspective(1300px) rotateX(28deg) translate(-25%, -31%) scale(.5);
+  transform: perspective(1300px) rotateX(28deg);
+  transform-origin: 50% 62%;
 }
-#mapwrap.explore.tilt-flat #nm { transform: scale(.5); }
+#mapwrap.explore.tilt-flat #nm { transform: none; }
 #mapwrap.explore.tilt-flat .nm-wall { display: none; }
 #mapwrap.explore #nm { touch-action: none; cursor: grab; }
 #mapwrap.explore #nm:active { cursor: grabbing; }
 #mapwrap.explore .nm-wall { display: block; }
-#mapwrap.explore .nm-hood { cursor: pointer; }
-#mapwrap.explore .nm-hoodg:hover { transform: translateY(calc(-1 * var(--lift, 9px))); }
-#mapwrap.explore .nm-hoodg:hover .nm-wall { transform: translateY(calc(var(--wd, 6px) + var(--lift, 9px))); }
-#mapwrap.explore .nm-hoodg:hover .nm-hood {
-  fill: #223050; stroke: #5a7ab8;
+
+/* hover: the tile lifts toward you (class set from the static hit layer,
+ * so the lift can never slide the target out from under the cursor) */
+#mapwrap.explore .nm-hoodg.hov { transform: translateY(calc(-1 * var(--lift, 12px))); filter: drop-shadow(0 10px 14px rgba(0,0,0,.55)); }
+#mapwrap.explore .nm-hoodg.hov .nm-wall { transform: translateY(calc(var(--wd, 8px) + var(--lift, 12px))); }
+#mapwrap.explore .nm-hoodg.hov .nm-hood {
+  fill: var(--face-hov, #223354); stroke: var(--edge, #5f80c0); stroke-opacity: 1; stroke-width: 1.2;
 }
 
-#mapwrap.explore .nm-hoodg.sel { transform: translateY(calc(-1.2 * var(--lift, 9px))); filter: drop-shadow(0 16px 22px rgba(0,0,0,.6)); }
-#mapwrap.explore .nm-hoodg.sel .nm-wall { transform: translateY(calc(var(--wd, 6px) + 1.2 * var(--lift, 9px))); }
+/* selected: clearly stronger than hover — higher, warmer, rimmed in amber */
+#mapwrap.explore .nm-hoodg.sel { transform: translateY(calc(-1.5 * var(--lift, 12px))); filter: drop-shadow(0 18px 26px rgba(0,0,0,.65)); }
+#mapwrap.explore .nm-hoodg.sel .nm-wall { transform: translateY(calc(var(--wd, 8px) + 1.5 * var(--lift, 12px))); }
 #mapwrap.explore .nm-hoodg.sel .nm-hood {
-  fill: #232c46; stroke: var(--amber); stroke-width: 1.4;
-  filter: drop-shadow(0 0 7px rgba(255,180,92,.45));
+  fill: var(--face-sel, #2b3554); stroke: var(--amber); stroke-width: 1.5; stroke-opacity: 1;
+}
+/* the amber rim glow is LAYERED VECTOR STROKES, not a filter — CSS
+ * drop-shadows rasterize at a capped resolution and turn into a blurry,
+ * glitching band once you zoom deep into a selected neighborhood */
+.nm-rim, .nm-rim-soft {
+  fill: none; stroke: var(--amber); vector-effect: non-scaling-stroke;
+  pointer-events: none; stroke-linejoin: round;
+}
+.nm-rim { stroke-width: 2.6; opacity: .55; }
+.nm-rim-soft { stroke-width: 7; opacity: .16; }
+/* the big soft filters are only safe at city scale — kill them once the
+ * rasterized area would exceed the browser's filter budget and blur */
+#mapwrap.zoomed .nm-hoodg.sel,
+#mapwrap.zoomed .nm-hoodg.hov { filter: none; }
+/* venue lights ride the raised tile */
+#mapwrap.explore.hood-sel #nm-spot {
+  transform: translateY(calc(-1.5 * var(--lift, 12px)));
+  transition: transform .25s cubic-bezier(.2,.85,.3,1);
 }
 @media (max-width: 919px) {
-  #mapwrap.explore.tilt-mid #nm { transform: translate(25%, 20%) perspective(1100px) rotateX(13deg) translate(-25%, -20%) scale(.5); }
-  #mapwrap.explore.tilt-full #nm { transform: translate(25%, 21%) perspective(900px) rotateX(22deg) translate(-25%, -21%) scale(.5); }
+  #mapwrap.explore.tilt-mid #nm { transform: perspective(1100px) rotateX(13deg); transform-origin: 50% 40%; }
+  #mapwrap.explore.tilt-full #nm { transform: perspective(900px) rotateX(22deg); transform-origin: 50% 42%; }
 }
 .nm-scan { fill: #22375f; }
 .nm-hood-glow {
   fill: rgba(255, 200, 130, .04); stroke: #ffb45c;
   stroke-width: 1.6; vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 6px rgba(255, 180, 92, .5));
+  animation: hood-breathe 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.nm-hood-glow-soft {
+  fill: none; stroke: #ffb45c; stroke-width: 6; opacity: .18;
+  vector-effect: non-scaling-stroke; stroke-linejoin: round;
   animation: hood-breathe 3.2s ease-in-out infinite;
   pointer-events: none;
 }
@@ -158,16 +199,19 @@ header > * { pointer-events: auto; }
 .nm-spot-halo { fill: rgba(255, 75, 92, .3); }
 .nm-spot-dot {
   fill: var(--amber); opacity: .92;
-  r: calc(var(--uz, 1px) * 4.2);
+  r: calc(var(--uz, 1px) * 4.6);
   stroke: rgba(6,10,18,.85); stroke-width: calc(var(--uz, 1px) * 1.4);
-  filter: drop-shadow(0 0 3px rgba(255,180,92,.8));
+  /* glow radius in --uz so it scales WITH the dot instead of ballooning
+   * into a soft orb at deep zoom (filter units are user units) */
+  filter: drop-shadow(0 0 calc(var(--uz, 1px) * 3) rgba(255,180,92,.9));
 }
 .nm-spot-hit { fill: transparent; cursor: pointer; r: calc(var(--uz, 1px) * 13); }
 .nm-spotlabel {
-  font-family: var(--sans); font-weight: 600; font-size: calc(var(--lbl, 12px) * .68);
+  font-family: var(--sans); font-weight: 600; font-size: 9px;
   letter-spacing: .04em; fill: #ffd9a8; opacity: 0; pointer-events: none;
   paint-order: stroke; stroke: rgba(3,6,13,.75); stroke-width: .14em; stroke-linejoin: round;
-  transform: translateY(calc(var(--uz, 1px) * -6));
+  transform-box: fill-box; transform-origin: center;
+  transform: translateY(calc(var(--uz, 1px) * -6)) scale(var(--zf, 1));
   transition: opacity .3s;
 }
 #mapwrap.zoomed2 .nm-spotlabel.vis { opacity: .95; }
@@ -178,27 +222,71 @@ header > * { pointer-events: auto; }
 #mapwrap.zoomed .nm-park { opacity: .55; }
 #mapwrap.zoomed .nm-waterbody { opacity: .9; }
 
+/* real-map tile tier: fades in past neighborhood zoom; the schematic
+ * neighborhood layer thins to a tinted overlay so streets/buildings read */
+#nm-tiles { opacity: 0; transition: opacity .5s ease; pointer-events: none; }
+#mapwrap.tiles-on #nm-tiles { opacity: 1; }
+/* per-IMAGE brightness lift (a filter on the whole group would blow the
+ * browser's filter-raster budget at deep zoom; single tiles are small) */
+.nm-tile { filter: brightness(1.5) saturate(1.08); }
+#mapwrap.tiles-on .nm-hood { fill-opacity: .10; }
+#mapwrap.tiles-on .nm-hoodg.hov .nm-hood { fill-opacity: .26; }
+#mapwrap.tiles-on .nm-hoodg.sel .nm-hood { fill-opacity: .10; }
+#mapwrap.tiles-on .nm-wall { opacity: .35; }
+#mapwrap.tiles-on #nm-streets, #mapwrap.tiles-on #nm-detail { opacity: 0 !important; }
+.nm-attrib {
+  position: absolute; left: 8px; bottom: 6px; z-index: 4; pointer-events: none;
+  font-size: 10px; letter-spacing: .02em; color: #8b96ab;
+  background: rgba(4, 7, 14, .55); padding: 2px 8px; border-radius: 7px;
+  opacity: 0; transition: opacity .4s;
+}
+#mapwrap.tiles-on .nm-attrib { opacity: 1; }
+
+/* "find me": device position + the accuracy circle it reports */
+.nm-user-acc {
+  fill: rgba(100, 216, 255, .09); stroke: rgba(100, 216, 255, .45);
+  stroke-width: 1; vector-effect: non-scaling-stroke; stroke-dasharray: 4 4;
+}
+.nm-user-dot {
+  fill: var(--skyblue); r: calc(var(--uz, 1px) * 5);
+  stroke: rgba(6, 10, 18, .9); stroke-width: calc(var(--uz, 1px) * 1.6);
+}
+.nm-user-ring {
+  fill: none; stroke: var(--skyblue); stroke-width: 1.4;
+  vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
+  r: calc(var(--uz, 1px) * 5);
+  animation: user-pulse 2.4s ease-out infinite;
+}
+@keyframes user-pulse {
+  0% { transform: scale(1); opacity: .9; }
+  75% { transform: scale(3.2); opacity: 0; }
+  100% { opacity: 0; }
+}
+
 /* add-a-place placement mode */
 #mapwrap.placing #nm { cursor: crosshair !important; }
 
-/* orientation overlays — transit is a toggle; streets also auto-appear on zoom */
-#nm-streets, #nm-transit { display: none; }
-#mapwrap.show-streets #nm-streets, #mapwrap.zoomed #nm-streets { display: block; }
-#mapwrap.show-transit #nm-transit { display: block; }
+/* orientation overlays — transit is a toggle; streets also auto-appear on
+ * zoom. Opacity (not display) so they fade in instead of popping mid-zoom. */
+#nm-streets, #nm-transit { opacity: 0; pointer-events: none; transition: opacity .45s ease; }
+#mapwrap.show-streets #nm-streets, #mapwrap.zoomed #nm-streets { opacity: 1; }
+#mapwrap.show-transit #nm-transit { opacity: 1; }
 .nm-street {
   fill: none; stroke: #3d5c92; stroke-width: 1; opacity: .5;
   vector-effect: non-scaling-stroke;
 }
+#mapwrap.zoomed2 .nm-street { stroke-width: 1.3; opacity: .68; }
 .nm-rail {
   fill: none; stroke-width: 2.2; opacity: .9; stroke-linecap: round;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 3px rgba(120,160,255,.25));
+  /* no filter: a drop-shadow over city-spanning paths rasterizes huge */
 }
 .nm-streetlabel {
-  font-family: var(--sans); font-weight: 500; font-size: calc(var(--lbl, 12px) * .72);
+  font-family: var(--sans); font-weight: 500; font-size: 9.4px;
   letter-spacing: .08em; fill: #8fa3c8; opacity: 0; pointer-events: none;
   paint-order: stroke; stroke: rgba(3,6,13,.7); stroke-width: .12em; stroke-linejoin: round;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.85));
+  transform-box: fill-box; transform-origin: center;
+  transform: scale(var(--zf, 1));
   transition: opacity .3s;
 }
 #mapwrap.zoomed .nm-streetlabel.vis { opacity: .95; }
@@ -207,6 +295,7 @@ header > * { pointer-events: auto; }
 #map-controls {
   position: absolute; z-index: 25; left: 16px; top: 64px;
   display: none; flex-direction: column; gap: 8px; align-items: flex-start;
+  user-select: none; -webkit-user-select: none;
 }
 body[data-screen="explore"] #map-controls { display: flex; }
 #map-controls .seg { padding: 2px; }
@@ -449,6 +538,30 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .rv-hours .dot.unk { background: var(--muted); }
 .rv-hours .tips { color: #b8c2d4; }
 
+/* the honesty section — collapsed by default, never alarmist */
+.risks { margin: -4px 0 14px; }
+.risks summary {
+  cursor: pointer; font-size: 12px; color: var(--warn); letter-spacing: .06em;
+  list-style: none; user-select: none; -webkit-user-select: none;
+}
+.risks summary::-webkit-details-marker { display: none; } /* older Safari */
+.risks summary::before { content: "⚠ "; }
+.risks ul { margin: 8px 0 0; padding-left: 18px; }
+.risks li { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 3px; }
+
+.alt-tag {
+  font-family: var(--sans); font-weight: 400; font-style: italic;
+  font-size: 11px; color: var(--amber); margin-left: 6px; white-space: nowrap;
+}
+
+/* engine debug (?debug=1 only) */
+.dbg { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.dbg summary { font-size: 11px; letter-spacing: .18em; color: var(--skyblue); cursor: pointer; }
+.dbg table { width: 100%; border-collapse: collapse; margin: 8px 0 4px; font-size: 11px; }
+.dbg th, .dbg td { text-align: left; padding: 3px 6px 3px 0; border-bottom: 1px solid var(--line-soft); color: var(--muted); }
+.dbg tr.win td { color: var(--amber); }
+.dbg p { font-size: 11px; color: var(--muted); margin: 6px 0 0; }
+
 .then {
   border-left: 2px solid var(--amber); padding: 4px 0 6px 14px; margin: 0 0 16px;
 }
@@ -583,6 +696,9 @@ dialog h3 + .night-row { margin-top: 4px; }
 .ex-title em { font-style: italic; color: var(--amber); }
 .ex-take { font-family: var(--serif); font-style: italic; font-size: 14.5px; color: var(--muted); line-height: 1.5; margin: 2px 0 12px; }
 .ex-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+.ex-passport { font-size: 12.5px; color: var(--muted); margin: -4px 0 12px; }
+.ex-passport b { color: var(--amber); }
+.ex-hint { font-size: 11.5px; color: var(--muted); font-style: italic; margin: -6px 0 10px; }
 .ex-search {
   width: 100%; background: rgba(7,12,22,.85); color: var(--text);
   border: 1px solid var(--line); border-radius: 11px; padding: 10px 13px;

@@ -55,6 +55,39 @@ tier fades in automatically — major streets with arterial names, parks, water
 (OSM, simplified, ~500 KB total gzipped ~120 KB) — under the Tonight route
 too. CTA L lines in official colors stay a toggle.
 
+**How the map stays glitch-free (v4 interaction core):** all zoom lives in
+the SVG viewBox and the CSS 3D tilt is rotation-only; screen↔map math goes
+through the computed transform matrix (inverted analytically), so
+cursor-anchored zoom, pan-under-the-finger, and tap-to-place are exact under
+any tilt. Interaction lives on an invisible, immobile **hit layer** — one
+twin path per neighborhood — so a lifting tile can never slide out from
+under the cursor (the old hover-flicker class of bug is structurally
+impossible). Continuous camera motion is rAF-driven and suspends tile
+transitions (`moving` class) so walls can't smear; hover is suppressed while
+panning and re-derived when the camera rests; text selection is disabled on
+map surfaces and globally while a pan is live (panel copy stays selectable).
+Every neighborhood is colored by WHERE it sits around the Loop —
+North Side teal, Northwest indigo, West violet, Southwest plum, South
+coral, downtown gold (the blend walks up the color wheel so it never
+passes through olive mud) — so regions cohere, neighbors differ, and the
+color means something; venue density still drives brightness (the city's
+light map), and hover/select brighten a hood in its own hue. Walls carry
+a vertical gradient for the diorama read. Reduced-motion
+users get camera jumps instead of flights.
+
+**The real-map tier (v4.1):** past neighborhood zoom the schematic hands
+over to actual OSM cartography — CARTO dark raster tiles (streets,
+buildings, names) fade in under the neighborhood layer, which thins to a
+tinted overlay; zoom now goes deep enough to read a single block. Keyless,
+attributed on-map ("© OpenStreetMap contributors © CARTO"). Every glow at
+depth is layered vector strokes, never a CSS filter — filters rasterize in
+user units and turn into blurry, glitching bands when magnified (same for
+label drop-shadows and fixed-size text: labels keep a fixed font and
+counter-scale via transform so glyphs never degrade). **📍 Find me** drops
+the device position with its reported accuracy circle — the honest answer
+to "how much should I trust this dot." A 4-second timeout on the weather
+fetch means a hung API can never hold boot hostage.
+
 **The personal layer:** ♡ wishlist anywhere; "✓ been here" from any profile
 (feeds the engine's novelty memory); **add your own places** (pin-on-map
 picker, on-device, `◆ yours`, instantly pickable) with **"Suggest to
@@ -92,6 +125,22 @@ A generic pick kills the product, so the picks are defended three ways:
 2 AM — double-check ↗"), otherwise "Hours unverified — check before you go ↗".
 Prices are marked as estimates. The murals walk is labeled
 "location approximate". The why-line only cites factors that actually scored.
+Every reveal also carries a collapsible **"What could go wrong"** section
+built only from claims the data supports: unverified hours (hero or second
+stop), rain probability vs outdoor-only picks, weather-fetch failure
+disclosure, long hauls from home base. Alternates are labeled by how they
+differ (different neighborhood / cheaper / closer / calmer / the classic /
+the wildcard) — never presented as interchangeable clones. And the whole
+engine can be interrogated: **`?debug=1`** shows the top-10 leaderboard with
+scores, reason codes, hours-verified flags, and per-filter drop counts under
+the alternates.
+
+**Explore filters + passport:** beyond vibes, the catalog filters by budget
+ceiling and a verified-hours-only "Open now" toggle (with honest microcopy
+about what it can't know); the venue lights on a selected tile always mirror
+the filtered list. A **neighborhood passport** ("7 of 98 neighborhoods
+lived") tracks the date log + been-theres and offers "stamp somewhere new" —
+a jump to a venue-rich neighborhood you haven't touched.
 
 ## Memory (the repeat-use engine)
 
@@ -105,11 +154,11 @@ spots get boosted), and habit nudges — "You always end up in Logan Square
 Night navy city, warm light: Chicago-flag palette shifted after dark (amber
 route light, coral star pin, cooled sky blue), Georgia italic as the editorial
 voice, a custom no-tile SVG map of the official 98 neighborhoods, starfield
-atmosphere. The map renders **supersampled** (the layer is rasterized at 2×
-and always minified, never stretched) so streets, boundaries, and label type
-stay sharp mid-zoom, mid-tilt, on every screen. Installable as a PWA. No
-frameworks, no webfonts, no build step — vanilla ES modules served by the
-same nginx image as before.
+atmosphere. Crisp at every zoom by construction — vector-stroke glows,
+fixed-font counter-scaled labels, and real map tiles at depth (see the
+interaction-core notes above); no raster scaling anywhere. Installable as
+a PWA. No frameworks, no webfonts, no build step — vanilla ES modules
+served by the same nginx image as before.
 
 ## Data & attribution
 
