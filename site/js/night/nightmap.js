@@ -6,11 +6,21 @@
  * name floating on the plane. Painter's algorithm (north drawn first) makes
  * lifted hoods overlap their northern neighbors correctly.
  *
+ * Architecture rules that keep it glitch-free:
+ *  - ALL zoom lives in the viewBox; the CSS 3D tilt is rotation-only.
+ *  - Interaction is a separate invisible hit layer that NEVER moves, so a
+ *    lifting tile can't slide out from under the cursor (hover flicker) and
+ *    a click target can't shift mid-press.
+ *  - Screen↔map math goes through the computed CSS transform matrix, so
+ *    cursor-anchored zoom and pan are exact under any tilt.
+ *  - Continuous camera motion is rAF-driven and suppresses CSS transitions
+ *    (class "moving") so walls/lifts can't lag the geometry and smear.
+ *
  * No tiles, no libraries — the city itself is the art. */
 
 const NS = "http://www.w3.org/2000/svg";
 const W = 1000;
-const DEPTH = 6;   // extrusion, in map units
+const DEPTH = 8;   // extrusion, in map units (screen-constant via --wd)
 
 export class NightMap {
   constructor(svg, geojson) {
@@ -20,6 +30,8 @@ export class NightMap {
     this._scanTimer = null;
     this.onHoodClick = null;   // (polygonName) => void — wired by the app
     this.selected = null;
+    this._hovName = null;
+    this._reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this._build();
   }
 
@@ -43,15 +55,6 @@ export class NightMap {
       lng: (ux / W) * (mxx - mnx) + mnx,
       lat: mny + ((H - uy) / H) * (mxy - mny),
     });
-    /* screen px -> map units. Only exact when the map is untilted (flat). */
-    this.screenToUnits = (pxX, pxY) => {
-      const r = this.svg.getBoundingClientRect();
-      const scale = Math.max(r.width / this.box.w, r.height / this.box.h);
-      const offX = (r.width - this.box.w * scale) / 2;
-      const offY = (r.height - this.box.h * scale) / 2;
-      return { x: this.box.x + (pxX - r.left - offX) / scale,
-               y: this.box.y + (pxY - r.top - offY) / scale };
-    };
 
     this.svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
     this.svg.innerHTML = `
@@ -61,6 +64,10 @@ export class NightMap {
           <stop offset="55%" stop-color="#071120"/>
           <stop offset="100%" stop-color="#050b16"/>
         </radialGradient>
+        <linearGradient id="nm-wallgrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0c1728"/>
+          <stop offset="100%" stop-color="#02050c"/>
+        </linearGradient>
         <filter id="nm-glow" x="-80%" y="-80%" width="260%" height="260%">
           <feGaussianBlur stdDeviation="6" result="b"/>
           <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
@@ -77,13 +84,15 @@ export class NightMap {
       <g id="nm-transit"></g>
       <g id="nm-fx"></g>
       <g id="nm-route"></g>
+      <g id="nm-hit"></g>
       <g id="nm-pins"></g>
       <g id="nm-labels"></g>`;
 
     const hoodsG = this.svg.querySelector("#nm-hoods");
+    const hitG = this.svg.querySelector("#nm-hit");
     const labelsG = this.svg.querySelector("#nm-labels");
     this.hoodPaths = new Map();   // name -> face path (scan flicker, glow clone)
-    this.hoodGroups = new Map();  // name -> <g>
+    this.hoodGroups = new Map();  // name -> <g> (visual layer only)
     this.hoodBBoxes = new Map();  // name -> {x,y,w,h}
     this.hoodLabels = new Map();  // name -> <text> (top layer, never occluded)
 
@@ -154,24 +163,31 @@ export class NightMap {
 
       g.append(wall, face);
       hoodsG.appendChild(g);
+
+      // the hit twin: invisible, immobile, owns ALL pointer interaction.
+      // Visual tiles can lift, reorder, and glow without ever moving the
+      // thing the cursor is actually touching.
+      const hit = document.createElementNS(NS, "path");
+      hit.setAttribute("d", d);
+      hit.setAttribute("class", "nm-hit");
+      hit.dataset.name = name;
+      hitG.appendChild(hit);
+
       this.hoodPaths.set(name, face);
       this.hoodGroups.set(name, g);
       this.hoodLabels.set(name, label);
       this.hoodBBoxes.set(name, { x: bx0, y: by0, w: bx1 - bx0, h: by1 - by0 });
 
-      face.addEventListener("click", (ev) => {
+      hit.addEventListener("click", (ev) => {
         ev.stopPropagation();
-        if (this._dragMoved) return; // that was a pan, not a pick
+        if (this._dragMoved || this._justPicked) return; // pan or place-pick, not a pick
         if (this.onHoodClick) this.onHoodClick(name);
       });
-      // hover = pure CSS lift + a label on the top layer. No DOM reshuffling:
-      // moving nodes under the cursor is what caused stuck tiles + dead clicks.
-      face.addEventListener("mouseenter", () => {
-        if (this.svg.parentElement.classList.contains("explore"))
-          label.classList.add("show");
+      hit.addEventListener("pointerenter", (ev) => {
+        if (ev.pointerType === "mouse") this._setHover(name);
       });
-      face.addEventListener("mouseleave", () => {
-        if (this.selected !== name) label.classList.remove("show");
+      hit.addEventListener("pointerleave", (ev) => {
+        if (ev.pointerType === "mouse" && this._hovName === name) this._setHover(null);
       });
     }
     this._orderedGroups = [...hoodsG.children];
@@ -179,6 +195,69 @@ export class NightMap {
     this.cityBox = { x: -W * 0.06, y: -H * 0.02, w: W * 1.24, h: H * 1.04 };
     this._setBox(this.cityBox);
     this._wireInteractions();
+  }
+
+  /* -------- screen ↔ layout ↔ map-unit projection (tilt-aware) ------------ */
+  /* The svg's layout box equals its untransformed parent (#mapwrap), so the
+   * computed CSS transform (perspective·rotateX, possibly mid-transition) is
+   * the only thing between layout space and the screen. We invert it
+   * analytically — a ray→plane solve — instead of measuring transformed
+   * rects, which lie. */
+  _plane() {
+    const cs = getComputedStyle(this.svg);
+    const tr = cs.transform;
+    if (!tr || tr === "none") return null;
+    const m = new DOMMatrixReadOnly(tr);
+    if (m.isIdentity) return null;
+    const parts = cs.transformOrigin.split(" ").map(parseFloat);
+    return { m, ox: parts[0] || 0, oy: parts[1] || 0 };
+  }
+  /* layout px (relative to the svg box) -> screen px relative to the box */
+  _projLayout(lx, ly, plane) {
+    if (!plane) return { x: lx, y: ly };
+    const { m, ox, oy } = plane;
+    const x = lx - ox, y = ly - oy;
+    const X = m.m11 * x + m.m21 * y + m.m41;
+    const Y = m.m12 * x + m.m22 * y + m.m42;
+    const Wc = m.m14 * x + m.m24 * y + m.m44 || 1;
+    return { x: ox + X / Wc, y: oy + Y / Wc };
+  }
+  /* screen px relative to the box -> layout px (inverse of the above) */
+  _unprojLayout(sx, sy, plane) {
+    if (!plane) return { x: sx, y: sy };
+    const { m, ox, oy } = plane;
+    const U = sx - ox, V = sy - oy;
+    const a1 = m.m11 - U * m.m14, b1 = m.m21 - U * m.m24, c1 = U * m.m44 - m.m41;
+    const a2 = m.m12 - V * m.m14, b2 = m.m22 - V * m.m24, c2 = V * m.m44 - m.m42;
+    const det = a1 * b2 - b1 * a2;
+    if (!det) return { x: sx, y: sy };
+    return { x: ox + (c1 * b2 - b1 * c2) / det, y: oy + (a1 * c2 - c1 * a2) / det };
+  }
+  /* viewBox mapping under preserveAspectRatio="slice" */
+  _frame(box = this.box) {
+    const elW = this.svg.clientWidth || 1, elH = this.svg.clientHeight || 1;
+    const scale = Math.max(elW / box.w, elH / box.h);
+    return { elW, elH, scale,
+             offX: (elW - box.w * scale) / 2, offY: (elH - box.h * scale) / 2 };
+  }
+  /* client (viewport) px -> map units. Exact under any tilt. */
+  screenToUnits(pxX, pxY) {
+    const host = this.svg.parentElement.getBoundingClientRect();
+    const l = this._unprojLayout(pxX - host.left, pxY - host.top, this._plane());
+    const f = this._frame();
+    return { x: this.box.x + (l.x - f.offX) / f.scale,
+             y: this.box.y + (l.y - f.offY) / f.scale };
+  }
+  /* map units -> px relative to #mapwrap. Exact under any tilt. */
+  toScreen(ux, uy) {
+    const f = this._frame();
+    return this._projLayout(f.offX + (ux - this.box.x) * f.scale,
+                            f.offY + (uy - this.box.y) * f.scale, this._plane());
+  }
+  /* which fraction of the viewBox sits under this client point (zoom anchor) */
+  _anchorFractions(pxX, pxY) {
+    const u = this.screenToUnits(pxX, pxY);
+    return { fx: (u.x - this.box.x) / this.box.w, fy: (u.y - this.box.y) / this.box.h };
   }
 
   _setBox(b) {
@@ -189,12 +268,12 @@ export class NightMap {
       const z = b.w / this.cityBox.w;
       const st = this.svg.style;
       st.setProperty("--lbl", (13 * z).toFixed(2) + "px");
-      st.setProperty("--wd", (6 * z).toFixed(2) + "px");
-      st.setProperty("--lift", (9 * z).toFixed(2) + "px");
+      st.setProperty("--wd", (DEPTH * z).toFixed(2) + "px");
+      st.setProperty("--lift", (12 * z).toFixed(2) + "px");
       st.setProperty("--uz", z.toFixed(4) + "px"); // 1 screen-ish px in map units
       const host = this.svg.parentElement;
       host.classList.toggle("zoomed", z < 0.78);
-      host.classList.toggle("zoomed2", z < 0.3);
+      host.classList.toggle("zoomed2", z < 0.32);
       if (z < 0.85) { // close enough that detail matters — fetch it once
         this.loadStreets("data/streets.min.geojson");
         this.loadDetail("data/detail.min.geojson");
@@ -203,8 +282,35 @@ export class NightMap {
     }
   }
 
+  /* ------- motion state: transitions off while the camera is live -------- */
+  _beginMove() {
+    clearTimeout(this._moveT);
+    this._moveT = null;
+    const host = this.svg.parentElement;
+    if (!host.classList.contains("moving")) {
+      host.classList.add("moving");
+      const el = host.querySelector(".nm-label");
+      if (el) el.classList.remove("show"); // reposition when the dust settles
+    }
+  }
+  _endMoveSoon(ms = 150) {
+    clearTimeout(this._moveT);
+    this._moveT = setTimeout(() => {
+      this.svg.parentElement.classList.remove("moving");
+      if (this._labelPt) this.setLabel(this._labelPt, this._labelText);
+      this._syncHover();
+    }, ms);
+  }
+
   setLabelWeights(weights) {
     this._labelWeights = weights; // polygonName -> venue count
+    // venue-dense hoods glow a shade lighter — the city's light map
+    for (const [name, g] of this.hoodGroups) {
+      const t = Math.sqrt(Math.min(1, (weights.get(name) || 0) / 12));
+      const ch = (a, b) => Math.round(a + (b - a) * t);
+      g.style.setProperty("--face",
+        `rgb(${ch(15, 27)} ${ch(24, 40)} ${ch(48, 76)})`); // #0f1830 → #1b284c
+    }
     this._queueCull();
   }
 
@@ -214,15 +320,35 @@ export class NightMap {
       for (const l of this.hoodLabels.values()) l.classList.remove("vis");
       return;
     }
-    const elW = this.svg.clientWidth || 1, elH = this.svg.clientHeight || 1;
-    const scale = Math.max(elW / this.box.w, elH / this.box.h);
-    const offX = (elW - this.box.w * scale) / 2, offY = (elH - this.box.h * scale) / 2;
-    const F = 13 * (this.box.w / this.cityBox.w) * scale; // label px on screen
+    const f = this._frame();
+    const plane = this._plane();
+    const zc = this.box.w / this.cityBox.w;
+    const toLayout = (ux, uy) => ({ x: f.offX + (ux - this.box.x) * f.scale,
+                                    y: f.offY + (uy - this.box.y) * f.scale });
+    // project + measure the local screen scale (perspective shrinks the far edge)
+    const projU = (ux, uy) => {
+      const l = toLayout(ux, uy);
+      const p = this._projLayout(l.x, l.y, plane);
+      const q = this._projLayout(l.x + 8, l.y, plane);
+      return { x: p.x, y: p.y, s: Math.abs(q.x - p.x) / 8 };
+    };
     // labels must live in the VISIBLE window — not under the panel, not clipped
     const desktop = matchMedia("(min-width: 920px)").matches;
-    const winX1 = desktop ? elW - 445 : elW - 6;
-    const winY1 = desktop ? elH - 8 : elH * 0.52;
+    const winX1 = desktop ? f.elW - 445 : f.elW - 6;
+    const winY1 = desktop ? f.elH - 8 : f.elH * 0.52;
     const kept = [];
+    // the tilt/overlay controls own the top-left corner — no labels beneath
+    kept.push(desktop ? { x0: 0, x1: 200, y0: 0, y1: 165 }
+                      : { x0: 0, x1: 190, y0: 0, y1: 205 });
+    // street names are furniture the hood labels must not sit on
+    if (host.classList.contains("zoomed") || host.classList.contains("show-streets")) {
+      for (const t of this.svg.querySelectorAll(".nm-streetlabel")) {
+        const p = projU(+t.getAttribute("x"), +t.getAttribute("y"));
+        const F = 13 * 0.72 * zc * f.scale * p.s;
+        const w = t.textContent.length * F * 0.6;
+        kept.push({ x0: p.x - w / 2, x1: p.x + w / 2, y0: p.y - F, y1: p.y + 4 });
+      }
+    }
     const wts = this._labelWeights || new Map();
     // venue-rich neighborhoods name themselves first; empty giants fill in after
     const ordered = [...this.hoodLabels.entries()]
@@ -230,13 +356,13 @@ export class NightMap {
                       ((+b[1].dataset.area) - (+a[1].dataset.area)));
     for (const [name, l] of ordered) {
       const bb = this.hoodBBoxes.get(name);
+      const p = projU(+l.getAttribute("x"), +l.getAttribute("y"));
+      const F = 13 * zc * f.scale * p.s; // label px on screen at this point
       const w = l.textContent.length * F * 0.62;
       const weight = wts.get(name) || 0;
       // skip hoods too small on screen to own their name (unless venue-rich)
-      if (bb.w * scale < w * (weight >= 3 ? 0.45 : 0.8)) { l.classList.remove("vis"); continue; }
-      const sx = offX + (+l.getAttribute("x") - this.box.x) * scale;
-      const sy = offY + (+l.getAttribute("y") - this.box.y) * scale;
-      const r = { x0: sx - w / 2 - 8, x1: sx + w / 2 + 8, y0: sy - F - 6, y1: sy + 6 };
+      if (bb.w * f.scale * p.s < w * (weight >= 3 ? 0.45 : 0.8)) { l.classList.remove("vis"); continue; }
+      const r = { x0: p.x - w / 2 - 8, x1: p.x + w / 2 + 8, y0: p.y - F - 6, y1: p.y + 6 };
       if (r.x0 < 6 || r.x1 > winX1 || r.y0 < 60 || r.y1 > winY1) { l.classList.remove("vis"); continue; }
       const hit = kept.some((k) => r.x0 < k.x1 && r.x1 > k.x0 && r.y0 < k.y1 && r.y1 > k.y0);
       l.classList.toggle("vis", !hit);
@@ -246,10 +372,10 @@ export class NightMap {
     const tags = [...this.svg.querySelectorAll(".nm-spotlabel")];
     const keptT = [];
     for (const t of tags) {
-      const w = t.textContent.length * F * 0.68 * 0.68;
-      const sx = offX + (+t.getAttribute("x") - this.box.x) * scale;
-      const sy = offY + (+t.getAttribute("y") - this.box.y) * scale;
-      const r = { x0: sx - w / 2 - 5, x1: sx + w / 2 + 5, y0: sy - F - 4, y1: sy + 4 };
+      const p = projU(+t.getAttribute("x"), +t.getAttribute("y"));
+      const F = 13 * zc * f.scale * p.s * 0.68;
+      const w = t.textContent.length * F * 0.68;
+      const r = { x0: p.x - w / 2 - 5, x1: p.x + w / 2 + 5, y0: p.y - F - 4, y1: p.y + 4 };
       const hit = keptT.some((k) => r.x0 < k.x1 && r.x1 > k.x0 && r.y0 < k.y1 && r.y1 > k.y0);
       t.classList.toggle("vis", !hit);
       if (!hit) keptT.push(r);
@@ -260,11 +386,42 @@ export class NightMap {
     this._cullTimer = setTimeout(() => this._cullLabels(), 110);
   }
 
+  /* ----------------- hover + painter order (visual layer) ----------------- */
+  _setHover(name) {
+    if (name && (this._panning || this._anim ||
+        !this.svg.parentElement.classList.contains("explore"))) return;
+    if (this._hovName === name) return;
+    const prev = this._hovName ? this.hoodGroups.get(this._hovName) : null;
+    if (prev) {
+      prev.classList.remove("hov");
+      if (this._hovName !== this.selected)
+        this.hoodLabels.get(this._hovName)?.classList.remove("show");
+    }
+    this._hovName = name || null;
+    if (name) {
+      const g = this.hoodGroups.get(name);
+      if (!g) { this._hovName = null; return; }
+      g.classList.add("hov");
+      this.hoodLabels.get(name)?.classList.add("show");
+      g.parentElement.appendChild(g); // paint above every neighbor while lifted
+    } else {
+      this._restoreOrder();
+    }
+  }
+  /* after pans/zooms/animations, re-derive hover from wherever the mouse is */
+  _syncHover() {
+    if (!this._lastMouse || this._panning) return;
+    const el = document.elementFromPoint(this._lastMouse.x, this._lastMouse.y);
+    this._setHover(el?.classList?.contains("nm-hit") ? el.dataset.name : null);
+  }
+
   _restoreOrder() {
     const parent = this.svg.querySelector("#nm-hoods");
     for (const g of this._orderedGroups) parent.appendChild(g);
     if (this.selected && this.hoodGroups.has(this.selected))
       parent.appendChild(this.hoodGroups.get(this.selected));
+    if (this._hovName && this._hovName !== this.selected && this.hoodGroups.has(this._hovName))
+      parent.appendChild(this.hoodGroups.get(this._hovName));
   }
 
   /* ---------------- pan / zoom / pinch — the user takes the camera -------- */
@@ -273,13 +430,9 @@ export class NightMap {
     const ptrs = new Map();
     let start = null, pinch = null;
     this._dragMoved = false;
+    this._panning = false;
 
     const active = () => svg.parentElement.classList.contains("explore");
-    const toUnits = (dxPx, dyPx) => {
-      const r = { w: svg.clientWidth || 1, h: svg.clientHeight || 1 };
-      const scale = Math.max(r.w / this.box.w, r.h / this.box.h);
-      return { dx: dxPx / scale, dy: dyPx / scale };
-    };
     const clampBox = (b) => {
       const minW = this.cityBox.w / 16, maxW = this.cityBox.w * 1.7;
       if (b.w < minW) { const f = minW / b.w; b = this._scaleBox(b, f, .5, .5); }
@@ -292,6 +445,13 @@ export class NightMap {
       b.y += Math.min(0, lim.y1 - cy) + Math.max(0, lim.y0 - cy);
       return b;
     };
+    this._clampBox = clampBox;
+
+    const endPan = () => {
+      this._panning = false;
+      document.body.classList.remove("map-dragging");
+      this._endMoveSoon();
+    };
 
     svg.addEventListener("click", (e) => {
       if (this._placePick && !this._dragMoved) {
@@ -299,14 +459,19 @@ export class NightMap {
         const ll = this.unproject(u.x, u.y);
         const cb = this._placePick;
         this.disarmPlacePick();
+        this._justPicked = true;                     // eat the same click's
+        setTimeout(() => { this._justPicked = false; }, 0); // hood handler
         cb(ll);
       }
     }, true);
+
     svg.addEventListener("pointerdown", (e) => {
       if (!active()) return;
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
       // NO setPointerCapture: capturing retargets the eventual click to the
       // svg, which silently killed every neighborhood tap for real pointers.
+      // Window-level move/up listeners keep the pan alive outside the svg.
+      this._stopGlide();
       if (this._anim) { cancelAnimationFrame(this._anim); this._anim = null; }
       if (ptrs.size === 1) {
         start = { x: e.clientX, y: e.clientY, box: { ...this.box } };
@@ -314,59 +479,98 @@ export class NightMap {
       } else if (ptrs.size === 2) {
         const [a, b] = [...ptrs.values()];
         pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), box: { ...this.box },
-                  mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+                  mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+        const u = this.screenToUnits(pinch.mid.x, pinch.mid.y);
+        pinch.fx = (u.x - this.box.x) / this.box.w;
+        pinch.fy = (u.y - this.box.y) / this.box.h;
         start = null;
       }
     });
+    // track the mouse for post-move hover re-sync
     svg.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "mouse") this._lastMouse = { x: e.clientX, y: e.clientY };
+    });
+    svg.addEventListener("pointerleave", (e) => {
+      if (e.pointerType === "mouse") this._lastMouse = null;
+    });
+
+    window.addEventListener("pointermove", (e) => {
       if (!active() || !ptrs.has(e.pointerId)) return;
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (ptrs.size === 1 && start) {
         const dxPx = e.clientX - start.x, dyPx = e.clientY - start.y;
-        if (Math.hypot(dxPx, dyPx) > 9) this._dragMoved = true;
+        if (!this._dragMoved && Math.hypot(dxPx, dyPx) > 9) {
+          this._dragMoved = true;
+          this._panning = true;
+          this._setHover(null);
+          document.body.classList.add("map-dragging");
+        }
         if (!this._dragMoved) return;
-        const { dx, dy } = toUnits(dxPx, dyPx);
+        this._beginMove();
+        // exact grab: the map point under the cursor at pointerdown stays
+        // under the cursor, even through the perspective tilt
+        const plane = this._plane();
+        const host = svg.parentElement.getBoundingClientRect();
+        const l0 = this._unprojLayout(start.x - host.left, start.y - host.top, plane);
+        const l1 = this._unprojLayout(e.clientX - host.left, e.clientY - host.top, plane);
+        const f = this._frame(start.box);
+        const dx = (l1.x - l0.x) / f.scale, dy = (l1.y - l0.y) / f.scale;
         this._setBox(clampBox({ ...start.box, x: start.box.x - dx, y: start.box.y - dy }));
+        this._endMoveSoon();
       } else if (ptrs.size === 2 && pinch) {
         const [a, b] = [...ptrs.values()];
         const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
         const f = pinch.d / d;
         this._dragMoved = true;
-        const rect = svg.getBoundingClientRect();
-        const rx = (pinch.mx - rect.left) / (rect.width || 1);
-        const ry = (pinch.my - rect.top) / (rect.height || 1);
-        this._setBox(clampBox(this._scaleBox(pinch.box, f, rx, ry)));
+        this._panning = true;
+        this._beginMove();
+        let nb = this._scaleBox(pinch.box, f, pinch.fx, pinch.fy);
+        // two-finger pan: follow the midpoint too
+        const plane = this._plane();
+        const host = svg.parentElement.getBoundingClientRect();
+        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        const l0 = this._unprojLayout(pinch.mid.x - host.left, pinch.mid.y - host.top, plane);
+        const l1 = this._unprojLayout(mid.x - host.left, mid.y - host.top, plane);
+        const fr = this._frame(nb);
+        nb.x -= (l1.x - l0.x) / fr.scale;
+        nb.y -= (l1.y - l0.y) / fr.scale;
+        this._setBox(clampBox(nb));
+        this._endMoveSoon();
       }
     });
     const up = (e) => {
+      if (!ptrs.has(e.pointerId)) return;
       ptrs.delete(e.pointerId);
       if (ptrs.size < 2) pinch = null;
+      if (ptrs.size === 1) { // pinch → single-finger: re-anchor the pan
+        const [p] = [...ptrs.values()];
+        start = { x: p.x, y: p.y, box: { ...this.box } };
+      }
       if (ptrs.size === 0) {
         start = null;
+        if (this._panning) endPan();
         setTimeout(() => { this._dragMoved = false; }, 0); // let click handlers read it
       }
     };
-    svg.addEventListener("pointerup", up);
-    svg.addEventListener("pointercancel", up);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
 
     svg.addEventListener("wheel", (e) => {
       if (!active()) return;
       e.preventDefault();
       if (this._anim) { cancelAnimationFrame(this._anim); this._anim = null; }
-      const f = Math.exp(e.deltaY * 0.0016);
-      const rect = svg.getBoundingClientRect();
-      const rx = (e.clientX - rect.left) / (rect.width || 1);
-      const ry = (e.clientY - rect.top) / (rect.height || 1);
-      this._setBox(clampBox(this._scaleBox(this.box, f, rx, ry)));
+      // trackpad pinch arrives as ctrl+wheel — give it a stronger gear
+      const k = e.ctrlKey ? 0.0042 : 0.0016;
+      const f = Math.exp(e.deltaY * k);
+      const { fx, fy } = this._anchorFractions(e.clientX, e.clientY);
+      this._glide(clampBox(this._scaleBox(this.box, f, fx, fy)));
     }, { passive: false });
 
     svg.addEventListener("dblclick", (e) => {
       if (!active()) return;
       e.preventDefault();
-      const rect = svg.getBoundingClientRect();
-      const rx = (e.clientX - rect.left) / (rect.width || 1);
-      const ry = (e.clientY - rect.top) / (rect.height || 1);
-      this.animateTo(clampBox(this._scaleBox(this.box, 1 / 1.7, rx, ry)), 500);
+      const { fx, fy } = this._anchorFractions(e.clientX, e.clientY);
+      this.animateTo(clampBox(this._scaleBox(this.box, 1 / 1.7, fx, fy)), 500);
     });
 
     // click the water to step back out
@@ -376,12 +580,39 @@ export class NightMap {
     });
   }
 
+  /* rAF-glided zoom: wheel events only move the target; one loop eases the
+   * camera toward it, so chunky wheel steps render as one smooth motion. */
+  _glide(target) {
+    this._glideTarget = target;
+    if (this._reduced) { this._stopGlide(); this._setBox(target); this._endMoveSoon(); return; }
+    if (this._glideRaf) return;
+    this._beginMove();
+    const step = () => {
+      const t = this._glideTarget, b = this.box;
+      const nx = b.x + (t.x - b.x) * 0.34, ny = b.y + (t.y - b.y) * 0.34;
+      const nw = b.w + (t.w - b.w) * 0.34, nh = b.h + (t.h - b.h) * 0.34;
+      if (Math.abs(t.w - nw) / t.w < 0.001 && Math.hypot(t.x - nx, t.y - ny) < t.w * 0.001) {
+        this._setBox({ ...t });
+        this._glideRaf = null;
+        this._endMoveSoon();
+        return;
+      }
+      this._setBox({ x: nx, y: ny, w: nw, h: nh });
+      this._glideRaf = requestAnimationFrame(step);
+    };
+    this._glideRaf = requestAnimationFrame(step);
+  }
+  _stopGlide() {
+    if (this._glideRaf) { cancelAnimationFrame(this._glideRaf); this._glideRaf = null; }
+    this._glideTarget = null;
+  }
+
   _scaleBox(b, f, rx, ry) {
     const w = b.w * f, h = b.h * f;
     return { x: b.x + (b.w - w) * rx, y: b.y + (b.h - h) * ry, w, h };
   }
 
-  /* arm a one-shot "tap the map to place" interaction (flat coords only) */
+  /* arm a one-shot "tap the map to place" interaction */
   armPlacePick(cb) {
     this._placePick = cb;
     this.svg.parentElement.classList.add("placing");
@@ -397,19 +628,9 @@ export class NightMap {
     host.classList.remove("tilt-flat", "tilt-mid", "tilt-full");
     host.classList.add("tilt-" + mode);
     this.tilt = mode;
-  }
-
-  /* project unit-space point to on-screen px. Uses a live probe element so
-   * the result stays correct under CSS 3D transforms (the explore tilt). */
-  toScreen(ux, uy) {
-    const probe = document.createElementNS(NS, "circle");
-    probe.setAttribute("cx", ux); probe.setAttribute("cy", uy);
-    probe.setAttribute("r", 0.01); probe.setAttribute("fill", "none");
-    this.svg.appendChild(probe);
-    const r = probe.getBoundingClientRect();
-    const host = this.svg.parentElement.getBoundingClientRect();
-    probe.remove();
-    return { x: r.left + r.width / 2 - host.left, y: r.top + r.height / 2 - host.top };
+    // labels re-cull once the tilt transition lands (projection changed)
+    clearTimeout(this._tiltT);
+    this._tiltT = setTimeout(() => this._queueCull(), 950);
   }
 
   setLabel(pt, text) {
@@ -419,7 +640,8 @@ export class NightMap {
       el.className = "nm-label";
       this.svg.parentElement.appendChild(el);
     }
-    if (!pt) { el.classList.remove("show"); return; }
+    if (!pt) { this._labelPt = null; this._labelText = null; el.classList.remove("show"); return; }
+    this._labelPt = pt; this._labelText = text;
     el.textContent = text;
     const s = this.toScreen(this.px(pt.lng), this.py(pt.lat));
     el.style.left = s.x + "px";
@@ -430,6 +652,10 @@ export class NightMap {
   animateTo(target, ms = 1400) {
     return new Promise((res) => {
       if (this._anim) cancelAnimationFrame(this._anim);
+      this._stopGlide();
+      if (this._reduced) ms = 0;
+      if (!ms) { this._setBox({ ...target }); this._endMoveSoon(); res(); return; }
+      this._beginMove();
       const from = { ...this.box }, t0 = performance.now();
       const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
       const step = (now) => {
@@ -441,7 +667,7 @@ export class NightMap {
           h: from.h + (target.h - from.h) * e,
         });
         if (t < 1) this._anim = requestAnimationFrame(step);
-        else { this._anim = null; res(); }
+        else { this._anim = null; this._endMoveSoon(); res(); }
       };
       this._anim = requestAnimationFrame(step);
     });
@@ -450,17 +676,17 @@ export class NightMap {
   /* ------------------------------ explore -------------------------------- */
   setExplore(on) {
     this.svg.parentElement.classList.toggle("explore", on);
-    if (!on) { this.selectHood(null, { camera: false }); this.disarmPlacePick(); }
+    if (!on) { this._setHover(null); this.selectHood(null, { camera: false }); this.disarmPlacePick(); }
     this._queueCull();
   }
 
-  /* frame the whole city with UI insets (explore home view) */
   /* layout-box aspect — getBoundingClientRect lies under the 3D tilt */
   _aspect() {
     const w = this.svg.clientWidth, h = this.svg.clientHeight;
     return w && h ? w / h : 1;
   }
 
+  /* frame the whole city with UI insets (explore home view) */
   cityView(inset = {}, zoomF = 1) {
     let box = { ...this.cityBox };
     const aspect = this._aspect();
@@ -485,9 +711,10 @@ export class NightMap {
     for (const [n, l] of this.hoodLabels) if (n !== name) l.classList.remove("show");
     if (name && this.hoodLabels.has(name)) this.hoodLabels.get(name).classList.add("show");
     this.selected = name || null;
+    this.svg.parentElement.classList.toggle("hood-sel", !!this.selected);
     this._restoreOrder();
     if (!name) {
-      if (opts.camera !== false) this.animateTo(this.cityBox, 900);
+      if (opts.camera !== false) return this.animateTo(this.cityBox, 900);
       return;
     }
     const g = this.hoodGroups.get(name);
@@ -496,7 +723,7 @@ export class NightMap {
     if (opts.camera === false) return;
     const bb = this.hoodBBoxes.get(name);
     const aspect = this._aspect();
-    // wide framing: the tilt's CSS scale magnifies, and neighbors are context
+    // wide framing: neighbors are context
     let w = Math.max(bb.w * 3.4, 330), h = Math.max(bb.h * 3.6, 330 / aspect);
     if (w / h < aspect) w = h * aspect; else h = w / aspect;
     let box = { x: bb.x + bb.w / 2 - w / 2, y: bb.y + bb.h / 2 - h / 2, w, h };
@@ -634,6 +861,7 @@ export class NightMap {
 
   setOverlay(kind, on) {
     this.svg.parentElement.classList.toggle("show-" + kind, on);
+    this._queueCull();
   }
   clearSpot() {
     this.svg.querySelector("#nm-spot")?.remove();

@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n4";
-import { buildContext } from "./context.js?v=n4";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n4";
-import { NightMap } from "./nightmap.js?v=n4";
-import { sharePlan } from "./share.js?v=n4";
+import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n5";
+import { buildContext } from "./context.js?v=n5";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n5";
+import { NightMap } from "./nightmap.js?v=n5";
+import { sharePlan } from "./share.js?v=n5";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -821,7 +821,7 @@ function buildExploreIndex() {
 
 const exInset = () => matchMedia("(min-width: 920px)").matches
   ? { right: 430 / innerWidth } : { bottom: Math.min(0.47, 420 / innerHeight) };
-const tiltZoom = () => (S.map?.tilt === "full" ? 0.8 : S.map?.tilt === "mid" ? 0.88 : 1);
+const tiltZoom = () => (S.map?.tilt === "full" ? 0.78 : S.map?.tilt === "mid" ? 0.85 : 0.97);
 
 function exSelectHood(key) {
   S.ex.hood = key; S.ex.venue = null;
