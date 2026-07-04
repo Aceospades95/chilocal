@@ -341,7 +341,9 @@ export class NightMap {
     kept.push(desktop ? { x0: 0, x1: 200, y0: 0, y1: 165 }
                       : { x0: 0, x1: 190, y0: 0, y1: 205 });
     // street names are furniture the hood labels must not sit on
-    if (host.classList.contains("zoomed") || host.classList.contains("show-streets")) {
+    // (they only PAINT when zoomed — reserving space for invisible text
+    // would silently eat neighborhood names along the arterials)
+    if (host.classList.contains("zoomed")) {
       for (const t of this.svg.querySelectorAll(".nm-streetlabel")) {
         const p = projU(+t.getAttribute("x"), +t.getAttribute("y"));
         const F = 13 * 0.72 * zc * f.scale * p.s;
@@ -387,6 +389,38 @@ export class NightMap {
   }
 
   /* ----------------- hover + painter order (visual layer) ----------------- */
+  /* Lifted tiles are promoted to the end of #nm-hoods so they paint above
+   * every neighbor. Demotion is a SINGLE insertBefore back into the painter
+   * order, delayed until the descent transition finishes — a DOM move
+   * cancels running transitions, and re-appending all 98 groups per hover
+   * crossing (the old approach) both snapped tiles down and churned. */
+  _promote(g) {
+    const t = this._reslots?.get(g);
+    if (t) { clearTimeout(t); this._reslots.delete(g); }
+    // already on top → no move → an in-flight lift transition survives
+    if (g.parentElement.lastElementChild !== g) g.parentElement.appendChild(g);
+  }
+  _scheduleReslot(g) {
+    (this._reslots ||= new Map());
+    clearTimeout(this._reslots.get(g));
+    this._reslots.set(g, setTimeout(() => {
+      this._reslots.delete(g);
+      this._reslot(g);
+    }, 300));
+  }
+  _reslot(g) {
+    const parent = this.svg.querySelector("#nm-hoods");
+    const i = this._orderedGroups.indexOf(g);
+    let next = null;
+    for (let j = i + 1; j < this._orderedGroups.length; j++) {
+      const c = this._orderedGroups[j];
+      const displaced = this._reslots?.has(c) || c.classList.contains("sel") ||
+        (this._hovName && this.hoodGroups.get(this._hovName) === c);
+      if (!displaced) { next = c; break; }
+    }
+    parent.insertBefore(g, next); // null → last (only when all successors are lifted)
+  }
+
   _setHover(name) {
     if (name && (this._panning || this._anim ||
         !this.svg.parentElement.classList.contains("explore"))) return;
@@ -396,16 +430,16 @@ export class NightMap {
       prev.classList.remove("hov");
       if (this._hovName !== this.selected)
         this.hoodLabels.get(this._hovName)?.classList.remove("show");
+      if (prev !== (this.selected && this.hoodGroups.get(this.selected)))
+        this._scheduleReslot(prev); // descend on top, re-slot afterwards
     }
     this._hovName = name || null;
     if (name) {
       const g = this.hoodGroups.get(name);
       if (!g) { this._hovName = null; return; }
-      g.classList.add("hov");
+      this._promote(g);       // move BEFORE the class flip — a move after it
+      g.classList.add("hov"); // would cancel the lift transition
       this.hoodLabels.get(name)?.classList.add("show");
-      g.parentElement.appendChild(g); // paint above every neighbor while lifted
-    } else {
-      this._restoreOrder();
     }
   }
   /* after pans/zooms/animations, re-derive hover from wherever the mouse is */
@@ -413,15 +447,6 @@ export class NightMap {
     if (!this._lastMouse || this._panning) return;
     const el = document.elementFromPoint(this._lastMouse.x, this._lastMouse.y);
     this._setHover(el?.classList?.contains("nm-hit") ? el.dataset.name : null);
-  }
-
-  _restoreOrder() {
-    const parent = this.svg.querySelector("#nm-hoods");
-    for (const g of this._orderedGroups) parent.appendChild(g);
-    if (this.selected && this.hoodGroups.has(this.selected))
-      parent.appendChild(this.hoodGroups.get(this.selected));
-    if (this._hovName && this._hovName !== this.selected && this.hoodGroups.has(this._hovName))
-      parent.appendChild(this.hoodGroups.get(this._hovName));
   }
 
   /* ---------------- pan / zoom / pinch — the user takes the camera -------- */
@@ -446,6 +471,14 @@ export class NightMap {
       return b;
     };
     this._clampBox = clampBox;
+    // clamp the ZOOM FACTOR before scaling — letting clampBox rescale an
+    // over-limit box re-centers it, which reads as the map sliding sideways
+    // while the user is pinned at min/max zoom
+    const clampFactor = (b, f) => {
+      const minW = this.cityBox.w / 16, maxW = this.cityBox.w * 1.7;
+      return Math.max(minW / b.w, Math.min(maxW / b.w, f));
+    };
+    this._clampFactor = clampFactor;
 
     const endPan = () => {
       this._panning = false;
@@ -520,7 +553,7 @@ export class NightMap {
       } else if (ptrs.size === 2 && pinch) {
         const [a, b] = [...ptrs.values()];
         const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
-        const f = pinch.d / d;
+        const f = this._clampFactor(pinch.box, pinch.d / d);
         this._dragMoved = true;
         this._panning = true;
         this._beginMove();
@@ -561,7 +594,7 @@ export class NightMap {
       this._cancelAnim();
       // trackpad pinch arrives as ctrl+wheel — give it a stronger gear
       const k = e.ctrlKey ? 0.0042 : 0.0016;
-      const f = Math.exp(e.deltaY * k);
+      const f = clampFactor(this.box, Math.exp(e.deltaY * k));
       const { fx, fy } = this._anchorFractions(e.clientX, e.clientY);
       this._glide(clampBox(this._scaleBox(this.box, f, fx, fy)));
     }, { passive: false });
@@ -570,12 +603,12 @@ export class NightMap {
       if (!active()) return;
       e.preventDefault();
       const { fx, fy } = this._anchorFractions(e.clientX, e.clientY);
-      this.animateTo(clampBox(this._scaleBox(this.box, 1 / 1.7, fx, fy)), 500);
+      this.animateTo(clampBox(this._scaleBox(this.box, clampFactor(this.box, 1 / 1.7), fx, fy)), 500);
     });
 
     // click the water to step back out
     this.svg.querySelector("#nm-water-rect").addEventListener("click", () => {
-      if (!active() || this._dragMoved) return;
+      if (!active() || this._dragMoved || this._justPicked) return;
       if (this.onBackgroundClick) this.onBackgroundClick();
     });
   }
@@ -647,7 +680,11 @@ export class NightMap {
     if (!pt) { this._labelPt = null; this._labelText = null; el.classList.remove("show"); return; }
     this._labelPt = pt; this._labelText = text;
     el.textContent = text;
-    const s = this.toScreen(this.px(pt.lng), this.py(pt.lat));
+    // when a hood is selected its venue dots ride the raised tile
+    // (translateY of -1.5 lifts) — anchor the tooltip to the LIFTED spot
+    const liftU = this.svg.parentElement.classList.contains("hood-sel")
+      ? 18 * (this.box.w / this.cityBox.w) : 0;
+    const s = this.toScreen(this.px(pt.lng), this.py(pt.lat) - liftU);
     el.style.left = s.x + "px";
     el.style.top = s.y + "px";
     el.classList.add("show");
@@ -708,35 +745,50 @@ export class NightMap {
   cityView(inset = {}, zoomF = 1) {
     let box = { ...this.cityBox };
     const aspect = this._aspect();
-    if (box.w / box.h < aspect) { const nw = box.h * aspect; box.x -= (nw - box.w) / 2; box.w = nw; }
+    if (inset.right) {
+      // fit the city into the visible sub-viewport LEFT of the panel, then
+      // extend the box rightward under the panel keeping the element aspect
+      // (a widened box without matching height gets center-cropped by
+      // preserveAspectRatio=slice — the city would drift off-center)
+      const visAspect = aspect * (1 - inset.right);
+      if (box.w / box.h < visAspect) { const nw = box.h * visAspect; box.x -= (nw - box.w) / 2; box.w = nw; }
+      else { const nh = box.w / visAspect; box.y -= (nh - box.h) / 2; box.h = nh; }
+      const cy = box.y + box.h / 2;
+      box.w = box.w / (1 - inset.right);
+      box.h = box.w / aspect;
+      box.y = cy - box.h / 2;
+    } else if (box.w / box.h < aspect) {
+      const nw = box.h * aspect; box.x -= (nw - box.w) / 2; box.w = nw;
+    }
     if (inset.bottom) {
       const cx = box.x + box.w / 2;
       box.h = box.h / (1 - inset.bottom);
       box.w = box.h * aspect;
       box.x = cx - box.w / 2;
     }
-    if (inset.right) {
-      box.w = box.w / (1 - inset.right);
-    }
-    if (zoomF !== 1) box = this._scaleBox(box, zoomF, 0.5, 0.42);
+    // anchor the zoom on the center of the VISIBLE window, not the box
+    if (zoomF !== 1) box = this._scaleBox(box, zoomF, (1 - (inset.right || 0)) / 2, 0.42);
     return this.animateTo(box, 950);
   }
 
   /* Raise + outline a hood; ease the camera onto it. name=null clears. */
   selectHood(name, opts = {}) {
-    if (this.selected && this.hoodGroups.has(this.selected))
-      this.hoodGroups.get(this.selected).classList.remove("sel");
+    if (this.selected && this.hoodGroups.has(this.selected) && this.selected !== name) {
+      const prev = this.hoodGroups.get(this.selected);
+      prev.classList.remove("sel");
+      if (this.selected !== this._hovName) this._scheduleReslot(prev);
+    }
     for (const [n, l] of this.hoodLabels) if (n !== name) l.classList.remove("show");
     if (name && this.hoodLabels.has(name)) this.hoodLabels.get(name).classList.add("show");
     this.selected = name || null;
     this.svg.parentElement.classList.toggle("hood-sel", !!this.selected);
-    this._restoreOrder();
     if (!name) {
       if (opts.camera !== false) return this.animateTo(this.cityBox, 900);
       return;
     }
     const g = this.hoodGroups.get(name);
     if (!g) return;
+    this._promote(g); // before the class flip so the lift transition survives
     g.classList.add("sel");
     if (opts.camera === false) return;
     const bb = this.hoodBBoxes.get(name);
@@ -798,7 +850,7 @@ export class NightMap {
       hit.addEventListener("mouseleave", () => this.setLabel(null));
       hit.addEventListener("click", (ev) => {
         ev.stopPropagation();
-        if (this._dragMoved) return;
+        if (this._dragMoved || this._justPicked) return;
         this.setLabel(null);
         if (this.onSpotClick) this.onSpotClick(p.id);
       });

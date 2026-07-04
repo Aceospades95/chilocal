@@ -85,7 +85,15 @@ async function boot() {
   buildExploreIndex();
   S.map.onHoodClick = (name) => {
     if (S.view !== "explore") return;
-    if (S.ex.hood === name && !S.ex.venue) { exBackToCity(); return; } // click again = step out
+    const now = performance.now();
+    const isDbl = S._hoodClickN === name && now - (S._hoodClickT || 0) < 450;
+    S._hoodClickN = name; S._hoodClickT = now;
+    if (S.ex.hood === name && !S.ex.venue) {
+      // click again = step out — but the 2nd click of a double-click is a
+      // zoom gesture, not a step-out; the svg dblclick handler owns it
+      if (!isDbl) exBackToCity();
+      return;
+    }
     S.ex.venue = null;
     exSelectHood(name);
   };
@@ -96,6 +104,9 @@ async function boot() {
   };
   S.map.onSpotClick = (id) => {
     if (S.view !== "explore") return;
+    // a dot that spawned under the cursor an instant ago (hood just
+    // selected) shouldn't hijack the second click of a double-click
+    if (performance.now() - (S._hoodClickT || 0) < 450) return;
     S.ex.venue = id;
     renderExplore();
   };
@@ -1111,8 +1122,10 @@ function renderExplore() {
         .filter(([key, g]) => g.display.toLowerCase().includes(q) || key.toLowerCase().includes(q))
         .slice(0, 4);
       const venueHits = S.venues.filter((v) =>
-        v.name.toLowerCase().includes(q) || v.cat.toLowerCase().includes(q) ||
-        v.vibes.some((vb) => vibeName(vb).includes(q))).slice(0, 12);
+        (v.name.toLowerCase().includes(q) || v.cat.toLowerCase().includes(q) ||
+         v.vibes.some((vb) => vibeName(vb).includes(q))) &&
+        (!S.ex.price || v.price <= S.ex.price) &&
+        (!S.ex.open || openState(v._hours, S.ctx.day, S.ctx.minutes)?.open)).slice(0, 12);
       box.innerHTML = hoodHits.map(([key, g]) => `
           <button class="ex-row" data-hood="${esc(key)}">
             <span class="n">${esc(g.display)}</span><span class="c">${g.venues.length} spots →</span>
