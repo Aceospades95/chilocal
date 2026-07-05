@@ -440,10 +440,6 @@ export class NightMap {
 
   _cullLabels() {
     const host = this.svg.parentElement;
-    if (!host.classList.contains("explore")) {
-      for (const l of this.hoodLabels.values()) l.classList.remove("vis");
-      return;
-    }
     const f = this._frame();
     const plane = this._plane();
     const zc = this.box.w / this.cityBox.w;
@@ -456,6 +452,22 @@ export class NightMap {
       const q = this._projLayout(l.x + 8, l.y, plane);
       return { x: p.x, y: p.y, s: Math.abs(q.x - p.x) / 8 };
     };
+    // street names cull among THEMSELVES in every mode — the Tonight reveal
+    // shows them too, and "N Clark St""Lake Shore Dr" must not read as one
+    const streetRects = [];
+    for (const t of this.svg.querySelectorAll(".nm-streetlabel")) {
+      const p = projU(+t.getAttribute("x"), +t.getAttribute("y"));
+      const F = 9.4 * zc * f.scale * p.s;
+      const w = t.textContent.length * F * 0.6;
+      const r = { x0: p.x - w / 2 - 6, x1: p.x + w / 2 + 6, y0: p.y - F - 4, y1: p.y + 4 };
+      const hit = streetRects.some((k) => r.x0 < k.x1 && r.x1 > k.x0 && r.y0 < k.y1 && r.y1 > k.y0);
+      t.classList.toggle("vis", !hit);
+      if (!hit) streetRects.push(r);
+    }
+    if (!host.classList.contains("explore")) {
+      for (const l of this.hoodLabels.values()) l.classList.remove("vis");
+      return;
+    }
     // labels must live in the VISIBLE window — not under the panel, not clipped
     const desktop = matchMedia("(min-width: 920px)").matches;
     const winX1 = desktop ? f.elW - 445 : f.elW - 6;
@@ -464,17 +476,9 @@ export class NightMap {
     // the tilt/overlay controls own the top-left corner — no labels beneath
     kept.push(desktop ? { x0: 0, x1: 200, y0: 0, y1: 165 }
                       : { x0: 0, x1: 190, y0: 0, y1: 205 });
-    // street names are furniture the hood labels must not sit on
-    // (they only PAINT when zoomed — reserving space for invisible text
-    // would silently eat neighborhood names along the arterials)
-    if (host.classList.contains("zoomed")) {
-      for (const t of this.svg.querySelectorAll(".nm-streetlabel")) {
-        const p = projU(+t.getAttribute("x"), +t.getAttribute("y"));
-        const F = 13 * 0.72 * zc * f.scale * p.s;
-        const w = t.textContent.length * F * 0.6;
-        kept.push({ x0: p.x - w / 2, x1: p.x + w / 2, y0: p.y - F, y1: p.y + 4 });
-      }
-    }
+    // the street names that SURVIVED their own cull are furniture the hood
+    // labels must not sit on (they only paint when zoomed)
+    if (host.classList.contains("zoomed")) kept.push(...streetRects);
     const wts = this._labelWeights || new Map();
     // venue-rich neighborhoods name themselves first; empty giants fill in after
     const ordered = [...this.hoodLabels.entries()]
@@ -1062,6 +1066,7 @@ export class NightMap {
       t.textContent = l.n;
       host.appendChild(t);
     }
+    this._queueCull(); // labels arrived after the last cull pass
   }
 
   setOverlay(kind, on) {

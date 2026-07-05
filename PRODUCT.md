@@ -154,7 +154,10 @@ spots get boosted), and habit nudges — "You always end up in Logan Square
 Night navy city, warm light: Chicago-flag palette shifted after dark (amber
 route light, coral star pin, cooled sky blue), Georgia italic as the editorial
 voice, a custom no-tile SVG map of the official 98 neighborhoods, starfield
-atmosphere. No frameworks, no webfonts, no build step — vanilla ES modules
+atmosphere. Crisp at every zoom by construction — vector-stroke glows,
+fixed-font counter-scaled labels, and real map tiles at depth (see the
+interaction-core notes above); no raster scaling anywhere. Installable as
+a PWA. No frameworks, no webfonts, no build step — vanilla ES modules
 served by the same nginx image as before.
 
 ## Data & attribution
@@ -172,9 +175,11 @@ served by the same nginx image as before.
 
 ## Roadmap (in order)
 
-1. **Get-in-tonight actions** — Resy/OpenTable/Tock deep links per venue, and
-   events (Do312 / Ticketmaster / Songkick APIs) so "a show" can name the
-   actual show. Needs API keys → Jacob's call.
+1. **Get-in-tonight actions** — dinner picks now carry a keyless
+   "find a table ↗" OpenTable deep link (search, not availability — honest).
+   The real version — live availability (Resy/OpenTable/Tock APIs) and events
+   (Do312 / Ticketmaster / Songkick) so "a show" can name the actual show —
+   needs API keys → Jacob's call.
 2. **Stay in, done right** — the funnel's "In" branch is a teaser by design
    (scope discipline). v2: cook-something tied to what's fresh (Green City
    Market calendar), movie roulette, board-game picks, order-in cuisine wheel.

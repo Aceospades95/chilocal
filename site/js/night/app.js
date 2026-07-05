@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n6";
-import { buildContext } from "./context.js?v=n6";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n6";
-import { NightMap } from "./nightmap.js?v=n6";
-import { sharePlan } from "./share.js?v=n6";
+import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n7";
+import { buildContext } from "./context.js?v=n7";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n7";
+import { NightMap } from "./nightmap.js?v=n7";
+import { sharePlan } from "./share.js?v=n7";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -477,6 +477,7 @@ function renderReveal() {
   $("#rv-take").textContent = v.take;
   $("#rv-why").innerHTML = `<span class="why-k">Why tonight:</span> ${esc(why)}${S.plan.widened ? esc(` (We loosened the ${S.plan.widened} dial — the strict version came up empty.)`) : ""}`;
   $("#rv-hours").innerHTML = hoursLine(v) +
+    (v.vibes.includes("dinner") && !v.mine ? ` · <a href="${esc(reserveUrl(v))}" target="_blank" rel="noopener">find a table ↗</a>` : "") +
     (v.tips?.length ? ` <span class="tips">· ${v.tips.map(esc).join(" · ")}</span>` : "") +
     (v.approx ? ` <span class="tips">· location approximate — it's a stroll, not one door</span>` : "");
 
@@ -1038,6 +1039,7 @@ function renderExplore() {
           ${v.addr ? `<a class="btn ghost" style="flex:1" target="_blank" rel="noopener"
             href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.name + " " + v.addr + " Chicago")}">Map ↗</a>` : ""}
           ${v.site ? `<a class="btn ghost" style="flex:1" href="${esc(v.site)}" target="_blank" rel="noopener">Site ↗</a>` : ""}
+          ${v.vibes.includes("dinner") && !v.mine ? `<a class="btn ghost" style="flex:1" href="${esc(reserveUrl(v))}" target="_blank" rel="noopener">Table ↗</a>` : ""}
         </div>
       </div>`;
     $("#ex-back").onclick = () => { S.ex.venue = null; S.map.clearSpot?.(); renderExplore(); };
@@ -1086,7 +1088,7 @@ function renderExplore() {
         ${exFilterChips2()}
         ${list.map((v) => `
           <button class="ex-row" data-id="${esc(v.id)}">
-            <span class="n">${esc(v.name)}</span>
+            <span class="n">${S.mem.saved.includes(v.id) ? `<span class="rowheart">♥</span> ` : ""}${esc(v.name)}</span>
             <span class="m">${esc(v.cat)} · ${"$".repeat(v.price)}</span>
             <span class="ven-badges">${exBadges(v)}</span>
           </button>`).join("")}
@@ -1154,7 +1156,7 @@ function renderExplore() {
           </button>`).join("") +
         venueHits.map((v) => `
           <button class="ex-row" data-id="${esc(v.id)}">
-            <span class="n">${esc(v.name)}</span><span class="m">${esc(v.cat)} · ${esc(v.hood)}</span>
+            <span class="n">${S.mem.saved.includes(v.id) ? `<span class="rowheart">♥</span> ` : ""}${esc(v.name)}</span><span class="m">${esc(v.cat)} · ${esc(v.hood)}</span>
           </button>`).join("") ||
         `<p class="ex-empty">Nothing by that name in the book yet.</p>`;
     } else {
@@ -1254,6 +1256,10 @@ function openAddPlace(presetHood) {
     if (S.view === "explore") renderExplore();
   };
   dlg.showModal();
+}
+
+function reserveUrl(v) {
+  return "https://www.opentable.com/s?covers=2&term=" + encodeURIComponent(v.name + " Chicago");
 }
 
 function suggestUrl(v) {
