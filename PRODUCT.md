@@ -76,6 +76,20 @@ map), and hover/select brighten a hood in its own hue. Walls carry a
 vertical gradient for the diorama read. Reduced-motion users get camera
 jumps instead of flights.
 
+**The view is yours (v4.2):** three basemap styles for the detail tier —
+**Night** (CARTO dark), **Satellite** (Esri imagery, dimmed into the night
+theme), or pure **Diorama** (no tiles) — plus overlays: CTA L lines with
+all 144 stations, **Metra** commuter rail (OSM), and major streets.
+Selecting a neighborhood now SPOTLIGHTS it: tight camera framing straight
+into real-street zoom, everything else recedes. Tiles prefetch for the
+camera's destination while it flies and the previous zoom level stays up
+as a backdrop until the new one has loaded — no blank flash, no arrival
+delay. **CTA knowledge:** every venue shows its nearest L station and
+walk time ("🚇 California (Blue) · ~5 min walk"), from City of Chicago
+open data. **Visitor mode** (🧳 chip) leans the engine toward the icons
+and classics, with hotel-zone quick picks (Loop, River North, Gold Coast,
+Streeterville, West Loop) for setting a downtown home base.
+
 **The real-map tier (v4.1):** past neighborhood zoom the schematic hands
 over to actual OSM cartography — CARTO dark raster tiles (streets,
 buildings, names) fade in under the neighborhood layer, which thins to a

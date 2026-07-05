@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n9";
-import { buildContext } from "./context.js?v=n9";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n9";
-import { NightMap } from "./nightmap.js?v=n9";
-import { sharePlan } from "./share.js?v=n9";
+import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n10";
+import { buildContext } from "./context.js?v=n10";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n10";
+import { NightMap } from "./nightmap.js?v=n10";
+import { sharePlan } from "./share.js?v=n10";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -76,6 +76,10 @@ async function boot() {
     fetch("data/neighborhoods.min.geojson").then((r) => r.json()),
     buildContext(),
   ]);
+  // CTA knowledge: station list is tiny — fetch in the background, degrade silently
+  fetch("data/cta-stations.min.json").then((r) => r.json())
+    .then((d) => { S.stations = d.stations; }).catch(() => { S.stations = null; });
+  S.visitor = !!prefs.visitor;
   S.baseVenues = venuesRaw.venues;
   S.geo = geo;
   refreshVenues();
@@ -114,9 +118,12 @@ async function boot() {
   S.map.setLabelWeights(new Map([...S.exIndex.groups].map(([k, g]) => [k, g.venues.length])));
 
   // restore map prefs
+  S.map.setBasemap(prefs.basemap || "night");
+  $$("#bm-seg button").forEach((b) => b.classList.toggle("on", b.dataset.b === (prefs.basemap || "night")));
   S.map.setTilt(prefs.tilt || "mid");
   $$("#tilt-seg button").forEach((b) => b.classList.toggle("on", b.dataset.t === (prefs.tilt || "mid")));
   if (prefs.ovTransit) toggleOverlay("transit", true);
+  if (prefs.ovMetra) toggleOverlay("metra", true);
   if (prefs.ovStreets) toggleOverlay("streets", true);
 
   renderContextChip();
@@ -195,6 +202,11 @@ function renderAsk() {
       el.innerHTML = `Fine — <b>${esc(nudge.hood)}</b> is off the table tonight.`;
     };
   } else el.hidden = true;
+
+  $("#visit-chip").classList.toggle("on", !!S.visitor);
+  $("#visit-chip").innerHTML = S.visitor
+    ? `🧳 <b>Visitor mode on</b> <span class="edit">tap to turn off</span>`
+    : `🧳 Visiting Chicago? <span class="edit">tourist-friendly picks</span>`;
 
   // party toggle
   $$("#party-seg button").forEach((b) => b.classList.toggle("on", b.dataset.v === S.party));
@@ -354,7 +366,7 @@ async function runDecision() {
   const input = {
     mode: S.mode, vibe: S.mode === "out" ? S.vibe : null,
     budget: S.budget, maxMi: DIST_DIALS.find((d) => d.id === S.dial).mi,
-    origin: origin(), party: S.party,
+    origin: origin(), party: S.party, visitor: !!S.visitor,
     p1: S.p1e || null, p2: S.p2e || null,
   };
   const memv = memoryView(S.mem);
@@ -423,6 +435,19 @@ function metaLine(v) {
   return bits.map(esc).join(" · ");
 }
 
+/* CTA knowledge: the nearest L station within a real walk */
+function lNote(v) {
+  if (!S.stations) return "";
+  let best = null;
+  for (const st of S.stations) {
+    const mi = haversineMi(v, st);
+    if (!best || mi < best.mi) best = { ...st, mi };
+  }
+  if (!best || best.mi > 0.9) return "";
+  const min = Math.max(2, Math.round(best.mi * 20));
+  return `🚇 ${best.n} (${best.l.join("/")}) · ~${min} min walk`;
+}
+
 /* one honest word on how each alternate differs from the hero */
 function altTag(a, hero) {
   if (a.v.hood !== hero.v.hood) return "different neighborhood";
@@ -480,7 +505,9 @@ function renderReveal() {
   $("#rv-meta").innerHTML = metaLine(v);
   $("#rv-take").textContent = v.take;
   $("#rv-why").innerHTML = `<span class="why-k">Why tonight:</span> ${esc(why)}${S.plan.widened ? esc(` (We loosened the ${S.plan.widened} dial — the strict version came up empty.)`) : ""}`;
+  const rvL = lNote(v);
   $("#rv-hours").innerHTML = hoursLine(v) +
+    (rvL ? ` <span class="tips">· ${esc(rvL)}</span>` : "") +
     (v.vibes.includes("dinner") && !v.mine ? ` · <a href="${esc(reserveUrl(v))}" target="_blank" rel="noopener">find a table ↗</a>` : "") +
     (v.tips?.length ? ` <span class="tips">· ${v.tips.map(esc).join(" · ")}</span>` : "") +
     (v.approx ? ` <span class="tips">· location approximate — it's a stroll, not one door</span>` : "");
@@ -622,9 +649,12 @@ function openWhere(cb) {
   const dlg = $("#where");
   const list = $("#where-list");
   const feats = S.geo.features.map((f) => f.properties.name).sort();
+  const HOTEL_ZONES = ["Loop", "River North", "Gold Coast", "Streeterville", "West Loop"];
   const render = (q = "") => {
     const ql = q.toLowerCase();
-    list.innerHTML = feats.filter((n) => n.toLowerCase().includes(ql)).slice(0, 60)
+    const zone = !ql ? `<div class="where-zones"><span class="where-k">STAYING DOWNTOWN?</span>${
+      HOTEL_ZONES.map((n) => `<button data-n="${esc(n)}">🏨 ${esc(n)}</button>`).join("")}</div>` : "";
+    list.innerHTML = zone + feats.filter((n) => n.toLowerCase().includes(ql)).slice(0, 60)
       .map((n) => `<button data-n="${esc(n)}">${esc(n)}</button>`).join("");
     $$("button", list).forEach((b) => b.onclick = () => chooseHome(b.dataset.n));
   };
@@ -786,7 +816,21 @@ function wireStatic() {
     if (S.view === "explore" && !S.ex.hood) S.exCam = S.map.cityView(exInset(), tiltZoom());
   });
   $("#ov-transit").onclick = () => toggleOverlay("transit");
+  $("#ov-metra").onclick = () => toggleOverlay("metra");
   $("#ov-streets").onclick = () => toggleOverlay("streets");
+  $$("#bm-seg button").forEach((b) => b.onclick = () => {
+    S.map.setBasemap(b.dataset.b);
+    $$("#bm-seg button").forEach((x) => x.classList.toggle("on", x === b));
+    savePrefs({ ...loadPrefs(), basemap: b.dataset.b });
+  });
+  $("#visit-chip").onclick = () => {
+    S.visitor = !S.visitor;
+    savePrefs({ ...loadPrefs(), visitor: S.visitor });
+    renderAsk();
+    toast(S.visitor
+      ? "Visitor mode on — the engine leans toward the icons and keeps things close."
+      : "Visitor mode off — back to local deep cuts.");
+  };
   $("#ov-locate").onclick = () => {
     const btn = $("#ov-locate");
     if (btn.classList.contains("on")) { // second tap clears the marker
@@ -976,16 +1020,20 @@ function exBackToCity() {
 
 /* overlays + tilt (persisted) */
 function toggleOverlay(kind, force) {
-  const btn = kind === "transit" ? $("#ov-transit") : $("#ov-streets");
+  const btn = $("#ov-" + kind);
   const on = force ?? !btn.classList.contains("on");
   btn.classList.toggle("on", on);
   S.map.setOverlay(kind, on);
   if (on) {
-    if (kind === "transit") S.map.loadTransit("data/cta-lines.min.geojson");
+    if (kind === "transit") {
+      S.map.loadTransit("data/cta-lines.min.geojson");
+      S.map.loadStations("data/cta-stations.min.json");
+    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson");
     else S.map.loadStreets("data/streets.min.geojson");
   }
   const prefs = loadPrefs();
   savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
+              ovMetra: $("#ov-metra").classList.contains("on"),
               ovStreets: $("#ov-streets").classList.contains("on") });
 }
 
@@ -1044,7 +1092,7 @@ function renderExplore() {
       <button class="ex-back" id="ex-back">← ${esc(groups.get(S.ex.hood)?.display || "back")}</button>
       <p class="ex-kicker">${esc(v.cat).toUpperCase()}${v.mine ? " · ◆ YOURS" : ""}</p>
       <h2 class="ex-title">${esc(v.name)}</h2>
-      <p class="ex-meta">${esc(v.hood)} · ${"$".repeat(v.price)} · ${esc(travelLabel(haversineMi(origin(), v)))}</p>
+      <p class="ex-meta">${esc(v.hood)} · ${"$".repeat(v.price)} · ${esc(travelLabel(haversineMi(origin(), v)))}${lNote(v) ? `<br/>${esc(lNote(v))}` : ""}</p>
       <p class="ex-venue-take">${esc(v.take)}</p>
       <div class="prof-chips">
         ${v.vibes.map((vb) => { const V = VIBES.find((x) => x.id === vb); return V ? `<span class="pc hot">${V.icon} ${esc(V.name)}</span>` : ""; }).join("")}
@@ -1335,7 +1383,7 @@ function adoptAsPlan(v) {
   const memv = memoryView(S.mem);
   const rand = mulberry32(hashStr(S.ctx.nightKey + "|adopt|" + v.id));
   const budget = Math.max(S.budget, v.price);
-  const { reasons } = scoreVenue(v, { vibe: null, budget, party: S.party }, S.ctx, memv, rand);
+  const { reasons } = scoreVenue(v, { vibe: null, budget, party: S.party, visitor: !!S.visitor }, S.ctx, memv, rand);
   const second = pickSecond(v, S.venues, { vibe: null, budget }, S.ctx);
   const why = "Your pick — we just did the homework. " +
     whyLine(v, reasons, { vibe: null, budget }, S.ctx, {});

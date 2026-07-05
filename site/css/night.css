@@ -170,6 +170,14 @@ body.map-dragging, body.map-dragging * {
  * rasterized area would exceed the browser's filter budget and blur */
 #mapwrap.zoomed .nm-hoodg.sel,
 #mapwrap.zoomed .nm-hoodg.hov { filter: none; }
+/* SPOTLIGHT: a selected neighborhood owns the stage — everything else
+ * recedes (fill-opacity transitions on .nm-hood keep this smooth) */
+#mapwrap.explore.hood-sel .nm-hoodg:not(.sel):not(.hov) .nm-hood { fill-opacity: .42; }
+#mapwrap.explore.hood-sel .nm-hoodg:not(.sel):not(.hov) .nm-wall { opacity: .45; }
+#mapwrap.explore.hood-sel .nm-hoodlabel.vis { opacity: .26; }
+/* ...but over real-map tiles the schematic must stay translucent */
+#mapwrap.tiles-on.hood-sel .nm-hoodg:not(.sel):not(.hov) .nm-hood { fill-opacity: .07; }
+
 /* venue lights ride the raised tile */
 #mapwrap.explore.hood-sel #nm-spot {
   transform: translateY(calc(-1.5 * var(--lift, 12px)));
@@ -235,7 +243,9 @@ body.map-dragging, body.map-dragging * {
 /* per-IMAGE brightness lift (a filter on the whole group would blow the
  * browser's filter-raster budget at deep zoom; single tiles are small) */
 .nm-tile { filter: brightness(1.5) saturate(1.08); }
+#mapwrap.bm-sat .nm-tile { filter: brightness(.72) saturate(.88); }
 #mapwrap.tiles-on .nm-hood { fill-opacity: .10; }
+#mapwrap.bm-sat.tiles-on .nm-hood { fill-opacity: .05; }
 #mapwrap.tiles-on .nm-hoodg.hov .nm-hood { fill-opacity: .26; }
 #mapwrap.tiles-on .nm-hoodg.sel .nm-hood { fill-opacity: .10; }
 #mapwrap.tiles-on .nm-wall { opacity: .35; }
@@ -277,6 +287,18 @@ body.map-dragging, body.map-dragging * {
 #nm-streets, #nm-transit { opacity: 0; pointer-events: none; transition: opacity .45s ease; }
 #mapwrap.show-streets #nm-streets, #mapwrap.zoomed #nm-streets { opacity: 1; }
 #mapwrap.show-transit #nm-transit { opacity: 1; }
+#nm-metra { opacity: 0; pointer-events: none; transition: opacity .45s ease; }
+#mapwrap.show-metra #nm-metra { opacity: 1; }
+.nm-metra {
+  fill: none; stroke: #94a2b8; stroke-width: 1.5; stroke-dasharray: 7 5;
+  opacity: .7; vector-effect: non-scaling-stroke;
+}
+.nm-station {
+  pointer-events: none;
+  r: calc(var(--uz, 1px) * 2.6);
+  fill: #e8eef8; stroke: rgba(6, 10, 18, .9);
+  stroke-width: calc(var(--uz, 1px) * 1);
+}
 .nm-street {
   fill: none; stroke: #3d5c92; stroke-width: 1; opacity: .5;
   vector-effect: non-scaling-stroke;
@@ -449,6 +471,10 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
   white-space: nowrap;
 }
 .chip-btn:hover { color: var(--text); border-color: #2b3f66; }
+.chip-btn.on { border-style: solid; border-color: var(--amber); color: var(--text); }
+.where-zones { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.where-zones .where-k { flex-basis: 100%; font-size: 10px; letter-spacing: .2em; color: var(--amber); }
+.where-zones button { border-color: rgba(255,180,92,.35) !important; }
 .chip-btn b { color: var(--amber); font-weight: 600; }
 .chip-btn .edit { color: var(--skyblue); margin-left: 6px; font-size: 12px; }
 .nudge { font-size: 13px; color: var(--muted); margin: 0; }
