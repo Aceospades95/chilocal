@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<link rel="stylesheet" href="css/night.css?v=n9"/>
+<link rel="stylesheet" href="css/night.css?v=n10"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='19' font-size='19'%3E%F0%9F%8C%83%3C/text%3E%3C/svg%3E"/>
 </head>
 <body data-screen="ask">
@@ -43,8 +43,14 @@
       <button data-t="mid" class="on">2.5D</button>
       <button data-t="full">3D</button>
     </div>
+    <div class="seg" id="bm-seg" title="detail map style">
+      <button data-b="night">Night</button>
+      <button data-b="sat">Satellite</button>
+      <button data-b="none">Diorama</button>
+    </div>
     <div class="ov-chips">
       <button id="ov-transit">🚇 L lines</button>
+      <button id="ov-metra">🚆 Metra</button>
       <button id="ov-streets">🛣 Streets</button>
       <button id="ov-locate">📍 Find me</button>
     </div>
@@ -79,6 +85,7 @@
 
         <div class="ask-foot">
           <button id="home-chip" class="chip-btn"></button>
+          <button id="visit-chip" class="chip-btn">🧳 Visiting Chicago? <span class="edit">tourist-friendly picks</span></button>
           <p id="nudge" class="nudge" hidden></p>
         </div>
       </div>
@@ -223,6 +230,6 @@
   </footer>
 </div>
 
-<script type="module" src="js/night/app.js?v=n9"></script>
+<script type="module" src="js/night/app.js?v=n10"></script>
 </body>
 </html>

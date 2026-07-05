@@ -190,6 +190,11 @@ export function scoreVenue(v, input, ctx, mem, rand) {
 
   // --- quality prior & party fit
   if (v.inst) { s += 6; reasons.push("institution"); }
+  // visitor mode: first-timers want the icons, not the deep cuts
+  if (input.visitor) {
+    if (v.inst) { s += 10; reasons.push("visitor-icon"); }
+    if ((v.bestFor || []).includes("classic")) s += 6;
+  }
   if (input.party === "couple" && v.bestFor.includes("date")) { s += 9; reasons.push("date"); }
   if (input.party === "group" && v.bestFor.includes("group")) s += 8;
   if (input.party === "solo" && v.bestFor.includes("solo")) s += 8;
@@ -318,6 +323,9 @@ export function whyLine(v, reasons, input, ctx, extra = {}) {
                     `you saved it for a reason — tonight's the reason`]));
   if (extra.overlap && extra.overlapVibes?.length)
     bits.unshift(`you both tapped “${extra.overlapVibes.map(vibeName).join(" + ")}”`);
+  if (reasons.includes("visitor-icon") && bits.length < 2)
+    bits.push(pick([`a Chicago essential — exactly what a visit is for`,
+                    `first-trip canon: this is the city showing off`]));
   if (reasons.includes("institution") && bits.length < 2)
     bits.push(pick([`a certified Chicago institution`,
                     `the kind of place Chicago measures other rooms against`]));

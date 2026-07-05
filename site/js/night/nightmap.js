@@ -85,6 +85,7 @@ export class NightMap {
       <g id="nm-hoods"></g>
       <g id="nm-detail"></g>
       <g id="nm-streets"></g>
+      <g id="nm-metra"></g>
       <g id="nm-transit"></g>
       <g id="nm-fx"></g>
       <g id="nm-route"></g>
@@ -282,8 +283,9 @@ export class NightMap {
       host.classList.toggle("zoomed2", z < 0.32);
       // past hood-level zoom the schematic map hands over to the real one:
       // OSM/CARTO raster tiles with actual streets and buildings
-      host.classList.toggle("tiles-on", z < 0.34);
-      if (z < 0.34) this._queueTiles();
+      const tilesOn = z < 0.34 && NightMap.BASEMAPS[this._basemap || "night"] != null;
+      host.classList.toggle("tiles-on", tilesOn);
+      if (tilesOn) this._queueTiles();
       if (z < 0.85) { // close enough that detail matters — fetch it once
         this.loadStreets("data/streets.min.geojson");
         this.loadDetail("data/detail.min.geojson");
@@ -319,20 +321,47 @@ export class NightMap {
    * are placed by projecting each tile's corner coordinates through the
    * map's own projection; over Chicago's latitude span the per-tile error
    * is sub-pixel. Keyless, © OpenStreetMap contributors © CARTO. */
-  _queueTiles() {
-    clearTimeout(this._tileT);
-    this._tileT = setTimeout(() => this._updateTiles(), 140);
+  /* basemap styles for the detail tier — user-pickable, all keyless */
+  static BASEMAPS = {
+    night: { attrib: "detail © OpenStreetMap contributors © CARTO",
+             url: (z, x, y) => `https://${"abcd"[(x + y) % 4]}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png` },
+    sat:   { attrib: "imagery © Esri, Maxar, Earthstar Geographics",
+             url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}` },
+    none:  null,
+  };
+  setBasemap(key) {
+    this._basemap = NightMap.BASEMAPS[key] === undefined ? "night" : key;
+    const host = this.svg.parentElement;
+    host.classList.toggle("bm-sat", this._basemap === "sat");
+    for (const [, el] of this._tiles) el.remove();
+    this._tiles.clear();
+    const at = host.querySelector(".nm-attrib");
+    if (at) at.textContent = NightMap.BASEMAPS[this._basemap]?.attrib || "";
+    this._setBox(this.box); // re-derive tiles-on + refetch for the new style
   }
-  _updateTiles() {
-    if (!this.svg.parentElement.classList.contains("tiles-on")) return;
+  _queueTiles(box) {
+    if (box) this._tileBox = box;
+    clearTimeout(this._tileT);
+    this._tileT = setTimeout(() => {
+      const b = this._tileBox || this.box;
+      this._tileBox = null;
+      this._updateTiles(b);
+    }, 60);
+  }
+  _updateTiles(bArg) {
+    const bm = NightMap.BASEMAPS[this._basemap || "night"];
+    if (!bm) return;
+    const b = bArg || this.box;
+    if (b.w / this.cityBox.w >= 0.34) return;
     const g = this.svg.querySelector("#nm-tiles");
     const f = this._frame();
-    const b = this.box, pad = 0.15;
+    const pad = 0.15;
     const tl = this.unproject(b.x - b.w * pad, b.y - b.h * pad);
     const br = this.unproject(b.x + b.w * (1 + pad), b.y + b.h * (1 + pad));
     // choose z so one 256-unit tile paints at roughly 300–600 screen px
+    const fScale = Math.max((this.svg.clientWidth || 1) / b.w, (this.svg.clientHeight || 1) / b.h);
     const zt = Math.max(12, Math.min(17,
-      Math.ceil(Math.log2((360 * this._pxPerLng * f.scale) / 520))));
+      Math.ceil(Math.log2((360 * this._pxPerLng * fScale) / 520))));
     const n = 2 ** zt;
     const xOf = (lng) => Math.floor(((lng + 180) / 360) * n);
     const yOf = (lat) => Math.floor(((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2) * n);
@@ -354,14 +383,30 @@ export class NightMap {
       img.setAttribute("height", (this.py(la1) - Y).toFixed(2));
       img.setAttribute("preserveAspectRatio", "none");
       img.setAttribute("class", "nm-tile");
-      img.setAttribute("href",
-        `https://${"abcd"[(x + y) % 4]}.basemaps.cartocdn.com/dark_all/${zt}/${x}/${y}@2x.png`);
+      img.dataset.z = zt;
+      img.setAttribute("href", bm.url(zt, x, y));
       img.addEventListener("error", () => { img.remove(); this._tiles.delete(key); });
-      g.appendChild(img);
+      // once loaded, a cheap re-pass can retire the stale parent tiles
+      img.addEventListener("load", () => { img.dataset.ok = "1"; this._queueTiles(); });
+      // keep the group ordered by z so sharper tiles always paint on top
+      let before = null;
+      for (const c of g.children) if (+c.dataset.z > zt) { before = c; break; }
+      g.insertBefore(img, before);
       this._tiles.set(key, img);
     }
-    for (const [key, el] of this._tiles)
-      if (!want.has(key)) { el.remove(); this._tiles.delete(key); }
+    // same-z offscreen tiles go immediately; OTHER-z tiles (the previous
+    // zoom level) stay as an instant backdrop until every wanted tile has
+    // actually loaded — no blank flash while the new level streams in
+    let allLoaded = true;
+    for (const key of want) {
+      const el = this._tiles.get(key);
+      if (!el || !el.dataset.ok) { allLoaded = false; break; }
+    }
+    for (const [key, el] of this._tiles) {
+      const z = +el.dataset.z;
+      if (z === zt) { if (!want.has(key)) { el.remove(); this._tiles.delete(key); } }
+      else if (allLoaded) { el.remove(); this._tiles.delete(key); }
+    }
   }
 
   /* ---------------- "find me": device location + honest accuracy ---------- */
@@ -784,13 +829,14 @@ export class NightMap {
    * camera toward it, so chunky wheel steps render as one smooth motion. */
   _glide(target) {
     this._glideTarget = target;
+    if (target.w / this.cityBox.w < 0.34) this._queueTiles(target); // prefetch
     if (this._reduced) { this._stopGlide(); this._setBox(target); this._endMoveSoon(); return; }
     if (this._glideRaf) return;
     this._beginMove();
     const step = () => {
       const t = this._glideTarget, b = this.box;
-      const nx = b.x + (t.x - b.x) * 0.45, ny = b.y + (t.y - b.y) * 0.45;
-      const nw = b.w + (t.w - b.w) * 0.45, nh = b.h + (t.h - b.h) * 0.45;
+      const nx = b.x + (t.x - b.x) * 0.5, ny = b.y + (t.y - b.y) * 0.5;
+      const nw = b.w + (t.w - b.w) * 0.5, nh = b.h + (t.h - b.h) * 0.5;
       if (Math.abs(t.w - nw) / t.w < 0.001 && Math.hypot(t.x - nx, t.y - ny) < t.w * 0.001) {
         this._setBox({ ...t });
         this._glideRaf = null;
@@ -871,6 +917,8 @@ export class NightMap {
   }
 
   animateTo(target, ms = 1400) {
+    // start fetching the destination's tiles WHILE the camera flies
+    if (target.w / this.cityBox.w < 0.34) this._queueTiles(target);
     return new Promise((res) => {
       this._cancelAnim();
       this._stopGlide();
@@ -935,7 +983,7 @@ export class NightMap {
     }
     // anchor the zoom on the center of the VISIBLE window, not the box
     if (zoomF !== 1) box = this._scaleBox(box, zoomF, (1 - (inset.right || 0)) / 2, 0.42);
-    return this.animateTo(box, 950);
+    return this.animateTo(box, 750);
   }
 
   /* Raise + outline a hood; ease the camera onto it. name=null clears. */
@@ -971,8 +1019,8 @@ export class NightMap {
     if (opts.camera === false) return;
     const bb = this.hoodBBoxes.get(name);
     const aspect = this._aspect();
-    // wide framing: neighbors are context
-    let w = Math.max(bb.w * 3.4, 330), h = Math.max(bb.h * 3.6, 330 / aspect);
+    // tight framing: the selected neighborhood IS the subject
+    let w = Math.max(bb.w * 2.0, 190), h = Math.max(bb.h * 2.1, 190 / aspect);
     if (w / h < aspect) w = h * aspect; else h = w / aspect;
     let box = { x: bb.x + bb.w / 2 - w / 2, y: bb.y + bb.h / 2 - h / 2, w, h };
     const ins = opts.inset || {};
@@ -988,7 +1036,7 @@ export class NightMap {
       box.h = box.w / aspect;
       box.y = cy - box.h / 2;
     }
-    return this.animateTo(box, 1000);
+    return this.animateTo(box, 750);
   }
 
   /* markers for browsed venues (explore mode). One highlighted, or a field
@@ -1081,6 +1129,41 @@ export class NightMap {
       path.setAttribute("class", "nm-rail");
       path.setAttribute("stroke", color);
       host.appendChild(path);
+    }
+  }
+
+  /* Metra commuter rail — one steel dashed system (OSM, ODbL) */
+  async loadMetra(url) {
+    if (this._metraLoaded) return;
+    this._metraLoaded = true;
+    const gj = await fetch(url).then((r) => r.json()).catch(() => null);
+    if (!gj) { this._metraLoaded = false; return; }
+    const host = this.svg.querySelector("#nm-metra");
+    let d = "";
+    for (const seg of gj.features[0].geometry.coordinates)
+      seg.forEach((c, i) => { d += (i ? "L" : "M") + this.px(c[0]).toFixed(1) + " " + this.py(c[1]).toFixed(1); });
+    const path = document.createElementNS(NS, "path");
+    path.setAttribute("d", d);
+    path.setAttribute("class", "nm-metra");
+    host.appendChild(path);
+  }
+
+  /* CTA stations ride along with the L-lines overlay */
+  async loadStations(url) {
+    if (this._stationsLoaded) return;
+    this._stationsLoaded = true;
+    const data = await fetch(url).then((r) => r.json()).catch(() => null);
+    if (!data) { this._stationsLoaded = false; return; }
+    const host = this.svg.querySelector("#nm-transit");
+    for (const st of data.stations) {
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", this.px(st.lng).toFixed(1));
+      c.setAttribute("cy", this.py(st.lat).toFixed(1));
+      c.setAttribute("class", "nm-station");
+      const t = document.createElementNS(NS, "title");
+      t.textContent = `${st.n} (${st.l.join(", ")})`;
+      c.appendChild(t);
+      host.appendChild(c);
     }
   }
 
