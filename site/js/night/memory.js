@@ -4,6 +4,12 @@
 
 const KEY = "chilocal.tonight.v1";
 
+/* Chicago-local YYYY-MM-DD — toISOString() is UTC and flips to tomorrow at
+ * 7pm CDT, which off-by-ones the date log and been-there history. */
+const localISO = () =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago",
+    year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+
 const DEFAULTS = () => ({
   home: null,                 // { name, lat, lng }
   dates: [],                  // [{ n, iso, heroId, heroName, secondId, hood, vibe }]
@@ -28,7 +34,7 @@ export function setHome(m, home) { m.home = home; save(m); }
 
 export function logGenerated(m, plan) {
   m.generated.unshift({
-    iso: new Date().toISOString().slice(0, 10),
+    iso: localISO(),
     heroId: plan.hero.v.id || null,
     heroName: plan.hero.v.name, heroCat: plan.hero.v.cat, heroHood: plan.hero.v.hood,
     secondName: plan.second?.venue.name || null,
@@ -55,7 +61,7 @@ export function toggleSaved(m, id) {
 export function lockDate(m, plan, vibe) {
   const n = m.dates.length + 1;
   m.dates.push({
-    n, iso: new Date().toISOString().slice(0, 10),
+    n, iso: localISO(),
     heroId: plan.hero.v.id, heroName: plan.hero.v.name,
     secondId: plan.second?.venue.id || null, hood: plan.hero.v.hood, vibe: vibe || null,
   });

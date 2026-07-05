@@ -21,7 +21,10 @@
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
+/* a full-viewport app owns the viewport: no document scroll room, ever.
+ * (the radar-sweep div overhangs the viewport by design — without this,
+ * html gains ~220px of real scrollable height that wheel/keys can reach) */
+html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
 body {
   background: var(--ink);
   color: var(--text);
@@ -75,7 +78,7 @@ header > * { pointer-events: auto; }
     radial-gradient(1.5px 1.5px at 97% 41%, rgba(207,228,255,.6), transparent 100%);
 }
 #mapwrap {
-  position: absolute; inset: 0; z-index: 0;
+  position: absolute; inset: 0; z-index: 0; overflow: hidden;
   transition: opacity .8s ease, filter .8s ease;
   opacity: .48; filter: saturate(.85);
   user-select: none; -webkit-user-select: none;
@@ -440,6 +443,7 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .chip-btn {
   border: 1px dashed var(--line); background: rgba(13,21,36,.6); color: var(--muted);
   font-size: 13px; border-radius: 999px; padding: 8px 14px; transition: all .18s;
+  white-space: nowrap;
 }
 .chip-btn:hover { color: var(--text); border-color: #2b3f66; }
 .chip-btn b { color: var(--amber); font-weight: 600; }
