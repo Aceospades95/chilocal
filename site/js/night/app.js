@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n7";
-import { buildContext } from "./context.js?v=n7";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n7";
-import { NightMap } from "./nightmap.js?v=n7";
-import { sharePlan } from "./share.js?v=n7";
+import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n8";
+import { buildContext } from "./context.js?v=n8";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n8";
+import { NightMap } from "./nightmap.js?v=n8";
+import { sharePlan } from "./share.js?v=n8";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -257,7 +257,7 @@ function renderTwoForm(who) {
     ? `Player one — <i>your call</i>`
     : `Player two — <i>no pressure</i>`;
   $("#two-sub").textContent = who === "p1"
-    ? "Pick up to two vibes, answer three quick calls. Then hand it over."
+    ? "Pick up to two vibes, answer four quick calls. Then hand it over."
     : "Your turn. They can't see this.";
 
   $("#two-vibes").innerHTML = VIBES.map((v) => `
@@ -439,9 +439,13 @@ function altTag(a, hero) {
 function planRisks(plan) {
   const v = plan.hero.v;
   const risks = [];
-  if (!v._hours) risks.push("Hours unverified — check before you head out.");
+  // NOTE: the hero's hours state is already on the line above the section —
+  // repeating it here made the section feel like filler. Only genuinely
+  // additional risks belong in it.
   if (plan.second && !plan.second.venue._hours)
-    risks.push(`${plan.second.venue.name}'s hours are unverified too.`);
+    risks.push(`${plan.second.venue.name}'s hours are unverified — check the second stop too.`);
+  if (v.tips?.some((tip) => /cash/i.test(tip)))
+    risks.push("Cash only — hit an ATM on the way.");
   if (!S.ctx.ok) risks.push("Weather didn't load, so this pick ignores tonight's sky.");
   else if (v.outdoor && !v.indoor && S.ctx.precipProb != null && S.ctx.precipProb >= 40)
     risks.push(`${S.ctx.precipProb}% rain risk tonight and this one lives outdoors.`);
@@ -999,6 +1003,35 @@ function exBadges(v) {
   return b.join(" · ");
 }
 
+
+/* typo-tolerant search: exact substring first, else every query word must
+ * prefix- or nearly-match (edit distance ≤1, ≤2 for 5+ letter words) some
+ * word of the candidate — "wickr prk" still finds Wicker Park */
+const norm = (s) => String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function editWithin(a, b, k) {
+  if (Math.abs(a.length - b.length) > k) return false;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    let rowMin = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      rowMin = Math.min(rowMin, cur[j]);
+    }
+    if (rowMin > k) return false;
+    prev = cur;
+  }
+  return prev[b.length] <= k;
+}
+function fuzzyHas(hay, q) {
+  const h = norm(hay);
+  if (h.includes(q)) return true;
+  const hw = h.split(/[^a-z0-9]+/).filter(Boolean);
+  const qw = q.split(/[^a-z0-9]+/).filter(Boolean);
+  return qw.length > 0 && qw.every((qt) =>
+    hw.some((ht) => ht.startsWith(qt) || editWithin(qt, ht, qt.length >= 5 ? 2 : 1)));
+}
+
 function renderExplore() {
   const el = $("#ex-sheet");
   const { groups } = S.exIndex;
@@ -1140,14 +1173,14 @@ function renderExplore() {
 
   const renderResults = () => {
     const box = $("#ex-results");
-    const q = S.ex.q.trim().toLowerCase();
+    const q = norm(S.ex.q.trim());
     if (q) {
       const hoodHits = [...groups.entries()]
-        .filter(([key, g]) => g.display.toLowerCase().includes(q) || key.toLowerCase().includes(q))
+        .filter(([key, g]) => fuzzyHas(g.display, q) || fuzzyHas(key, q))
         .slice(0, 4);
       const venueHits = S.venues.filter((v) =>
-        (v.name.toLowerCase().includes(q) || v.cat.toLowerCase().includes(q) ||
-         v.vibes.some((vb) => vibeName(vb).includes(q))) &&
+        (fuzzyHas(v.name, q) || fuzzyHas(v.cat, q) ||
+         v.vibes.some((vb) => fuzzyHas(vibeName(vb), q))) &&
         (!S.ex.price || v.price <= S.ex.price) &&
         (!S.ex.open || openState(v._hours, S.ctx.day, S.ctx.minutes)?.open)).slice(0, 12);
       box.innerHTML = hoodHits.map(([key, g]) => `

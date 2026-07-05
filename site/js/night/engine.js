@@ -275,30 +275,60 @@ export function pickSecond(hero, pool, input, ctx) {
 /* ------------------------------- why lines --------------------------------- */
 const HOODS_PREP = { "The Loop": "in the Loop", "Museum Campus": "on the Museum Campus" };
 const inHood = (h) => HOODS_PREP[h] || `in ${h}`;
+/* Every reason code has several honest phrasings; the pick is seeded by the
+ * VENUE (id + night), so two different venues in one session never read the
+ * same sentence verbatim — repetition was quietly killing the product's
+ * "specific, believable reason" promise. Facts stay identical across
+ * variants; only the wording moves. */
 export function whyLine(v, reasons, input, ctx, extra = {}) {
+  const rand = mulberry32(hashStr(String(v.id) + "|" + (ctx.nightKey || "")));
+  const pick = (arr) => arr[(rand() * arr.length) | 0];
+  const t = ctx.temp != null ? Math.round(ctx.temp) : null;
   const bits = [];
-  if (reasons.includes("patio") && ctx.temp != null)
-    bits.push(`${Math.round(ctx.temp)}° and dry — real patio weather`);
-  if (reasons.includes("heat-ac") && ctx.temp != null)
-    bits.push(`${Math.round(ctx.temp)}° out there — this one's built for A/C and cold drinks`);
+  if (reasons.includes("patio") && t != null)
+    bits.push(pick([`${t}° and dry — real patio weather`,
+                    `${t}° with no rain in sight — take the outside seats`]));
+  if (reasons.includes("heat-ac") && t != null)
+    bits.push(pick([`${t}° out there — this one's built for A/C and cold drinks`,
+                    `${t}° says get somewhere cold-pouring and stay there`]));
   if (reasons.includes("heat-dusk"))
-    bits.push(`hot day, but it cools after sunset — outside seats earn it`);
+    bits.push(pick([`hot day, but it cools after sunset — outside seats earn it`,
+                    `too hot till dusk — then the outside seats are the move`]));
   if (reasons.includes("rain-cozy") || reasons.includes("rain-dry"))
-    bits.push(ctx.temp != null && ctx.temp <= 34
-      ? `snow on the radar — this keeps the night warm and dry`
-      : `radar says rain — this keeps the night dry`);
+    bits.push(t != null && t <= 34
+      ? pick([`snow on the radar — this keeps the night warm and dry`,
+              `snow's coming, and this keeps the whole night indoors`])
+      : pick([`radar says rain — this keeps the night dry`,
+              `rain's on the way, and nobody's walking far for this one`]));
   if (reasons.includes("cold-cozy") || reasons.includes("cold-warm"))
-    bits.push(`${Math.round(ctx.temp)}° tonight — warm, close, and glowing inside`);
-  if (reasons.includes("late")) bits.push(`open properly late, so nobody's rushing you`);
-  if (reasons.includes("never-been")) bits.push(`you've never logged a night here`);
-  if (reasons.includes("new-hood")) bits.push(`you two always end up in the same spots — ${v.hood} is unclaimed territory`);
-  if (reasons.includes("wishlist")) bits.push(`it's been sitting on your wishlist`);
+    bits.push(pick([`${t}° tonight — warm, close, and glowing inside`,
+                    `${t}° out — an indoors-done-right kind of night`]));
+  if (reasons.includes("late"))
+    bits.push(pick([`open properly late, so nobody's rushing you`,
+                    `the night can run long here — no last-call panic`]));
+  if (reasons.includes("never-been"))
+    bits.push(pick([`you've never logged a night here`,
+                    `still unclaimed in your book`,
+                    `a first for the log`]));
+  if (reasons.includes("new-hood"))
+    bits.push(pick([`you always end up in the same spots — ${v.hood} is unclaimed territory`,
+                    `your usual orbit skips ${v.hood}; tonight it shouldn't`]));
+  if (reasons.includes("wishlist"))
+    bits.push(pick([`it's been sitting on your wishlist`,
+                    `you saved it for a reason — tonight's the reason`]));
   if (extra.overlap && extra.overlapVibes?.length)
     bits.unshift(`you both tapped “${extra.overlapVibes.map(vibeName).join(" + ")}”`);
   if (reasons.includes("institution") && bits.length < 2)
-    bits.push(`a certified Chicago institution`);
-  if (reasons.includes("date") && bits.length < 2) bits.push(`built for a two-person table`);
-  if (!bits.length) bits.push(`the strongest match ${inHood(v.hood)} for what you asked`);
+    bits.push(pick([`a certified Chicago institution`,
+                    `the kind of place Chicago measures other rooms against`]));
+  if (reasons.includes("date") && bits.length < 2)
+    bits.push(pick([`built for a two-person table`,
+                    `made for a table of exactly two`]));
+  if (v.energy <= 2 && bits.length < 2 && (input.vibe === "chill" || reasons.includes("cold-cozy")))
+    bits.push(`quiet enough to actually talk`);
+  if (!bits.length)
+    bits.push(pick([`the strongest match ${inHood(v.hood)} for what you asked`,
+                    `of everything within your dials, this ${(v.cat || "spot").toLowerCase()} fit best`]));
   const line = bits.slice(0, 2).join(", and ");
   return line.charAt(0).toUpperCase() + line.slice(1) + ".";
 }
