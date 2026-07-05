@@ -99,17 +99,20 @@ body.map-dragging, body.map-dragging * {
 
 .nm-hood {
   fill: var(--face, #0f1830); stroke: var(--edge, #24365c); stroke-width: 1;
-  stroke-opacity: .55;
+  stroke-opacity: .62;
   vector-effect: non-scaling-stroke;
-  transition: fill .25s ease, stroke .25s ease;
+  /* fill-opacity fades so the real-map handover doesn't flash mid-zoom */
+  transition: fill .25s ease, stroke .25s ease, fill-opacity .45s ease;
 }
 .nm-hoodg { transition: transform .25s cubic-bezier(.2,.85,.3,1), filter .25s ease; }
-.nm-wall { fill: url(#nm-wallgrad); stroke: none; display: none; transition: transform .25s cubic-bezier(.2,.85,.3,1); transform: translateY(var(--wd, 8px)); }
+.nm-wall { fill: url(#nm-wallgrad); stroke: none; display: none; transition: transform .25s cubic-bezier(.2,.85,.3,1), opacity .45s ease; transform: translateY(var(--wd, 8px)); }
 
 /* camera in motion: geometry moves every frame — transitions would smear */
 #mapwrap.moving .nm-hoodg,
-#mapwrap.moving .nm-wall,
 #mapwrap.moving #nm-spot { transition: none !important; }
+/* walls: transform snaps with the camera, but opacity keeps fading so the
+ * tiles-on handover stays smooth even mid-zoom */
+#mapwrap.moving .nm-wall { transition: opacity .45s ease !important; }
 .nm-hoodlabel {
   font-family: var(--sans); font-weight: 600; font-size: 13px;
   letter-spacing: .1em; fill: #e2ecff; opacity: 0; pointer-events: none;
