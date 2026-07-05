@@ -253,5 +253,19 @@ console.log(`\n✓ wrote site/data/venues.json — ${out.length} venues (${seed.
 const withHours = out.filter((v) => v.hours).length;
 const withSite = out.filter((v) => v.site).length;
 console.log(`  hours: ${withHours}/${out.length} · websites: ${withSite}/${out.length}`);
+
+/* hours-wanted.md — the coverage drive's work list. Every venue that OSM has
+ * no opening_hours for, with a direct edit link: add the hours UPSTREAM (from
+ * the venue's own site/door), and the next refresh pulls them into the app.
+ * That's the only honest way to grow coverage — we never guess hours. */
+const wanted = out.filter((v) => !v.hours && v.osm);
+const md = [`# Hours wanted — ${wanted.length}/${out.length} venues missing opening_hours in OSM`,
+  ``, `Add \`opening_hours\` (from the venue's own website or door) at the OSM link,`,
+  `then rerun the refresh cycle. Do not guess. Format: https://wiki.openstreetmap.org/wiki/Key:opening_hours`, ``,
+  `| venue | neighborhood | source of truth | edit in OSM |`, `|---|---|---|---|`,
+  ...wanted.map((v) => `| ${v.name} | ${v.hood} | ${v.site ? `[site](${v.site})` : "—"} | [${v.osm}](https://www.openstreetmap.org/edit?${v.osm.replace("/", "=")}) |`),
+].join("\n");
+writeFileSync(join(ROOT, "scripts/hours-wanted.md"), md + "\n");
+console.log(`  hours-wanted list → scripts/hours-wanted.md (${wanted.length} venues)`);
 if (review.length) console.log(`\nREVIEW (${review.length}):\n  ` + review.join("\n  "));
 if (dropped.length) console.log(`\nDROPPED — no confident OSM match (${dropped.length}):\n  ` + dropped.join("\n  "));

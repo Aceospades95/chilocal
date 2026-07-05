@@ -30,8 +30,17 @@ and Explore (the 2.5D city catalog) in one page, toggled in the header.
   - `seed-venues.json` — the editorial layer (takes, vibes, tiers) — ours
   - `build-venues.mjs` — verifies every seed against OpenStreetMap
     (Overpass) and active City of Chicago business licenses; drops anything
-    it can't verify; emits `site/data/venues.json`
+    it can't verify; emits `site/data/venues.json` + `scripts/hours-wanted.md`
+    (the upstream-contribution work list for missing opening hours)
+  - `fetch-transit.mjs` — bakes CTA stations (with Train Tracker `map_id`),
+    Metra geometry, and Divvy dock stations (GBFS) into `site/data/`
   - `overpass-query.txt`, `cache/` — reproducible source pulls
+- `server/` — the **optional companion API** (zero-dependency Node):
+  live CTA arrival proxying, tonight's events (Ticketmaster Discovery),
+  and two-phone decide-together rooms. The site probes `/api/health` at
+  boot and hides all three features if it's not deployed. Keys
+  (`CTA_TRAIN_KEY`, `TM_KEY`) are env vars on the container — never in
+  the repo, never in the browser. See `DEPLOY.md`.
 
 ## Quick start
 
@@ -54,7 +63,9 @@ Push to `main` → GitHub Actions builds `ghcr.io/aceospades95/chilocal:latest`
 → Unraid → Docker → `chilocal-map` → *force update*. The image is the same
 tiny nginx static server as before (`Dockerfile`, `nginx.conf` untouched);
 `scripts/fetch-data.sh` still bakes full-resolution boundary data at build
-time when the network allows.
+time when the network allows. The same workflow now also publishes
+`ghcr.io/aceospades95/chilocal-api:latest` (the optional companion server —
+deploying it is a separate, opt-in container; see `DEPLOY.md`).
 
 ```bash
 docker compose up -d --build   # local: http://localhost:8080

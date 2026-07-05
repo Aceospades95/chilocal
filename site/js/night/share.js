@@ -77,6 +77,14 @@ export function renderShareCard(plan, ctxNight, dateN) {
     g.font = "italic 600 62px Georgia, serif";
     y = wrap(g, plan.second.venue.name, L + 190, y + 112, W - 2 * L - 190, 70) + 20;
   }
+  if (plan.third) {
+    g.fillStyle = "#ffb45c";
+    g.font = "400 46px Georgia, serif";
+    g.fillText("then →", L, y + 96);
+    g.fillStyle = "#f4eede";
+    g.font = "italic 600 62px Georgia, serif";
+    y = wrap(g, plan.third.venue.name, L + 190, y + 98, W - 2 * L - 190, 70) + 6;
+  }
 
   // the why, quoted (older history entries may not have one)
   if (plan.why) {
@@ -103,7 +111,7 @@ export async function sharePlan(plan, ctxNight, dateN) {
   const canvas = renderShareCard(plan, ctxNight, dateN);
   const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
   const file = new File([blob], "tonight.png", { type: "image/png" });
-  const text = `Tonight: ${plan.hero.v.name}${plan.second ? " → " + plan.second.venue.name : ""} (${plan.hero.v.hood}). Decided by ChiLocal.`;
+  const text = `Tonight: ${plan.hero.v.name}${plan.second ? " → " + plan.second.venue.name : ""}${plan.third ? " → " + plan.third.venue.name : ""} (${plan.hero.v.hood}). Decided by ChiLocal.`;
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], text }); return "shared"; }
     catch (e) { if (e.name === "AbortError") return "aborted"; }

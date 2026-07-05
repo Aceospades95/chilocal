@@ -3,6 +3,8 @@
  *                                     (City of Chicago open data, keyless)
  *   site/data/metra-lines.min.geojson Metra commuter rail geometry
  *                                     (OpenStreetMap via Overpass, ODbL)
+ *   site/data/divvy-stations.min.json Divvy bike-share stations
+ *                                     (official GBFS feed, keyless)
  * Run: node scripts/fetch-transit.mjs */
 import { writeFileSync } from "fs";
 
@@ -20,7 +22,8 @@ for (const s of stops) {
   for (const [k, name] of Object.entries(LINES)) if (s[k]) e.l.add(name);
   byStation.set(key, e);
 }
-const stations = [...byStation.values()].map((s) => ({
+const stations = [...byStation.entries()].map(([id, s]) => ({
+  id: +id, // CTA map_id — the Train Tracker arrivals API keys on this
   n: s.n, lat: +s.lat.toFixed(5), lng: +s.lng.toFixed(5), l: [...s.l],
 }));
 writeFileSync("site/data/cta-stations.min.json",
@@ -47,3 +50,14 @@ const gj = { type: "FeatureCollection",
                geometry: { type: "MultiLineString", coordinates: lines } }] };
 writeFileSync("site/data/metra-lines.min.geojson", JSON.stringify(gj));
 console.log("metra segments:", lines.length);
+
+// ---- Divvy stations (GBFS) -------------------------------------------------
+const gbfs = await (await fetch(
+  "https://gbfs.divvybikes.com/gbfs/en/station_information.json", { headers: UA })).json();
+const divvy = gbfs.data.stations
+  .filter((s) => s.lat > B.s && s.lat < B.n && s.lon > B.w && s.lon < B.e)
+  .map((s) => ({ n: s.name, lat: +s.lat.toFixed(5), lng: +s.lon.toFixed(5), cap: s.capacity || 0 }))
+  .sort((a, b) => a.lat - b.lat || a.lng - b.lng);
+writeFileSync("site/data/divvy-stations.min.json",
+  JSON.stringify({ src: "Divvy GBFS (official feed)", fetched: new Date().toISOString().slice(0, 10), stations: divvy }));
+console.log("divvy stations:", divvy.length);

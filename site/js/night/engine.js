@@ -120,6 +120,10 @@ export function travelLabel(mi) {
   const walkMin = Math.round(mi * 20);
   if (mi <= 1.05) return `~${Math.max(4, walkMin)} min walk`;
   const ride = Math.round(mi * 3.2 + 8);
+  if (mi <= 4) { // Divvy range: too far to walk, silly to drive
+    const bike = Math.round(mi * 5 + 4); // ~12 mph + dock-to-dock overhead
+    return `~${ride} min ride · 🚲 ~${bike} min`;
+  }
   return `~${ride} min ride`;
 }
 
@@ -195,6 +199,9 @@ export function scoreVenue(v, input, ctx, mem, rand) {
     if (v.inst) { s += 10; reasons.push("visitor-icon"); }
     if ((v.bestFor || []).includes("classic")) s += 6;
   }
+  // a real event on the bill tonight (companion server, matched by venue) —
+  // decisive when they asked for a show, a nudge otherwise
+  if (v._event) { s += input.vibe === "show" ? 16 : 5; reasons.push("event"); }
   if (input.party === "couple" && v.bestFor.includes("date")) { s += 9; reasons.push("date"); }
   if (input.party === "group" && v.bestFor.includes("group")) s += 8;
   if (input.party === "solo" && v.bestFor.includes("solo")) s += 8;
@@ -277,6 +284,19 @@ export function pickSecond(hero, pool, input, ctx) {
   return best ? { venue: best.v, mi: best.mi } : null;
 }
 
+/* Crawl builder: chain a third stop onto hero → second, every leg a real
+ * walk (pickSecond's 0.72 mi cap). The nightcap is always drinks-ish —
+ * forcing vibe:"dinner" reuses pickSecond's drink pairing rules. */
+export function buildCrawl(hero, second, pool, input, ctx) {
+  let s2 = second;
+  if (!s2) s2 = pickSecond(hero, pool, { ...input, vibe: "dinner" }, ctx);
+  if (!s2) return null;
+  const rest = pool.filter((v) => v.id !== hero.id && v.id !== s2.venue.id);
+  const s3 = pickSecond(s2.venue, rest, { ...input, vibe: "dinner" }, ctx);
+  if (!s3) return null;
+  return { second: s2, third: s3 };
+}
+
 /* ------------------------------- why lines --------------------------------- */
 const HOODS_PREP = { "The Loop": "in the Loop", "Museum Campus": "on the Museum Campus" };
 const inHood = (h) => HOODS_PREP[h] || `in ${h}`;
@@ -321,6 +341,9 @@ export function whyLine(v, reasons, input, ctx, extra = {}) {
   if (reasons.includes("wishlist"))
     bits.push(pick([`it's been sitting on your wishlist`,
                     `you saved it for a reason — tonight's the reason`]));
+  if (reasons.includes("event") && v._event)
+    bits.unshift(pick([`${v._event.name} is on the bill there tonight`,
+                       `tonight's bill: ${v._event.name}`]));
   if (extra.overlap && extra.overlapVibes?.length)
     bits.unshift(`you both tapped “${extra.overlapVibes.map(vibeName).join(" + ")}”`);
   if (reasons.includes("visitor-icon") && bits.length < 2)
