@@ -393,48 +393,76 @@ export class NightMap {
     this._queueCull();
   }
 
-  /* Every neighborhood gets a hue from WHERE it sits around the Loop —
-   * North Side teal, Northwest indigo, West violet, Southwest plum, South
-   * coral, downtown gold — so regions cohere, neighbors differ, and the
-   * color means something. Venue density still drives brightness (the
-   * city's light map); hover/select brighten a hood in its own hue. */
+  /* Colors v2 — the city as eight named districts, every neighbor distinct.
+   * Each hood belongs to a curated color FAMILY by where it sits (compass
+   * sector from the Loop, lakefront split by longitude, far-south by
+   * distance, downtown gold). Within a family, a greedy coloring over the
+   * true adjacency graph hands neighbors different shade steps — so two
+   * touching neighborhoods NEVER read as one blob. Venue density still
+   * adds brightness; hover/select brighten in the hood's own hue. */
   _paintFaces() {
     const weights = this._labelWeights || new Map();
     const Lx = this.px(-87.628), Ly = this.py(41.8785); // the Loop
-    // angle (deg) around downtown -> hue stops, muted night jewel tones
-    const STOPS = [[-180, 285], [-120, 230], [-70, 190], [-15, 160],
-                   [30, 45], [80, 18], [130, 340], [180, 285]];
-    const hueAt = (a) => {
-      for (let i = 0; i < STOPS.length - 1; i++) {
-        const [a0, h0] = STOPS[i], [a1, h1] = STOPS[i + 1];
-        if (a >= a0 && a <= a1) {
-          const t = (a - a0) / (a1 - a0);
-          let d = h1 - h0; // wrap-aware hue lerp
-          if (d > 180) d -= 360; if (d < -180) d += 360;
-          return (h0 + d * t + 360) % 360;
-        }
-      }
-      return 220;
+    const FAMILIES = {
+      teal:    { h: 187, s: 40 },  // North Side lakefront
+      indigo:  { h: 232, s: 36 },  // Northwest
+      violet:  { h: 270, s: 32 },  // West Side
+      wine:    { h: 336, s: 34 },  // near south / Bridgeport band
+      sienna:  { h: 18,  s: 42 },  // Southwest (Pilsen's terracotta)
+      emerald: { h: 158, s: 30 },  // South lakefront
+      slate:   { h: 207, s: 26 },  // Far South
+      gold:    { h: 42,  s: 44 },  // downtown
     };
+    const famOf = (cx, cy, lng) => {
+      const dist = Math.hypot(cx - Lx, cy - Ly);
+      if (dist < 62) return "gold";
+      const a = Math.atan2(cy - Ly, cx - Lx) * 180 / Math.PI;
+      if (a >= -115 && a < -60) return "teal";
+      if (a >= -160 && a < -115) return "indigo";
+      if (a < -160 || a >= 160) return "violet";
+      if (a >= 115 && a < 160) return "sienna";
+      if (a >= 60 && a < 115) {
+        if (dist > 380) return "slate";
+        return lng > -87.606 ? "emerald" : "wine";
+      }
+      if (a >= 0 && a < 60) return "emerald";
+      return "teal"; // NE lakefront sliver
+    };
+    // adjacency ≈ inflated-bbox overlap (superset of shared borders — safe)
+    const names = [...this.hoodGroups.keys()];
+    const bb = (n) => this.hoodBBoxes.get(n);
+    const touches = (a, b) => {
+      const A = bb(a), B = bb(b), e = 3;
+      return A.x < B.x + B.w + e && B.x < A.x + A.w + e &&
+             A.y < B.y + B.h + e && B.y < A.y + A.h + e;
+    };
+    const STEPS = [{ dl: 0, dh: 0 }, { dl: 5, dh: 9 }, { dl: -3.5, dh: -8 },
+                   { dl: 8.5, dh: -13 }, { dl: 3, dh: 16 }];
+    const stepOf = new Map();
+    for (const n of names) {
+      const used = new Set();
+      for (const m of names) {
+        if (m === n || !stepOf.has(m)) continue;
+        if (touches(n, m)) used.add(stepOf.get(m));
+      }
+      let pick = STEPS.findIndex((_, i) => !used.has(i));
+      if (pick < 0) pick = 0;
+      stepOf.set(n, pick);
+    }
     for (const [name, g] of this.hoodGroups) {
       const l = this.hoodLabels.get(name);
       const cx = +l.getAttribute("x"), cy = +l.getAttribute("y");
-      const dist = Math.hypot(cx - Lx, cy - Ly);
-      let hue = hueAt(Math.atan2(cy - Ly, cx - Lx) * 180 / Math.PI);
-      // downtown glows gold no matter the compass — and the blend walks
-      // UP the wheel (teal→violet→pink→gold), never through olive mud
-      if (dist < 70) {
-        const w = (1 - dist / 70) * 0.85;
-        const d = ((42 - hue) % 360 + 360) % 360;
-        hue = (hue + d * w) % 360;
-      }
+      const lng = this.unproject(cx, cy).lng;
+      const fam = FAMILIES[famOf(cx, cy, lng)];
+      const st = STEPS[stepOf.get(name) || 0];
       const t = Math.sqrt(Math.min(1, (weights.get(name) || 0) / 12));
-      const S = 28 + t * 10, L = 15.5 + t * 5.5;
-      const h = Math.round(hue);
+      const h = Math.round((fam.h + st.dh + 360) % 360);
+      const S = fam.s + t * 8;
+      const L = 17 + st.dl + t * 6;
       g.style.setProperty("--face", `hsl(${h} ${S.toFixed(0)}% ${L.toFixed(1)}%)`);
-      g.style.setProperty("--edge", `hsl(${h} ${(S + 8).toFixed(0)}% ${(L + 14).toFixed(1)}%)`);
-      g.style.setProperty("--face-hov", `hsl(${h} ${(S + 9).toFixed(0)}% ${(L + 9).toFixed(1)}%)`);
-      g.style.setProperty("--face-sel", `hsl(${h} ${(S + 11).toFixed(0)}% ${(L + 13).toFixed(1)}%)`);
+      g.style.setProperty("--edge", `hsl(${h} ${(S + 10).toFixed(0)}% ${(L + 16).toFixed(1)}%)`);
+      g.style.setProperty("--face-hov", `hsl(${h} ${(S + 8).toFixed(0)}% ${(L + 10).toFixed(1)}%)`);
+      g.style.setProperty("--face-sel", `hsl(${h} ${(S + 10).toFixed(0)}% ${(L + 14).toFixed(1)}%)`);
     }
   }
 
@@ -721,10 +749,21 @@ export class NightMap {
       e.preventDefault();
       this._cancelAnim();
       // trackpad pinch arrives as ctrl+wheel — give it a stronger gear
-      const k = e.ctrlKey ? 0.0042 : 0.0016;
+      const k = e.ctrlKey ? 0.0042 : 0.0013;
       const f = clampFactor(this.box, Math.exp(e.deltaY * k));
       const { fx, fy } = this._anchorFractions(e.clientX, e.clientY);
-      this._glide(clampBox(this._scaleBox(this.box, f, fx, fy)));
+      const target = clampBox(this._scaleBox(this.box, f, fx, fy));
+      // trackpads emit fine-grained deltas that are already smooth — easing
+      // them adds pure latency ("floaty" zoom). Only chunky mouse notches
+      // get the glide.
+      if (e.ctrlKey || Math.abs(e.deltaY) < 50) {
+        this._stopGlide();
+        this._beginMove();
+        this._setBox(target);
+        this._endMoveSoon();
+      } else {
+        this._glide(target);
+      }
     }, { passive: false });
 
     svg.addEventListener("dblclick", (e) => {
@@ -750,8 +789,8 @@ export class NightMap {
     this._beginMove();
     const step = () => {
       const t = this._glideTarget, b = this.box;
-      const nx = b.x + (t.x - b.x) * 0.34, ny = b.y + (t.y - b.y) * 0.34;
-      const nw = b.w + (t.w - b.w) * 0.34, nh = b.h + (t.h - b.h) * 0.34;
+      const nx = b.x + (t.x - b.x) * 0.45, ny = b.y + (t.y - b.y) * 0.45;
+      const nw = b.w + (t.w - b.w) * 0.45, nh = b.h + (t.h - b.h) * 0.45;
       if (Math.abs(t.w - nw) / t.w < 0.001 && Math.hypot(t.x - nx, t.y - ny) < t.w * 0.001) {
         this._setBox({ ...t });
         this._glideRaf = null;

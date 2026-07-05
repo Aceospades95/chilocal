@@ -66,14 +66,15 @@ impossible). Continuous camera motion is rAF-driven and suspends tile
 transitions (`moving` class) so walls can't smear; hover is suppressed while
 panning and re-derived when the camera rests; text selection is disabled on
 map surfaces and globally while a pan is live (panel copy stays selectable).
-Every neighborhood is colored by WHERE it sits around the Loop —
-North Side teal, Northwest indigo, West violet, Southwest plum, South
-coral, downtown gold (the blend walks up the color wheel so it never
-passes through olive mud) — so regions cohere, neighbors differ, and the
-color means something; venue density still drives brightness (the city's
-light map), and hover/select brighten a hood in its own hue. Walls carry
-a vertical gradient for the diorama read. Reduced-motion
-users get camera jumps instead of flights.
+The city is eight named color districts — North lakefront teal,
+Northwest indigo, West violet, Bridgeport-band wine, Southwest sienna,
+South-lakefront emerald, Far-South slate, downtown gold — and within a
+district a greedy coloring over the adjacency graph hands every touching
+pair of neighborhoods different shade steps, so no two neighbors ever
+read as one blob. Venue density still adds brightness (the city's light
+map), and hover/select brighten a hood in its own hue. Walls carry a
+vertical gradient for the diorama read. Reduced-motion users get camera
+jumps instead of flights.
 
 **The real-map tier (v4.1):** past neighborhood zoom the schematic hands
 over to actual OSM cartography — CARTO dark raster tiles (streets,
