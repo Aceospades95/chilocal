@@ -2,15 +2,15 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n18";
-import { buildContext } from "./context.js?v=n18";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n18";
-import { NightMap } from "./nightmap.js?v=n18";
-import { sharePlan } from "./share.js?v=n18";
+import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n19";
+import { buildContext } from "./context.js?v=n19";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n19";
+import { NightMap } from "./nightmap.js?v=n19";
+import { sharePlan } from "./share.js?v=n19";
 
 // the build tag also lives in the footer — the first question when a deploy
 // "didn't take" is always "which build am I actually looking at?"
-console.info("ChiLocal · build v=n18");
+console.info("ChiLocal · build v=n19");
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -149,13 +149,17 @@ async function boot() {
   S.mem = loadMemory();
 
   const [venuesRaw, geo, ctx] = await Promise.all([
-    fetch("data/venues.json?v=n18").then((r) => r.json()),
-    fetch("data/neighborhoods.min.geojson?v=n18").then((r) => r.json()),
+    fetch("data/venues.json?v=n19").then((r) => r.json()),
+    fetch("data/neighborhoods.min.geojson?v=n19").then((r) => r.json()),
     buildContext(),
   ]);
   // CTA knowledge: station list is tiny — fetch in the background, degrade silently
-  fetch("data/cta-stations.min.json?v=n18").then((r) => r.json())
+  fetch("data/cta-stations.min.json?v=n19").then((r) => r.json())
     .then((d) => { S.stations = d.stations; }).catch(() => { S.stations = null; });
+  // micro-neighborhood names (Bronzeville, Ravenswood, Buena Park…) — the
+  // names locals use, resolved to the official boundary that contains them
+  fetch("data/hood-aliases.json?v=n19").then((r) => r.json())
+    .then((d) => { S.hoodAliases = d.aliases; }).catch(() => { S.hoodAliases = null; });
   probeApi(); // companion server (live arrivals, events, two-phone) — optional
   S.visitor = !!prefs.visitor;
   S.baseVenues = venuesRaw.venues;
@@ -243,7 +247,7 @@ function setView(view) {
   if (view === "explore") {
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n18");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n19");
     if (S.ex.hood) S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
     else S.exCam = S.map.cityView(exInset(), tiltZoom());
     renderExplore();
@@ -1446,11 +1450,11 @@ function toggleOverlay(kind, force) {
   S.map.setOverlay(kind, on);
   if (on) {
     if (kind === "transit") {
-      S.map.loadTransit("data/cta-lines.min.geojson?v=n18");
-      S.map.loadStations("data/cta-stations.min.json?v=n18");
-    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n18");
-    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n18");
-    else S.map.loadStreets("data/streets.min.geojson?v=n18");
+      S.map.loadTransit("data/cta-lines.min.geojson?v=n19");
+      S.map.loadStations("data/cta-stations.min.json?v=n19");
+    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n19");
+    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n19");
+    else S.map.loadStreets("data/streets.min.geojson?v=n19");
   }
   const prefs = loadPrefs();
   savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
@@ -1584,6 +1588,7 @@ function renderExplore() {
       <h2 class="ex-title">${esc(display)}</h2>
       ${display !== S.ex.hood ? `<p class="ex-sub">officially “${esc(S.ex.hood)}”</p>` : ""}
       ${take ? `<p class="ex-take">${esc(take)}</p>` : ""}
+      ${(S.hoodAliases?.[S.ex.hood] || []).length ? `<p class="ex-aka">In here: ${(S.hoodAliases[S.ex.hood]).map(esc).join(" · ")}</p>` : ""}
       ${g ? `
         <div class="fchips" id="ex-vchips">
           <button data-v="all" class="${S.ex.vibe === "all" ? "on" : ""}">All (${g.venues.length})</button>
@@ -1647,17 +1652,38 @@ function renderExplore() {
     const box = $("#ex-results");
     const q = norm(S.ex.q.trim());
     if (q) {
+      // micro-neighborhood names resolve to the official hood that holds
+      // them — "bronzeville" finds Grand Boulevard, "pilsen" Lower West Side
+      const aliasOf = (key, g) => {
+        if (fuzzyHas(g.display, q) || fuzzyHas(key, q)) return null;
+        return (S.hoodAliases?.[key] || []).find((a) => fuzzyHas(a, q)) || false;
+      };
       const hoodHits = [...groups.entries()]
-        .filter(([key, g]) => fuzzyHas(g.display, q) || fuzzyHas(key, q))
+        .map(([key, g]) => ({ key, g, via: aliasOf(key, g) }))
+        .filter((h) => h.via !== false)
         .slice(0, 4);
+      // hoods with no venues yet have no group — but Bronzeville must still
+      // find Grand Boulevard, and every official polygon deserves a result
+      if (hoodHits.length < 4) {
+        const inGroups = new Set(groups.keys());
+        for (const f of S.geo.features) {
+          const key = f.properties.name;
+          if (inGroups.has(key)) continue;
+          const via = fuzzyHas(key, q) ? null
+            : ((S.hoodAliases?.[key] || []).find((a) => fuzzyHas(a, q)) || false);
+          if (via === false) continue;
+          hoodHits.push({ key, g: null, via });
+          if (hoodHits.length >= 4) break;
+        }
+      }
       const venueHits = S.venues.filter((v) =>
         (fuzzyHas(v.name, q) || fuzzyHas(v.cat, q) ||
          v.vibes.some((vb) => fuzzyHas(vibeName(vb), q))) &&
         (!S.ex.price || v.price <= S.ex.price) &&
         (!S.ex.open || openState(v._hours, S.ctx.day, S.ctx.minutes)?.open)).slice(0, 12);
-      box.innerHTML = hoodHits.map(([key, g]) => `
+      box.innerHTML = hoodHits.map(({ key, g, via }) => `
           <button class="ex-row" data-hood="${esc(key)}">
-            <span class="n">${esc(g.display)}</span><span class="c">${g.venues.length} spots →</span>
+            <span class="n">${esc(g ? g.display : key)}${via ? ` <span class="aka">incl. ${esc(via)}</span>` : ""}</span><span class="c">${g ? `${g.venues.length} spots` : "explore"} →</span>
           </button>`).join("") +
         venueHits.map((v) => `
           <button class="ex-row" data-id="${esc(v.id)}">
@@ -1794,7 +1820,7 @@ function openVenueProfile(id) {
     $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === "explore"));
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n18");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n19");
     show("explore");
   }
   S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
