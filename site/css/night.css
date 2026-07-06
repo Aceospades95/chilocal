@@ -82,9 +82,16 @@ header > * { pointer-events: auto; }
   transition: opacity .8s ease, filter .8s ease;
   opacity: .48; filter: saturate(.85);
   user-select: none; -webkit-user-select: none;
+  /* rotation only exists in explore — Tonight's labels must not counter-
+   * rotate against a map that isn't rotated */
+  --bearing-eff: 0deg;
 }
+#mapwrap.explore { --bearing-eff: var(--bearing, 0deg); }
 #mapwrap.on { opacity: 1; filter: none; }
-#nm { width: 100%; height: 100%; display: block; -webkit-tap-highlight-color: transparent; }
+/* overflow visible: under tilt/rotation the element's corners would
+ * otherwise show as empty triangles — the map paints past its box and
+ * #mapwrap's overflow:hidden does the real clipping */
+#nm { width: 100%; height: 100%; display: block; -webkit-tap-highlight-color: transparent; overflow: visible; }
 
 /* while a pan is live, nothing anywhere may start a text selection —
  * and the cursor reads "grabbing" even over the hit layer's pointer */
@@ -114,15 +121,25 @@ body.map-dragging, body.map-dragging * {
  * tiles-on handover stays smooth even mid-zoom */
 #mapwrap.moving .nm-wall { transition: opacity .45s ease !important; }
 .nm-hoodlabel {
-  font-family: var(--sans); font-weight: 600; font-size: 13px;
-  letter-spacing: .1em; fill: #e2ecff; opacity: 0; pointer-events: none;
+  font-family: var(--sans); font-weight: 600; font-size: 11.5px;
+  letter-spacing: .09em; fill: #e2ecff; opacity: 0; pointer-events: none;
   paint-order: stroke; stroke: rgba(3,6,13,.72); stroke-width: .12em; stroke-linejoin: round;
   /* fixed font + counter-scale: font-size below ~2px wrecks Chrome's glyph
    * geometry (blurry blobs at deep zoom); no drop-shadow either — filter
-   * blur is in user units and smears when magnified. Stroke is the halo. */
+   * blur is in user units and smears when magnified. Stroke is the halo.
+   * The counter-rotation keeps names upright when the map is rotated. */
   transform-box: fill-box; transform-origin: center;
-  transform: scale(var(--zf, 1));
+  transform: rotate(calc(-1 * var(--bearing-eff, 0deg))) scale(var(--zf, 1));
   transition: opacity .25s ease;
+}
+/* while the .9s bearing transition runs, labels rotate on the same curve;
+ * at any other time transform changes (--zf on zoom) must land instantly */
+#mapwrap.rotating .nm-hoodlabel,
+#mapwrap.rotating .nm-spotlabel,
+#mapwrap.rotating .nm-streetlabel,
+#mapwrap.rotating .nm-homelabel,
+#mapwrap.rotating .nm-routelabel {
+  transition: opacity .25s ease, transform .9s cubic-bezier(.3,.8,.3,1);
 }
 .nm-hoodlabel.show { opacity: 1 !important; }
 #mapwrap.explore .nm-hoodlabel.vis { opacity: .55; }
@@ -130,14 +147,14 @@ body.map-dragging, body.map-dragging * {
 /* -------- explore: the 2.5D diorama (three view presets) -------- */
 #nm { transition: transform .9s cubic-bezier(.3,.8,.3,1); }
 #mapwrap.explore.tilt-mid #nm {
-  transform: perspective(1500px) rotateX(16deg);
+  transform: perspective(1500px) rotateX(16deg) rotate(var(--bearing, 0deg));
   transform-origin: 50% 55%;
 }
 #mapwrap.explore.tilt-full #nm {
-  transform: perspective(1300px) rotateX(28deg);
+  transform: perspective(1300px) rotateX(28deg) rotate(var(--bearing, 0deg));
   transform-origin: 50% 62%;
 }
-#mapwrap.explore.tilt-flat #nm { transform: none; }
+#mapwrap.explore.tilt-flat #nm { transform: rotate(var(--bearing, 0deg)); transform-origin: 50% 50%; }
 #mapwrap.explore.tilt-flat .nm-wall { display: none; }
 #mapwrap.explore #nm { touch-action: none; cursor: grab; }
 #mapwrap.explore #nm:active { cursor: grabbing; }
@@ -184,8 +201,8 @@ body.map-dragging, body.map-dragging * {
   transition: transform .25s cubic-bezier(.2,.85,.3,1);
 }
 @media (max-width: 919px) {
-  #mapwrap.explore.tilt-mid #nm { transform: perspective(1100px) rotateX(13deg); transform-origin: 50% 40%; }
-  #mapwrap.explore.tilt-full #nm { transform: perspective(900px) rotateX(22deg); transform-origin: 50% 42%; }
+  #mapwrap.explore.tilt-mid #nm { transform: perspective(1100px) rotateX(13deg) rotate(var(--bearing, 0deg)); transform-origin: 50% 40%; }
+  #mapwrap.explore.tilt-full #nm { transform: perspective(900px) rotateX(22deg) rotate(var(--bearing, 0deg)); transform-origin: 50% 42%; }
 }
 .nm-scan { fill: #22375f; }
 .nm-hood-glow {
@@ -210,7 +227,7 @@ body.map-dragging, body.map-dragging * {
   font-family: var(--sans); font-weight: 600; font-size: 10.5px;
   paint-order: stroke; stroke: rgba(3,6,13,.8); stroke-width: .16em; stroke-linejoin: round;
   pointer-events: none; transform-box: fill-box; transform-origin: center;
-  transform: scale(var(--zf, 1));
+  transform: rotate(calc(-1 * var(--bearing-eff, 0deg))) scale(var(--zf, 1));
 }
 .nm-homelabel { fill: #9fd8f0; }
 .nm-routelabel { fill: rgba(255, 214, 170, .9); font-style: italic; font-weight: 500; }
@@ -233,7 +250,15 @@ body.map-dragging, body.map-dragging * {
   letter-spacing: .04em; fill: #ffd9a8; opacity: 0; pointer-events: none;
   paint-order: stroke; stroke: rgba(3,6,13,.75); stroke-width: .14em; stroke-linejoin: round;
   transform-box: fill-box; transform-origin: center;
-  transform: translateY(calc(var(--uz, 1px) * -6)) scale(var(--zf, 1));
+  /* anchored AT the dot. The scale pivots on the text's BBOX CENTER, which
+   * sits ~2.6 user units above the baseline anchor — uncorrected, that error
+   * scales with zoom and floats the name far above its dot. The first
+   * translateY term cancels it exactly ((1-zf)·Δ), the second is the
+   * screen-constant gap; the counter-rotation keeps the lift pointing
+   * straight up on screen when the map is rotated. */
+  transform: rotate(calc(-1 * var(--bearing-eff, 0deg)))
+             translateY(calc((1 - var(--zf, 1)) * 2.6px + var(--uz, 1px) * -11))
+             scale(var(--zf, 1));
   transition: opacity .3s;
 }
 #mapwrap.zoomed2 .nm-spotlabel.vis { opacity: .95; }
@@ -333,7 +358,7 @@ body.map-dragging, body.map-dragging * {
   letter-spacing: .08em; fill: #8fa3c8; opacity: 0; pointer-events: none;
   paint-order: stroke; stroke: rgba(3,6,13,.7); stroke-width: .12em; stroke-linejoin: round;
   transform-box: fill-box; transform-origin: center;
-  transform: scale(var(--zf, 1));
+  transform: rotate(calc(-1 * var(--bearing-eff, 0deg))) scale(var(--zf, 1));
   transition: opacity .3s;
 }
 #mapwrap.zoomed .nm-streetlabel.vis { opacity: .95; }

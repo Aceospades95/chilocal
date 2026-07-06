@@ -117,6 +117,23 @@ a third walkable stop (nightcap rules: ≤0.72 mi legs, late-open favored)
 chained onto the night, drawn as a second hop on the map, logged whole,
 and shared as one three-line card.
 
+**Round 5 — the camera is fully yours (v4.4):** a new control cluster joins
+Flat/2.5D/3D and the basemap picker: **zoom** steps (+/−, anchored on the
+visible window) and **orientation** — rotate the whole diorama in 30° stops
+with **N** snapping the compass home (persisted like tilt). Every label
+counter-rotates in CSS so names stay upright at any bearing, and the
+screen↔map math never special-cases it — it inverts whatever matrix the
+CSS lands on, so hit-testing and exact-grab panning stay pixel-true
+rotated. Three legibility fixes ride along: raster tiles are now chosen
+**per device pixel** (a tile never paints above ~1.08× its native
+resolution, so the street/neighborhood names baked into CARTO/Esri
+bitmaps stay sharp on retina screens and at in-between zoom stops, where
+they used to fuzz); venue name tags now sit ON their dots at every zoom
+(the counter-scale used to pivot on the text's bbox center, an error that
+grew with zoom until names floated ambiguously high); and city-view
+neighborhood names dropped to 11.5px with wider collision padding — fewer,
+calmer names when zoomed all the way out.
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on

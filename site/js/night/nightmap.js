@@ -324,9 +324,9 @@ export class NightMap {
    * is sub-pixel. Keyless, © OpenStreetMap contributors © CARTO. */
   /* basemap styles for the detail tier — user-pickable, all keyless */
   static BASEMAPS = {
-    night: { attrib: "detail © OpenStreetMap contributors © CARTO",
+    night: { attrib: "detail © OpenStreetMap contributors © CARTO", native: 512,
              url: (z, x, y) => `https://${"abcd"[(x + y) % 4]}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png` },
-    sat:   { attrib: "imagery © Esri, Maxar, Earthstar Geographics",
+    sat:   { attrib: "imagery © Esri, Maxar, Earthstar Geographics", native: 256,
              url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}` },
     none:  null,
   };
@@ -356,13 +356,19 @@ export class NightMap {
     if (b.w / this.cityBox.w >= 0.34) return;
     const g = this.svg.querySelector("#nm-tiles");
     const f = this._frame();
-    const pad = 0.15;
+    // rotation exposes map beyond the box's corners — widen the fetch pad
+    const rot = ((this.bearing || 0) * Math.PI) / 180;
+    const pad = 0.15 + (Math.abs(Math.cos(rot)) + Math.abs(Math.sin(rot)) - 1) / 2;
     const tl = this.unproject(b.x - b.w * pad, b.y - b.h * pad);
     const br = this.unproject(b.x + b.w * (1 + pad), b.y + b.h * (1 + pad));
-    // choose z so one 256-unit tile paints at roughly 300–600 screen px
+    // choose z from what the tile bitmap ACTUALLY lands on: DEVICE pixels.
+    // A tile shown above ~1.08x its native resolution reads as fuzz — the
+    // names baked into the raster (streets, neighborhoods) blur first
     const fScale = Math.max((this.svg.clientWidth || 1) / b.w, (this.svg.clientHeight || 1) / b.h);
-    const zt = Math.max(12, Math.min(17,
-      Math.ceil(Math.log2((360 * this._pxPerLng * fScale) / 520))));
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const target = ((bm.native || 512) * 1.08) / dpr;
+    const zt = Math.max(12, Math.min(18,
+      Math.ceil(Math.log2((360 * this._pxPerLng * fScale) / target))));
     const n = 2 ** zt;
     const xOf = (lng) => Math.floor(((lng + 180) / 360) * n);
     const yOf = (lat) => Math.floor(((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2) * n);
@@ -519,12 +525,13 @@ export class NightMap {
     const zc = this.box.w / this.cityBox.w;
     const toLayout = (ux, uy) => ({ x: f.offX + (ux - this.box.x) * f.scale,
                                     y: f.offY + (uy - this.box.y) * f.scale });
-    // project + measure the local screen scale (perspective shrinks the far edge)
+    // project + measure the local screen scale (perspective shrinks the far
+    // edge) — hypot, not Δx, so a rotated map doesn't read as scale 0
     const projU = (ux, uy) => {
       const l = toLayout(ux, uy);
       const p = this._projLayout(l.x, l.y, plane);
       const q = this._projLayout(l.x + 8, l.y, plane);
-      return { x: p.x, y: p.y, s: Math.abs(q.x - p.x) / 8 };
+      return { x: p.x, y: p.y, s: Math.hypot(q.x - p.x, q.y - p.y) / 8 };
     };
     // street names cull among THEMSELVES in every mode — the Tonight reveal
     // shows them too, and "N Clark St""Lake Shore Dr" must not read as one
@@ -547,9 +554,9 @@ export class NightMap {
     const winX1 = desktop ? f.elW - 445 : f.elW - 6;
     const winY1 = desktop ? f.elH - 8 : f.elH * 0.52;
     const kept = [];
-    // the tilt/overlay controls own the top-left corner — no labels beneath
-    kept.push(desktop ? { x0: 0, x1: 200, y0: 0, y1: 165 }
-                      : { x0: 0, x1: 190, y0: 0, y1: 205 });
+    // the tilt/overlay/camera controls own the top-left corner — no labels beneath
+    kept.push(desktop ? { x0: 0, x1: 200, y0: 0, y1: 205 }
+                      : { x0: 0, x1: 190, y0: 0, y1: 245 });
     // the street names that SURVIVED their own cull are furniture the hood
     // labels must not sit on (they only paint when zoomed)
     if (host.classList.contains("zoomed")) kept.push(...streetRects);
@@ -558,15 +565,18 @@ export class NightMap {
     const ordered = [...this.hoodLabels.entries()]
       .sort((a, b) => ((wts.get(b[0]) || 0) - (wts.get(a[0]) || 0)) ||
                       ((+b[1].dataset.area) - (+a[1].dataset.area)));
+    // zoomed out, names need BREATHING ROOM — the whole city's labels compete
+    // for one screen, so the collision pad widens with the zoom level
+    const padX = zc > 0.55 ? 26 : 8, padY = zc > 0.55 ? 16 : 6;
     for (const [name, l] of ordered) {
       const bb = this.hoodBBoxes.get(name);
       const p = projU(+l.getAttribute("x"), +l.getAttribute("y"));
-      const F = 13 * zc * f.scale * p.s; // label px on screen at this point
+      const F = 11.5 * zc * f.scale * p.s; // label px on screen at this point
       const w = l.textContent.length * F * 0.62;
       const weight = wts.get(name) || 0;
       // skip hoods too small on screen to own their name (unless venue-rich)
       if (bb.w * f.scale * p.s < w * (weight >= 3 ? 0.45 : 0.8)) { l.classList.remove("vis"); continue; }
-      const r = { x0: p.x - w / 2 - 8, x1: p.x + w / 2 + 8, y0: p.y - F - 6, y1: p.y + 6 };
+      const r = { x0: p.x - w / 2 - padX, x1: p.x + w / 2 + padX, y0: p.y - F - padY, y1: p.y + padY };
       if (r.x0 < 6 || r.x1 > winX1 || r.y0 < 60 || r.y1 > winY1) { l.classList.remove("vis"); continue; }
       const hit = kept.some((k) => r.x0 < k.x1 && r.x1 > k.x0 && r.y0 < k.y1 && r.y1 > k.y0);
       l.classList.toggle("vis", !hit);
@@ -884,6 +894,33 @@ export class NightMap {
     this._tiltT = setTimeout(() => this._queueCull(), 950);
   }
 
+  /* orientation: rotate the whole diorama; labels counter-rotate in CSS so
+   * every name stays readable. The screen↔map math needs no special case —
+   * it inverts whatever matrix the CSS lands on. */
+  setBearing(deg) {
+    this.bearing = ((deg % 360) + 360) % 360;
+    const host = this.svg.parentElement;
+    host.style.setProperty("--bearing", this.bearing + "deg");
+    // labels ride the .9s rotation (same curve) — but only while rotating,
+    // so zoom's --zf changes stay instant
+    host.classList.add("rotating");
+    clearTimeout(this._rotT);
+    this._rotT = setTimeout(() => {
+      host.classList.remove("rotating");
+      this._queueCull();
+      this._queueTiles(); // corners now show map that wasn't fetched
+    }, 950);
+  }
+
+  /* zoom buttons: one clamped step about the visible window's center */
+  zoomBy(f, fx = 0.5, fy = 0.5) {
+    this._stopGlide();
+    this._cancelAnim();
+    const fac = this._clampFactor(this.box, f);
+    const b = this._clampBox(this._scaleBox(this.box, fac, fx, fy));
+    return this.animateTo(b, 320);
+  }
+
   setLabel(pt, text) {
     let el = this.svg.parentElement.querySelector(".nm-label");
     if (!el) {
@@ -1072,7 +1109,10 @@ export class NightMap {
       const tag = document.createElementNS(NS, "text");
       tag.setAttribute("class", "nm-spotlabel");
       tag.setAttribute("x", x.toFixed(1));
-      tag.setAttribute("y", (y - 2).toFixed(1));
+      // anchor AT the dot — the screen-constant gap lives in the CSS
+      // transform (--uz); a user-unit offset here would grow with zoom
+      // until the name floats far above its dot
+      tag.setAttribute("y", y.toFixed(1));
       tag.setAttribute("text-anchor", "middle");
       tag.textContent = p.name;
       hit.addEventListener("mouseenter", () => this.setLabel({ lat: p.lat, lng: p.lng }, p.name));

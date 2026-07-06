@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n11";
-import { buildContext } from "./context.js?v=n11";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n11";
-import { NightMap } from "./nightmap.js?v=n11";
-import { sharePlan } from "./share.js?v=n11";
+import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n12";
+import { buildContext } from "./context.js?v=n12";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n12";
+import { NightMap } from "./nightmap.js?v=n12";
+import { sharePlan } from "./share.js?v=n12";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -194,6 +194,10 @@ async function boot() {
   $$("#bm-seg button").forEach((b) => b.classList.toggle("on", b.dataset.b === (prefs.basemap || "night")));
   S.map.setTilt(prefs.tilt || "mid");
   $$("#tilt-seg button").forEach((b) => b.classList.toggle("on", b.dataset.t === (prefs.tilt || "mid")));
+  if (prefs.bearing) {
+    S.map.setBearing(prefs.bearing);
+    $('#cam-seg button[data-c="north"]').classList.add("on");
+  }
   if (prefs.ovTransit) toggleOverlay("transit", true);
   if (prefs.ovMetra) toggleOverlay("metra", true);
   if (prefs.ovDivvy) toggleOverlay("divvy", true);
@@ -1126,6 +1130,24 @@ function wireStatic() {
     $$("#tilt-seg button").forEach((x) => x.classList.toggle("on", x === b));
     savePrefs({ ...loadPrefs(), tilt: b.dataset.t });
     if (S.view === "explore" && !S.ex.hood) S.exCam = S.map.cityView(exInset(), tiltZoom());
+  });
+  // camera cluster: zoom steps about the visible window's center; rotation
+  // in 30° stops with N snapping the compass home (persisted like tilt)
+  const visAnchor = () => {
+    const ins = exInset();
+    return ins.right ? { fx: (1 - ins.right) / 2, fy: 0.5 } : { fx: 0.5, fy: (1 - (ins.bottom || 0)) / 2 };
+  };
+  $$("#cam-seg button").forEach((b) => b.onclick = () => {
+    const c = b.dataset.c;
+    if (c === "zin" || c === "zout") {
+      const a = visAnchor();
+      S.map.zoomBy(c === "zin" ? 1 / 1.5 : 1.5, a.fx, a.fy);
+    } else {
+      const next = c === "north" ? 0 : (S.map.bearing || 0) + (c === "rr" ? 30 : -30);
+      S.map.setBearing(next);
+      savePrefs({ ...loadPrefs(), bearing: S.map.bearing });
+      $('#cam-seg button[data-c="north"]').classList.toggle("on", S.map.bearing !== 0);
+    }
   });
   $("#ov-transit").onclick = () => toggleOverlay("transit");
   $("#ov-metra").onclick = () => toggleOverlay("metra");
