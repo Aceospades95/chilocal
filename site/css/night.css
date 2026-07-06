@@ -394,6 +394,40 @@ body[data-screen="explore"] #map-controls { display: flex; }
   #map-controls { top: 104px; left: 12px; }
 }
 
+/* camera dock: bottom-right of the VISIBLE map, clear of the panel */
+#cam-dock {
+  position: absolute; z-index: 25; right: 16px; bottom: 30px;
+  display: none; user-select: none; -webkit-user-select: none;
+}
+body[data-screen="explore"] #cam-dock { display: block; }
+#cam-dock .seg {
+  display: flex; flex-direction: column; padding: 2px;
+  backdrop-filter: blur(6px);
+}
+#cam-dock .seg button { padding: 8px 10px; font-size: 13px; min-width: 34px; }
+@media (min-width: 920px) {
+  body:not(.ex-folded) #cam-dock { right: 446px; }
+}
+@media (max-width: 919px) {
+  #cam-dock { right: 10px; bottom: calc(48% + 12px); }
+}
+
+/* the browse panel folds away — the map gets the whole stage */
+.ex-fold {
+  display: none; pointer-events: auto;
+  position: absolute; z-index: 21; top: 50%; right: 430px;
+  transform: translateY(-50%);
+  width: 22px; height: 64px; border-radius: 10px 0 0 10px;
+  background: rgba(13, 21, 36, .92); border: 1px solid var(--line);
+  border-right: 0; color: var(--muted); font-size: 13px; padding: 0;
+  transition: right .35s cubic-bezier(.3,.8,.3,1), color .15s;
+}
+.ex-fold:hover { color: var(--text); }
+@media (min-width: 920px) { #screen-explore.active .ex-fold { display: block; } }
+#screen-explore .ex-sheet { transition: transform .35s cubic-bezier(.3,.8,.3,1); }
+#screen-explore.folded .ex-sheet { transform: translateX(108%); pointer-events: none; }
+#screen-explore.folded .ex-fold { right: 0; }
+
 .nm-pin > * { transform-box: fill-box; transform-origin: center; }
 .nm-pin-core { fill: var(--coral); animation: pin-drop .55s cubic-bezier(.2,1.6,.4,1) both; }
 .nm-pin-ring {
@@ -601,6 +635,21 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .spinner span:nth-child(3) { animation-delay: .32s; background: var(--skyblue); box-shadow: 0 0 14px rgba(100,216,255,.8); }
 .spinner.sm { margin: 14px 0 4px; justify-content: flex-start; }
 .spinner.sm span { width: 8px; height: 8px; }
+
+/* settings dialog */
+.chip-btn.gear { padding: 5px 9px; font-size: 14px; line-height: 1; }
+#settings .set-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin: 13px 0;
+}
+#settings .set-row.col { flex-direction: column; align-items: flex-start; gap: 8px; }
+#settings .set-row label { font-size: 13px; color: var(--muted); }
+#settings input[type="color"] {
+  width: 52px; height: 30px; padding: 2px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--panel-2); cursor: pointer;
+}
+#settings .seg button.on { color: var(--text); }
+#settings #set-reset { width: 100%; margin-top: 14px; }
 
 /* two-phone room dialog */
 #tworoom .tr-code { font-family: var(--serif); letter-spacing: .3em; color: var(--amber); }

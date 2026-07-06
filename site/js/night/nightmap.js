@@ -296,8 +296,20 @@ export class NightMap {
     const z = this.box.w / this.cityBox.w;
     return Math.min(2.3, Math.max(0.9, Math.pow(1 / z, 0.34)));
   }
-  _hoodFont(grow, s) { return Math.max(10, 11.5 * grow * Math.min(1.15, Math.max(0.55, s))); }
-  _spotFont(s) { return 10 * Math.min(1.15, Math.max(0.7, s)); }
+  _hoodFont(grow, s) {
+    return Math.max(10, 11.5 * (this._lblScale || 1) * grow * Math.min(1.15, Math.max(0.55, s)));
+  }
+  _spotFont(s) { return 10 * (this._lblScale || 1) * Math.min(1.15, Math.max(0.7, s)); }
+  /* settings: repaint the eight district families under a hue/sat shift */
+  setPalette(pal) {
+    this._pal = pal || { hueShift: 0, satMult: 1 };
+    this._paintFaces();
+  }
+  setLabelScale(k) {
+    this._lblScale = Math.min(1.4, Math.max(0.7, +k || 1));
+    this._layoutLabels(true);
+    this._queueCull();
+  }
   /* place billboards at their projected anchors, at their zoom size — the
    * per-frame pass touches only visible ones (cheap); the debounced cull
    * pass positions ALL of them so a label never first appears at (0,0) */
@@ -356,8 +368,8 @@ export class NightMap {
       host.classList.toggle("tiles-on", tilesOn);
       if (tilesOn) this._queueTiles();
       if (z < 0.85) { // close enough that detail matters — fetch it once
-        this.loadStreets("data/streets.min.geojson?v=n16");
-        this.loadDetail("data/detail.min.geojson?v=n16");
+        this.loadStreets("data/streets.min.geojson?v=n17");
+        this.loadDetail("data/detail.min.geojson?v=n17");
       }
       this._layoutLabels(); // billboards track the camera every frame
       this._queueCull();
@@ -628,13 +640,14 @@ export class NightMap {
     }
     for (const [name, g] of this.hoodGroups) {
       const l = this.hoodLabels.get(name);
-      const cx = +l.getAttribute("x"), cy = +l.getAttribute("y");
+      const cx = +l.dataset.ux, cy = +l.dataset.uy; // labels are HTML billboards
       const lng = this.unproject(cx, cy).lng;
       const fam = FAMILIES[famOf(cx, cy, lng)];
       const st = STEPS[stepOf.get(name) || 0];
       const t = Math.sqrt(Math.min(1, (weights.get(name) || 0) / 12));
-      const h = Math.round((fam.h + st.dh + 360) % 360);
-      const S = fam.s + t * 8;
+      const pal = this._pal || { hueShift: 0, satMult: 1 };
+      const h = Math.round((fam.h + pal.hueShift + st.dh + 720) % 360);
+      const S = Math.min(70, Math.max(4, fam.s * pal.satMult + t * 8));
       const L = 17 + st.dl + t * 6;
       g.style.setProperty("--face", `hsl(${h} ${S.toFixed(0)}% ${L.toFixed(1)}%)`);
       g.style.setProperty("--edge", `hsl(${h} ${(S + 10).toFixed(0)}% ${(L + 16).toFixed(1)}%)`);
@@ -676,12 +689,15 @@ export class NightMap {
     }
     // labels must live in the VISIBLE window — not under the panel, not clipped
     const desktop = matchMedia("(min-width: 920px)").matches;
-    const winX1 = desktop ? f.elW - 445 : f.elW - 6;
+    const panelW = this.panelW ?? (desktop ? 445 : 0); // app sets 12 when folded
+    const winX1 = desktop ? f.elW - panelW : f.elW - 6;
     const winY1 = desktop ? f.elH - 8 : f.elH * 0.52;
     const kept = [];
-    // the tilt/overlay/camera controls own the top-left corner — no labels beneath
-    kept.push(desktop ? { x0: 0, x1: 200, y0: 0, y1: 205 }
-                      : { x0: 0, x1: 190, y0: 0, y1: 245 });
+    // the tilt/overlay controls own the top-left corner — no labels beneath
+    kept.push(desktop ? { x0: 0, x1: 200, y0: 0, y1: 165 }
+                      : { x0: 0, x1: 190, y0: 0, y1: 205 });
+    // ...and the camera dock owns the bottom-right of the visible map
+    kept.push({ x0: winX1 - 64, x1: winX1, y0: winY1 - 250, y1: winY1 });
     // the street names that SURVIVED their own cull are furniture the hood
     // labels must not sit on (they only paint when zoomed)
     if (host.classList.contains("zoomed")) kept.push(...streetRects);
@@ -1042,6 +1058,24 @@ export class NightMap {
     this._trackProjection();
   }
 
+  /* deliberate camera flights (select, reveal) arrive at whatever scale the
+   * framing asked for — nudge the TARGET a few % so tiles land pixel-true
+   * on arrival, without breaking the framing's intent */
+  _snapBoxScale(box, maxLog = 0.22) { // ±16% — the crop-safe limit for select framing
+    const bm = NightMap.BASEMAPS[this._basemap || "night"];
+    if (!bm || !this.cityBox || box.w / this.cityBox.w >= 0.34) return box;
+    const elW = this.svg.clientWidth || 1, elH = this.svg.clientHeight || 1;
+    const fScale = Math.max(elW / box.w, elH / box.h);
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const native = bm.native || 512;
+    const cur = Math.log2((360 * this._pxPerLng * fScale * dpr) / native);
+    const z = Math.max(12, Math.min(bm.maxZ || 18, Math.round(cur)));
+    const perfect = (native * 2 ** z) / (360 * this._pxPerLng * dpr);
+    const ratio = fScale / perfect;
+    if (Math.abs(Math.log2(ratio)) > maxLog) return box; // framing wins
+    return this._scaleBox(box, ratio, 0.5, 0.5);
+  }
+
   /* zoom buttons: one clamped step about the visible window's center */
   zoomBy(f, fx = 0.5, fy = 0.5) {
     this._stopGlide();
@@ -1208,7 +1242,8 @@ export class NightMap {
       box.h = box.w / aspect;
       box.y = cy - box.h / 2;
     }
-    return this.animateTo(box, 750);
+    // arrive with tiles at 1 device px per bitmap px — no soft landing
+    return this.animateTo(this._snapBoxScale(box), 750);
   }
 
   /* markers for browsed venues (explore mode). One highlighted, or a field
@@ -1489,6 +1524,7 @@ export class NightMap {
       }
     }
 
+    box = this._snapBoxScale(box); // land with tiles pixel-true
     await this.animateTo(box, opts.fast ? 800 : 1500);
     if (gen !== this._revealGen) return;
 

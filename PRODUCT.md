@@ -190,6 +190,20 @@ growing along a soft power curve to ~26 px as you commit to a place,
 with far-edge labels sized down by the perspective. Labels stay upright
 at any map rotation for free — billboards don't rotate.
 
+**Round 10 — make it yours (v5.1):** a ⚙ **settings** dialog (header) opens
+the night for play: recolor the three accents (route light, star, sky blue)
+with live pickers, repaint the whole map under four district palettes
+(Classic · Neon · Ember · Steel — the eight families hue-shift together,
+neighbor-contrast guarantees intact), and pick a name size (A− / A / A+).
+Everything applies live and persists on-device; one button resets to
+ChiLocal night. The **browse panel folds away** (⟩ tab on its edge) so the
+map gets the whole stage — the camera reframes for the full window and
+remembers your choice. The **camera cluster moved to the bottom-right**
+like every map you've ever used, riding the panel fold. And camera flights
+now **arrive pixel-true**: select/reveal targets nudge up to ±16% (never
+enough to crop the framing) so the tiles land at exactly one device pixel
+per bitmap pixel instead of a slightly-soft in-between scale.
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on
