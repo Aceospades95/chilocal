@@ -288,8 +288,8 @@ export class NightMap {
       host.classList.toggle("tiles-on", tilesOn);
       if (tilesOn) this._queueTiles();
       if (z < 0.85) { // close enough that detail matters — fetch it once
-        this.loadStreets("data/streets.min.geojson");
-        this.loadDetail("data/detail.min.geojson");
+        this.loadStreets("data/streets.min.geojson?v=n14");
+        this.loadDetail("data/detail.min.geojson?v=n14");
       }
       this._queueCull();
     }
@@ -324,9 +324,9 @@ export class NightMap {
    * is sub-pixel. Keyless, © OpenStreetMap contributors © CARTO. */
   /* basemap styles for the detail tier — user-pickable, all keyless */
   static BASEMAPS = {
-    night: { attrib: "detail © OpenStreetMap contributors © CARTO", native: 512,
+    night: { attrib: "detail © OpenStreetMap contributors © CARTO", native: 512, maxZ: 19,
              url: (z, x, y) => `https://${"abcd"[(x + y) % 4]}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png` },
-    sat:   { attrib: "imagery © Esri, Maxar, Earthstar Geographics", native: 256,
+    sat:   { attrib: "imagery © Esri, Maxar, Earthstar Geographics", native: 256, maxZ: 19,
              url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}` },
     none:  null,
   };
@@ -367,8 +367,9 @@ export class NightMap {
     const fScale = Math.max((this.svg.clientWidth || 1) / b.w, (this.svg.clientHeight || 1) / b.h);
     const dpr = Math.min(3, window.devicePixelRatio || 1);
     const target = ((bm.native || 512) * 1.08) / dpr;
-    const zt = Math.max(12, Math.min(18,
-      Math.ceil(Math.log2((360 * this._pxPerLng * fScale) / target))));
+    const need = (360 * this._pxPerLng * fScale) / target;
+    const capZ = bm.maxZ || 18;
+    const zt = Math.max(12, Math.min(capZ, Math.ceil(Math.log2(need))));
     const n = 2 ** zt;
     const xOf = (lng) => Math.floor(((lng + 180) / 360) * n);
     const yOf = (lat) => Math.floor(((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2) * n);
@@ -413,6 +414,25 @@ export class NightMap {
       const z = +el.dataset.z;
       if (z === zt) { if (!want.has(key)) { el.remove(); this._tiles.delete(key); } }
       else if (allLoaded) { el.remove(); this._tiles.delete(key); }
+    }
+
+    // approaching the next level's switch point: warm those tiles into the
+    // HTTP cache now, so the stop-and-sharpen moment is instant instead of
+    // a fuzzy beat while the deeper level streams in
+    if (need / 2 ** zt > 0.8 && zt < capZ) {
+      const z2 = zt + 1, n2 = 2 ** z2;
+      const xo = (lng) => Math.floor(((lng + 180) / 360) * n2);
+      const yo = (lat) => Math.floor(((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2) * n2);
+      const tl2 = this.unproject(b.x, b.y), br2 = this.unproject(b.x + b.w, b.y + b.h);
+      this._warm = this._warm || new Set();
+      for (let x = xo(tl2.lng); x <= xo(br2.lng); x++)
+        for (let y = yo(tl2.lat); y <= yo(br2.lat); y++) {
+          const key = `${this._basemap}|${z2}/${x}/${y}`;
+          if (this._warm.has(key)) continue;
+          this._warm.add(key);
+          new Image().src = bm.url(z2, x, y);
+        }
+      if (this._warm.size > 600) this._warm.clear(); // bounded; a miss just refetches
     }
   }
 
@@ -671,7 +691,7 @@ export class NightMap {
 
     const active = () => svg.parentElement.classList.contains("explore");
     const clampBox = (b) => {
-      const minW = this.cityBox.w / 36, maxW = this.cityBox.w * 1.7;
+      const minW = this.cityBox.w / 90, maxW = this.cityBox.w * 1.7;
       if (b.w < minW) { const f = minW / b.w; b = this._scaleBox(b, f, .5, .5); }
       if (b.w > maxW) { const f = maxW / b.w; b = this._scaleBox(b, f, .5, .5); }
       // keep the city loosely on stage
@@ -687,7 +707,7 @@ export class NightMap {
     // over-limit box re-centers it, which reads as the map sliding sideways
     // while the user is pinned at min/max zoom
     const clampFactor = (b, f) => {
-      const minW = this.cityBox.w / 36, maxW = this.cityBox.w * 1.7;
+      const minW = this.cityBox.w / 90, maxW = this.cityBox.w * 1.7;
       return Math.max(minW / b.w, Math.min(maxW / b.w, f));
     };
     this._clampFactor = clampFactor;
