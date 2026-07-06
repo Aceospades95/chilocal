@@ -166,6 +166,16 @@ colors: the flag of Chicago (night edition) sits beside the wordmark, the
 six-pointed star is the favicon and the PWA icon, four stars crown every
 locked date, and the footer says where this thing was made.
 
+**Round 8 — the fuzz-free zoom (v4.7):** continuous zoom must resample tile
+bitmaps at fractional scales, which is why "certain zoom levels" looked
+soft no matter how well the level was chosen. Two rules end it: tiles are
+now never upscaled even mid-motion (level switches happen at exactly 1:1),
+and when a zoom gesture settles over the real-map tier the camera eases
+the last few percent so the tile level lands at **exactly one device pixel
+per bitmap pixel** — free zoom while moving, pixel-perfect wherever you
+stop (wheel, pinch, buttons, double-click all snap; deliberate camera
+flights are left alone). The wordmark also slimmed down to Chi·Local.
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on
