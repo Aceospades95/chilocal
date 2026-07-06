@@ -2,15 +2,15 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n16";
-import { buildContext } from "./context.js?v=n16";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n16";
-import { NightMap } from "./nightmap.js?v=n16";
-import { sharePlan } from "./share.js?v=n16";
+import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n17";
+import { buildContext } from "./context.js?v=n17";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n17";
+import { NightMap } from "./nightmap.js?v=n17";
+import { sharePlan } from "./share.js?v=n17";
 
 // the build tag also lives in the footer — the first question when a deploy
 // "didn't take" is always "which build am I actually looking at?"
-console.info("ChiLocal · build v=n16");
+console.info("ChiLocal · build v=n17");
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -149,12 +149,12 @@ async function boot() {
   S.mem = loadMemory();
 
   const [venuesRaw, geo, ctx] = await Promise.all([
-    fetch("data/venues.json?v=n16").then((r) => r.json()),
-    fetch("data/neighborhoods.min.geojson?v=n16").then((r) => r.json()),
+    fetch("data/venues.json?v=n17").then((r) => r.json()),
+    fetch("data/neighborhoods.min.geojson?v=n17").then((r) => r.json()),
     buildContext(),
   ]);
   // CTA knowledge: station list is tiny — fetch in the background, degrade silently
-  fetch("data/cta-stations.min.json?v=n16").then((r) => r.json())
+  fetch("data/cta-stations.min.json?v=n17").then((r) => r.json())
     .then((d) => { S.stations = d.stations; }).catch(() => { S.stations = null; });
   probeApi(); // companion server (live arrivals, events, two-phone) — optional
   S.visitor = !!prefs.visitor;
@@ -204,6 +204,8 @@ async function boot() {
     S.map.setBearing(prefs.bearing);
     $('#cam-seg button[data-c="north"]').classList.add("on");
   }
+  applySettings(prefs);
+  if (prefs.exFolded) setPanelFold(true);
   if (prefs.ovTransit) toggleOverlay("transit", true);
   if (prefs.ovMetra) toggleOverlay("metra", true);
   if (prefs.ovDivvy) toggleOverlay("divvy", true);
@@ -241,7 +243,7 @@ function setView(view) {
   if (view === "explore") {
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n16");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n17");
     if (S.ex.hood) S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
     else S.exCam = S.map.cityView(exInset(), tiltZoom());
     renderExplore();
@@ -1155,6 +1157,8 @@ function wireStatic() {
       $('#cam-seg button[data-c="north"]').classList.toggle("on", S.map.bearing !== 0);
     }
   });
+  $("#ex-fold").onclick = () => setPanelFold(!S.ex.folded);
+  wireSettings();
   $("#ov-transit").onclick = () => toggleOverlay("transit");
   $("#ov-metra").onclick = () => toggleOverlay("metra");
   $("#ov-divvy").onclick = () => toggleOverlay("divvy");
@@ -1312,7 +1316,7 @@ function buildExploreIndex() {
 }
 
 const exInset = () => matchMedia("(min-width: 920px)").matches
-  ? { right: 430 / document.documentElement.clientWidth }
+  ? (S.ex.folded ? {} : { right: 430 / document.documentElement.clientWidth })
   : { bottom: Math.min(0.47, 420 / document.documentElement.clientHeight) };
 const tiltZoom = () => (S.map?.tilt === "full" ? 0.78 : S.map?.tilt === "mid" ? 0.85 : 0.97);
 
@@ -1374,6 +1378,66 @@ function exBackToCity() {
   renderExplore();
 }
 
+/* the browse panel folds away so the map can have the whole stage */
+function setPanelFold(folded) {
+  S.ex.folded = !!folded;
+  $("#screen-explore").classList.toggle("folded", S.ex.folded);
+  document.body.classList.toggle("ex-folded", S.ex.folded);
+  $("#ex-fold").textContent = S.ex.folded ? "⟨" : "⟩";
+  $("#ex-fold").setAttribute("aria-label", S.ex.folded ? "show panel" : "hide panel");
+  S.map.panelW = matchMedia("(min-width: 920px)").matches && !S.ex.folded ? 445 : 12;
+  savePrefs({ ...loadPrefs(), exFolded: S.ex.folded });
+  if (S.view === "explore") { // reframe for the new visible window
+    if (S.ex.hood) S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
+    else S.exCam = S.map.cityView(exInset(), tiltZoom());
+  }
+}
+
+/* settings: accents, map palette, name size — applied live, saved locally */
+const PALETTES = {
+  classic: { hueShift: 0, satMult: 1 },
+  neon:    { hueShift: 150, satMult: 1.5 },
+  ember:   { hueShift: -28, satMult: 1.2 },
+  steel:   { hueShift: 8, satMult: 0.35 },
+};
+const ACCENT_DEFAULTS = { "--amber": "#ffb45c", "--coral": "#ff4b5c", "--skyblue": "#64d8ff" };
+function applySettings(prefs) {
+  const acc = prefs.accents || {};
+  for (const [k, def] of Object.entries(ACCENT_DEFAULTS))
+    document.documentElement.style.setProperty(k, acc[k] || def);
+  S.map.setPalette(PALETTES[prefs.palette] || PALETTES.classic);
+  S.map.setLabelScale(prefs.labelScale || 1);
+  $$("#set-pal button").forEach((b) => b.classList.toggle("on", b.dataset.p === (prefs.palette || "classic")));
+  $$("#set-lbl button").forEach((b) => b.classList.toggle("on", +b.dataset.l === (prefs.labelScale || 1)));
+  for (const inp of $$("#settings input[type=color]"))
+    inp.value = acc[inp.dataset.var] || ACCENT_DEFAULTS[inp.dataset.var];
+}
+function wireSettings() {
+  $("#settings-chip").onclick = () => $("#settings").showModal();
+  for (const inp of $$("#settings input[type=color]")) {
+    inp.oninput = () => {
+      document.documentElement.style.setProperty(inp.dataset.var, inp.value);
+      const prefs = loadPrefs();
+      savePrefs({ ...prefs, accents: { ...(prefs.accents || {}), [inp.dataset.var]: inp.value } });
+    };
+  }
+  $$("#set-pal button").forEach((b) => b.onclick = () => {
+    savePrefs({ ...loadPrefs(), palette: b.dataset.p });
+    applySettings(loadPrefs());
+  });
+  $$("#set-lbl button").forEach((b) => b.onclick = () => {
+    savePrefs({ ...loadPrefs(), labelScale: +b.dataset.l });
+    applySettings(loadPrefs());
+  });
+  $("#set-reset").onclick = () => {
+    const prefs = loadPrefs();
+    delete prefs.accents; delete prefs.palette; delete prefs.labelScale;
+    savePrefs(prefs);
+    applySettings(prefs);
+    toast("Back to ChiLocal night.");
+  };
+}
+
 /* overlays + tilt (persisted) */
 function toggleOverlay(kind, force) {
   const btn = $("#ov-" + kind);
@@ -1382,11 +1446,11 @@ function toggleOverlay(kind, force) {
   S.map.setOverlay(kind, on);
   if (on) {
     if (kind === "transit") {
-      S.map.loadTransit("data/cta-lines.min.geojson?v=n16");
-      S.map.loadStations("data/cta-stations.min.json?v=n16");
-    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n16");
-    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n16");
-    else S.map.loadStreets("data/streets.min.geojson?v=n16");
+      S.map.loadTransit("data/cta-lines.min.geojson?v=n17");
+      S.map.loadStations("data/cta-stations.min.json?v=n17");
+    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n17");
+    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n17");
+    else S.map.loadStreets("data/streets.min.geojson?v=n17");
   }
   const prefs = loadPrefs();
   savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
@@ -1730,7 +1794,7 @@ function openVenueProfile(id) {
     $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === "explore"));
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n16");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n17");
     show("explore");
   }
   S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
