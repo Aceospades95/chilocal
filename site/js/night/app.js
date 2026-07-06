@@ -2,15 +2,15 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n15";
-import { buildContext } from "./context.js?v=n15";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n15";
-import { NightMap } from "./nightmap.js?v=n15";
-import { sharePlan } from "./share.js?v=n15";
+import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n16";
+import { buildContext } from "./context.js?v=n16";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n16";
+import { NightMap } from "./nightmap.js?v=n16";
+import { sharePlan } from "./share.js?v=n16";
 
 // the build tag also lives in the footer — the first question when a deploy
 // "didn't take" is always "which build am I actually looking at?"
-console.info("ChiLocal · build v=n15");
+console.info("ChiLocal · build v=n16");
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -149,12 +149,12 @@ async function boot() {
   S.mem = loadMemory();
 
   const [venuesRaw, geo, ctx] = await Promise.all([
-    fetch("data/venues.json?v=n15").then((r) => r.json()),
-    fetch("data/neighborhoods.min.geojson?v=n15").then((r) => r.json()),
+    fetch("data/venues.json?v=n16").then((r) => r.json()),
+    fetch("data/neighborhoods.min.geojson?v=n16").then((r) => r.json()),
     buildContext(),
   ]);
   // CTA knowledge: station list is tiny — fetch in the background, degrade silently
-  fetch("data/cta-stations.min.json?v=n15").then((r) => r.json())
+  fetch("data/cta-stations.min.json?v=n16").then((r) => r.json())
     .then((d) => { S.stations = d.stations; }).catch(() => { S.stations = null; });
   probeApi(); // companion server (live arrivals, events, two-phone) — optional
   S.visitor = !!prefs.visitor;
@@ -241,7 +241,7 @@ function setView(view) {
   if (view === "explore") {
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n15");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n16");
     if (S.ex.hood) S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
     else S.exCam = S.map.cityView(exInset(), tiltZoom());
     renderExplore();
@@ -1382,11 +1382,11 @@ function toggleOverlay(kind, force) {
   S.map.setOverlay(kind, on);
   if (on) {
     if (kind === "transit") {
-      S.map.loadTransit("data/cta-lines.min.geojson?v=n15");
-      S.map.loadStations("data/cta-stations.min.json?v=n15");
-    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n15");
-    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n15");
-    else S.map.loadStreets("data/streets.min.geojson?v=n15");
+      S.map.loadTransit("data/cta-lines.min.geojson?v=n16");
+      S.map.loadStations("data/cta-stations.min.json?v=n16");
+    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n16");
+    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n16");
+    else S.map.loadStreets("data/streets.min.geojson?v=n16");
   }
   const prefs = loadPrefs();
   savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
@@ -1730,7 +1730,7 @@ function openVenueProfile(id) {
     $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === "explore"));
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n15");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n16");
     show("explore");
   }
   S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });

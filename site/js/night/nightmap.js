@@ -96,11 +96,20 @@ export class NightMap {
 
     const hoodsG = this.svg.querySelector("#nm-hoods");
     const hitG = this.svg.querySelector("#nm-hit");
-    const labelsG = this.svg.querySelector("#nm-labels");
+    /* Labels live in an HTML layer OVER the map, not inside the SVG.
+     * Text inside a scaled/tilted SVG gets rasterized once and stretched
+     * by some engines (Safari most of all) — fuzzy at every zoom except
+     * the one it was rasterized at. HTML billboards positioned through
+     * the same projection math render at their TRUE screen size every
+     * frame: pixel-crisp in any browser, by construction. */
+    const lblLayer = document.createElement("div");
+    lblLayer.className = "nm-lbl-layer";
+    this.svg.parentElement.appendChild(lblLayer);
+    this.lblLayer = lblLayer;
     this.hoodPaths = new Map();   // name -> face path (scan flicker, glow clone)
     this.hoodGroups = new Map();  // name -> <g> (visual layer only)
     this.hoodBBoxes = new Map();  // name -> {x,y,w,h}
-    this.hoodLabels = new Map();  // name -> <text> (top layer, never occluded)
+    this.hoodLabels = new Map();  // name -> <div> (HTML billboard layer)
 
     // paint north → south so a lifted hood overlaps its northern neighbor,
     // and every wall hides behind the hood south of it
@@ -158,14 +167,13 @@ export class NightMap {
       face.setAttribute("d", d);
       face.setAttribute("class", "nm-hood");
 
-      const label = document.createElementNS(NS, "text");
-      label.setAttribute("class", "nm-hoodlabel");
-      label.setAttribute("x", cx.toFixed(1));
-      label.setAttribute("y", cy2.toFixed(1));
-      label.setAttribute("text-anchor", "middle");
+      const label = document.createElement("div");
+      label.className = "nm-hoodlabel";
       label.textContent = name.replace(/,/, " · ").toUpperCase();
+      label.dataset.ux = cx.toFixed(1); // anchor, in map units
+      label.dataset.uy = cy2.toFixed(1);
       label.dataset.area = bigArea.toFixed(0);
-      labelsG.appendChild(label);
+      lblLayer.appendChild(label);
 
       g.append(wall, face);
       hoodsG.appendChild(g);
@@ -266,6 +274,66 @@ export class NightMap {
     return { fx: (u.x - this.box.x) / this.box.w, fy: (u.y - this.box.y) / this.box.h };
   }
 
+  /* ------------- HTML label layer: projection + dynamic sizing ------------ */
+  /* One projector per frame: map units -> screen px (mapwrap-relative),
+   * with the local perspective scale so far-edge billboards size down. */
+  _labelProjector() {
+    const f = this._frame();
+    const plane = this._plane();
+    const toL = (ux, uy) => ({ x: f.offX + (ux - this.box.x) * f.scale,
+                               y: f.offY + (uy - this.box.y) * f.scale });
+    const proj = (ux, uy) => {
+      const l = toL(ux, uy);
+      const p = this._projLayout(l.x, l.y, plane);
+      const q = this._projLayout(l.x + 8, l.y, plane);
+      return { x: p.x, y: p.y, s: Math.hypot(q.x - p.x, q.y - p.y) / 8 };
+    };
+    proj.f = f;
+    return proj;
+  }
+  /* names grow as you commit to a place: soft power curve on zoom */
+  _lblGrow() {
+    const z = this.box.w / this.cityBox.w;
+    return Math.min(2.3, Math.max(0.9, Math.pow(1 / z, 0.34)));
+  }
+  _hoodFont(grow, s) { return Math.max(10, 11.5 * grow * Math.min(1.15, Math.max(0.55, s))); }
+  _spotFont(s) { return 10 * Math.min(1.15, Math.max(0.7, s)); }
+  /* place billboards at their projected anchors, at their zoom size — the
+   * per-frame pass touches only visible ones (cheap); the debounced cull
+   * pass positions ALL of them so a label never first appears at (0,0) */
+  _layoutLabels(all = false) {
+    if (!this.cityBox) return;
+    const proj = this._labelProjector();
+    const grow = this._lblGrow();
+    for (const l of this.hoodLabels.values()) {
+      if (!all && !l.classList.contains("vis") && !l.classList.contains("show")) continue;
+      const p = proj(+l.dataset.ux, +l.dataset.uy);
+      l.style.fontSize = this._hoodFont(grow, p.s).toFixed(1) + "px";
+      l.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -50%)`;
+    }
+    // venue tags ride the raised tile when a hood is selected
+    const liftU = this.svg.parentElement.classList.contains("hood-sel")
+      ? 18 * (this.box.w / this.cityBox.w) : 0;
+    for (const t of this.lblLayer.querySelectorAll(".nm-spotlabel")) {
+      if (!all && !t.classList.contains("vis")) continue;
+      const p = proj(+t.dataset.ux, +t.dataset.uy - liftU);
+      t.style.fontSize = this._spotFont(p.s).toFixed(1) + "px";
+      t.style.transform = `translate(${p.x.toFixed(1)}px, ${(p.y - 11).toFixed(1)}px) translate(-50%, -100%)`;
+    }
+  }
+  /* tilt/bearing transitions move the projection without touching the box —
+   * ride the .9s animation frame-by-frame so billboards stay glued */
+  _trackProjection(ms = 980) {
+    const t0 = performance.now();
+    if (this._projRaf) cancelAnimationFrame(this._projRaf);
+    const step = () => {
+      this._layoutLabels();
+      if (performance.now() - t0 < ms) this._projRaf = requestAnimationFrame(step);
+      else { this._projRaf = null; this._queueCull(); }
+    };
+    this._projRaf = requestAnimationFrame(step);
+  }
+
   _setBox(b) {
     this.box = b;
     this.svg.setAttribute("viewBox", `${b.x} ${b.y} ${b.w} ${b.h}`);
@@ -288,9 +356,10 @@ export class NightMap {
       host.classList.toggle("tiles-on", tilesOn);
       if (tilesOn) this._queueTiles();
       if (z < 0.85) { // close enough that detail matters — fetch it once
-        this.loadStreets("data/streets.min.geojson?v=n15");
-        this.loadDetail("data/detail.min.geojson?v=n15");
+        this.loadStreets("data/streets.min.geojson?v=n16");
+        this.loadDetail("data/detail.min.geojson?v=n16");
       }
+      this._layoutLabels(); // billboards track the camera every frame
       this._queueCull();
     }
   }
@@ -624,32 +693,34 @@ export class NightMap {
     // zoomed out, names need BREATHING ROOM — the whole city's labels compete
     // for one screen, so the collision pad widens with the zoom level
     const padX = zc > 0.55 ? 26 : 8, padY = zc > 0.55 ? 16 : 6;
+    const grow = this._lblGrow(); // collision rects use the DYNAMIC font size
     for (const [name, l] of ordered) {
       const bb = this.hoodBBoxes.get(name);
-      const p = projU(+l.getAttribute("x"), +l.getAttribute("y"));
-      const F = 11.5 * zc * f.scale * p.s; // label px on screen at this point
+      const p = projU(+l.dataset.ux, +l.dataset.uy);
+      const F = this._hoodFont(grow, p.s); // label px on screen at this point
       const w = l.textContent.length * F * 0.62;
       const weight = wts.get(name) || 0;
       // skip hoods too small on screen to own their name (unless venue-rich)
       if (bb.w * f.scale * p.s < w * (weight >= 3 ? 0.45 : 0.8)) { l.classList.remove("vis"); continue; }
-      const r = { x0: p.x - w / 2 - padX, x1: p.x + w / 2 + padX, y0: p.y - F - padY, y1: p.y + padY };
+      const r = { x0: p.x - w / 2 - padX, x1: p.x + w / 2 + padX, y0: p.y - F / 2 - padY, y1: p.y + F / 2 + padY };
       if (r.x0 < 6 || r.x1 > winX1 || r.y0 < 60 || r.y1 > winY1) { l.classList.remove("vis"); continue; }
       const hit = kept.some((k) => r.x0 < k.x1 && r.x1 > k.x0 && r.y0 < k.y1 && r.y1 > k.y0);
       l.classList.toggle("vis", !hit);
       if (!hit) kept.push(r);
     }
     // spot name tags: same treatment among themselves (priority = list order)
-    const tags = [...this.svg.querySelectorAll(".nm-spotlabel")];
+    const tags = [...this.lblLayer.querySelectorAll(".nm-spotlabel")];
     const keptT = [];
     for (const t of tags) {
-      const p = projU(+t.getAttribute("x"), +t.getAttribute("y"));
-      const F = 13 * zc * f.scale * p.s * 0.68;
+      const p = projU(+t.dataset.ux, +t.dataset.uy);
+      const F = this._spotFont(p.s);
       const w = t.textContent.length * F * 0.68;
-      const r = { x0: p.x - w / 2 - 5, x1: p.x + w / 2 + 5, y0: p.y - F - 4, y1: p.y + 4 };
+      const r = { x0: p.x - w / 2 - 5, x1: p.x + w / 2 + 5, y0: p.y - F - 15, y1: p.y - 9 };
       const hit = keptT.some((k) => r.x0 < k.x1 && r.x1 > k.x0 && r.y0 < k.y1 && r.y1 > k.y0);
       t.classList.toggle("vis", !hit);
       if (!hit) keptT.push(r);
     }
+    this._layoutLabels(true); // position everything, revealed or not
   }
   _queueCull() {
     clearTimeout(this._cullTimer);
@@ -708,6 +779,7 @@ export class NightMap {
       this._promote(g);       // move BEFORE the class flip — a move after it
       g.classList.add("hov"); // would cancel the lift transition
       this.hoodLabels.get(name)?.classList.add("show");
+      this._layoutLabels();   // the hover name appears instantly — place it
     }
   }
   /* after pans/zooms/animations, re-derive hover from wherever the mouse is */
@@ -948,9 +1020,8 @@ export class NightMap {
     host.classList.remove("tilt-flat", "tilt-mid", "tilt-full");
     host.classList.add("tilt-" + mode);
     this.tilt = mode;
-    // labels re-cull once the tilt transition lands (projection changed)
-    clearTimeout(this._tiltT);
-    this._tiltT = setTimeout(() => this._queueCull(), 950);
+    // billboards ride the .9s transition; a final cull lands with it
+    this._trackProjection();
   }
 
   /* orientation: rotate the whole diorama; labels counter-rotate in CSS so
@@ -960,15 +1031,15 @@ export class NightMap {
     this.bearing = ((deg % 360) + 360) % 360;
     const host = this.svg.parentElement;
     host.style.setProperty("--bearing", this.bearing + "deg");
-    // labels ride the .9s rotation (same curve) — but only while rotating,
-    // so zoom's --zf changes stay instant
+    // street names (still SVG) counter-rotate on the same .9s curve;
+    // the HTML billboards just track the projection frame-by-frame
     host.classList.add("rotating");
     clearTimeout(this._rotT);
     this._rotT = setTimeout(() => {
       host.classList.remove("rotating");
-      this._queueCull();
       this._queueTiles(); // corners now show map that wasn't fetched
     }, 950);
+    this._trackProjection();
   }
 
   /* zoom buttons: one clamped step about the visible window's center */
@@ -1096,6 +1167,7 @@ export class NightMap {
     if (name && this.hoodLabels.has(name)) this.hoodLabels.get(name).classList.add("show");
     this.selected = name || null;
     this.svg.parentElement.classList.toggle("hood-sel", !!this.selected);
+    this._layoutLabels(); // the freshly shown name needs a position NOW
     if (!name) {
       if (opts.camera !== false) return this.animateTo(this.cityBox, 900);
       return;
@@ -1166,15 +1238,15 @@ export class NightMap {
       dot.setAttribute("cx", x.toFixed(1)); dot.setAttribute("cy", y.toFixed(1));
       dot.setAttribute("class", "nm-spot-dot");
       dot.style.pointerEvents = "none";
-      const tag = document.createElementNS(NS, "text");
-      tag.setAttribute("class", "nm-spotlabel");
-      tag.setAttribute("x", x.toFixed(1));
-      // anchor AT the dot — the screen-constant gap lives in the CSS
-      // transform (--uz); a user-unit offset here would grow with zoom
-      // until the name floats far above its dot
-      tag.setAttribute("y", y.toFixed(1));
-      tag.setAttribute("text-anchor", "middle");
+      // the name tag is an HTML billboard anchored AT the dot: it renders
+      // at true screen size (no scale chain to blur it) and the layout
+      // pass lifts it a constant few px above the dot at any zoom
+      const tag = document.createElement("div");
+      tag.className = "nm-spotlabel";
+      tag.dataset.ux = x.toFixed(1);
+      tag.dataset.uy = y.toFixed(1);
       tag.textContent = p.name;
+      this.lblLayer.appendChild(tag);
       hit.addEventListener("mouseenter", () => this.setLabel({ lat: p.lat, lng: p.lng }, p.name));
       hit.addEventListener("mouseleave", () => this.setLabel(null));
       hit.addEventListener("click", (ev) => {
@@ -1183,7 +1255,7 @@ export class NightMap {
         this.setLabel(null);
         if (this.onSpotClick) this.onSpotClick(p.id);
       });
-      g.append(hit, dot, tag);
+      g.append(hit, dot);
     }
     this.svg.querySelector("#nm-pins").appendChild(g);
     this._queueCull();
@@ -1321,6 +1393,7 @@ export class NightMap {
   }
   clearSpot() {
     this.svg.querySelector("#nm-spot")?.remove();
+    this.lblLayer?.querySelectorAll(".nm-spotlabel").forEach((t) => t.remove());
   }
 
   /* ------------------------- deciding: radar scan ------------------------- */

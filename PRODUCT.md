@@ -176,6 +176,20 @@ per bitmap pixel** — free zoom while moving, pixel-perfect wherever you
 stop (wheel, pinch, buttons, double-click all snap; deliberate camera
 flights are left alone). The wordmark also slimmed down to Chi·Local.
 
+**Round 9 — billboard labels (v5): the last blur, gone for good.** The
+neighborhood and venue names were text INSIDE the scaled, tilted SVG —
+and some engines rasterize that text once and stretch the bitmap, so
+names were crisp at exactly one zoom and fuzzy at every other. Now every
+name is an **HTML billboard in a layer above the map**: positioned each
+frame through the same exact projection math (so they're glued to their
+map anchors through pan, zoom, tilt, and rotation) but rendered at their
+TRUE screen size — pixel-crisp in every browser at every zoom, by
+construction. And because size is now just a number set per frame, names
+**scale dynamically with the camera**: ~10 px at the full-city view,
+growing along a soft power curve to ~26 px as you commit to a place,
+with far-edge labels sized down by the perspective. Labels stay upright
+at any map rotation for free — billboards don't rotate.
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on
