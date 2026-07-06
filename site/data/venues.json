@@ -1,5 +1,5 @@
 {
- "generated": "2026-07-05",
+ "generated": "2026-07-06",
  "note": "Venue facts (coordinates, names, addresses, websites, opening hours, tips) from OpenStreetMap via Overpass API — © OpenStreetMap contributors, ODbL 1.0. Editorial takes, vibe tags, energy and price tiers (≈ estimates) are ChiLocal's own opinion. Opening hours reflect OSM data and may be out of date — always linked out for confirmation.",
  "license": "Data: ODbL 1.0 (OpenStreetMap). Editorial content: © ChiLocal.",
  "venues": [
@@ -3836,7 +3836,7 @@
    "id": "north-ave-beach",
    "name": "North Avenue Beach",
    "hood": "Lincoln Park",
-   "geom": null,
+   "geom": "Lincoln Park",
    "cat": "Beach",
    "vibes": [
     "active"
@@ -5950,8 +5950,8 @@
    "inst": false,
    "take": "Moules-frites and gin in a dark-wooded corner bistro. The late-ish kitchen makes it the neighborhood's best second act.",
    "lat": 41.97974,
-   "lng": -87.66774,
-   "addr": "1475 W Balmoral Ave 1",
+   "lng": -87.66788,
+   "addr": "1479 W Balmoral Ave 1",
    "site": null,
    "hours": null,
    "hoursChecked": null,

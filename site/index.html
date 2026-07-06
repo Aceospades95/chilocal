@@ -10,7 +10,14 @@
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<link rel="stylesheet" href="css/night.css?v=n12"/>
+<!-- tile CDNs: warm the TLS handshake so the first tiles of every zoom stop
+     land sooner — the sharpen-in window at a stop is pure network time -->
+<link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin/>
+<link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin/>
+<link rel="preconnect" href="https://c.basemaps.cartocdn.com" crossorigin/>
+<link rel="preconnect" href="https://d.basemaps.cartocdn.com" crossorigin/>
+<link rel="preconnect" href="https://server.arcgisonline.com" crossorigin/>
+<link rel="stylesheet" href="css/night.css?v=n13"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext y='19' font-size='19'%3E%F0%9F%8C%83%3C/text%3E%3C/svg%3E"/>
 </head>
 <body data-screen="ask">
@@ -243,6 +250,6 @@
   </footer>
 </div>
 
-<script type="module" src="js/night/app.js?v=n12"></script>
+<script type="module" src="js/night/app.js?v=n13"></script>
 </body>
 </html>

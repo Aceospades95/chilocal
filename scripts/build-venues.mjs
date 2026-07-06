@@ -80,7 +80,25 @@ function hoodCentroid(name) {
 }
 function geomNameAt(pt) {
   for (const f of hoods.features) if (pointInFeature(pt, f)) return f.properties.name;
-  return null;
+  // beaches/piers sit on lakefront parkland OUTSIDE every official polygon —
+  // snap to the nearest boundary within ~500 m instead of orphaning them
+  let best = null;
+  for (const f of hoods.features) {
+    const g = f.geometry;
+    const polys = g.type === "MultiPolygon" ? g.coordinates : [g.coordinates];
+    for (const poly of polys) for (const ring of poly) {
+      for (let i = 0; i < ring.length - 1; i++) {
+        const [x0, y0] = ring[i], [x1, y1] = ring[i + 1];
+        const dx = x1 - x0, dy = y1 - y0;
+        const L2 = dx * dx + dy * dy;
+        let t = L2 ? ((pt.lng - x0) * dx + (pt.lat - y0) * dy) / L2 : 0;
+        t = Math.max(0, Math.min(1, t));
+        const mi = haversineMi(pt, { lng: x0 + t * dx, lat: y0 + t * dy });
+        if (!best || mi < best.mi) best = { mi, name: f.properties.name };
+      }
+    }
+  }
+  return best && best.mi < 0.31 ? best.name : null; // ~500 m
 }
 
 /* ---- name matching -------------------------------------------------------- */
