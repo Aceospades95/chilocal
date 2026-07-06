@@ -134,6 +134,22 @@ grew with zoom until names floated ambiguously high); and city-view
 neighborhood names dropped to 11.5px with wider collision padding — fewer,
 calmer names when zoomed all the way out.
 
+**Round 6 — boundaries a native can vouch for (v4.5):** the 98 neighborhood
+polygons are rebuilt from the official City of Chicago export (y6yq-dbs2)
+with topology-preserving simplification — shared borders are decomposed
+into arcs, each arc is simplified ONCE, and every neighborhood is
+reassembled from the same arcs, so neighbors stay stitched vertex-for-
+vertex with zero slivers. Audited worst-case deviation from the official
+line: **2 meters** on every one of the 98 (the old file was off by up to
+126 m — 4.2 sq mi of the city sat in the wrong neighborhood; now 0.19).
+Twelve landmark spot-checks (Willis Tower→Loop, Wrigley Field→Wrigleyville,
+the Bean→Millenium Park, Midway→Garfield Ridge…) agree with the official
+polygons exactly — including Wrigleyville, which lives inside a HOLE in
+Lake View and now hit-tests correctly everywhere in the app. Beach venues
+on lakefront parkland outside every official polygon snap to the nearest
+boundary instead of orphaning. All of it at 36 KB gzipped and measurably
+zero cost to pan/zoom frame times.
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on

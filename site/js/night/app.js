@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n12";
-import { buildContext } from "./context.js?v=n12";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n12";
-import { NightMap } from "./nightmap.js?v=n12";
-import { sharePlan } from "./share.js?v=n12";
+import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n13";
+import { buildContext } from "./context.js?v=n13";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n13";
+import { NightMap } from "./nightmap.js?v=n13";
+import { sharePlan } from "./share.js?v=n13";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -127,7 +127,9 @@ function pointInFeature(pt, feature) {
   };
   const g = feature.geometry;
   const polys = g.type === "MultiPolygon" ? g.coordinates : [g.coordinates];
-  return polys.some((poly) => poly.length && inRing(poly[0]));
+  // in the outer ring AND not in a hole — Wrigleyville lives inside a hole
+  // in Lake View; outer-ring-only would hand its points to Lake View
+  return polys.some((poly) => poly.length && inRing(poly[0]) && !poly.slice(1).some(inRing));
 }
 function polygonAt(ll) {
   for (const f of S.geo.features) if (pointInFeature(ll, f)) return f.properties.name;

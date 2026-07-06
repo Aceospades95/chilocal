@@ -34,6 +34,10 @@ and Explore (the 2.5D city catalog) in one page, toggled in the header.
     (the upstream-contribution work list for missing opening hours)
   - `fetch-transit.mjs` — bakes CTA stations (with Train Tracker `map_id`),
     Metra geometry, and Divvy dock stations (GBFS) into `site/data/`
+  - `build-hoods.py` — bakes the 98 neighborhood boundaries from the official
+    city export (y6yq-dbs2) with topology-preserving simplification: shared
+    borders stay stitched vertex-for-vertex, worst-case deviation from the
+    official line is ~2 m (audited via Hausdorff distance per hood)
   - `overpass-query.txt`, `cache/` — reproducible source pulls
 - `server/` — the **optional companion API** (zero-dependency Node):
   live CTA arrival proxying, tonight's events (Ticketmaster Discovery),
