@@ -127,22 +127,22 @@ body.map-dragging, body.map-dragging * {
 /* walls: transform snaps with the camera, but opacity keeps fading so the
  * tiles-on handover stays smooth even mid-zoom */
 #mapwrap.moving .nm-wall { transition: opacity .45s ease !important; }
+/* the HTML billboard layer: names render OUTSIDE the transformed SVG at
+ * their true screen size — no scale chain, so no engine can blur them.
+ * Positions + font sizes are set per frame through the projection math. */
+.nm-lbl-layer {
+  position: absolute; inset: 0; z-index: 3;
+  pointer-events: none; overflow: hidden;
+}
 .nm-hoodlabel {
+  position: absolute; left: 0; top: 0; will-change: transform;
   font-family: var(--sans); font-weight: 600; font-size: 11.5px;
-  letter-spacing: .09em; fill: #e2ecff; opacity: 0; pointer-events: none;
-  paint-order: stroke; stroke: rgba(3,6,13,.72); stroke-width: .12em; stroke-linejoin: round;
-  /* fixed font + counter-scale: font-size below ~2px wrecks Chrome's glyph
-   * geometry (blurry blobs at deep zoom); no drop-shadow either — filter
-   * blur is in user units and smears when magnified. Stroke is the halo.
-   * The counter-rotation keeps names upright when the map is rotated. */
-  transform-box: fill-box; transform-origin: center;
-  transform: rotate(calc(-1 * var(--bearing-eff, 0deg))) scale(var(--zf, 1));
+  letter-spacing: .09em; color: #e2ecff; opacity: 0; white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(3,6,13,.95), 0 0 5px rgba(3,6,13,.85), 0 0 1px rgba(3,6,13,.95);
   transition: opacity .25s ease;
 }
-/* while the .9s bearing transition runs, labels rotate on the same curve;
- * at any other time transform changes (--zf on zoom) must land instantly */
-#mapwrap.rotating .nm-hoodlabel,
-#mapwrap.rotating .nm-spotlabel,
+/* while the .9s bearing transition runs, street names (still SVG) rotate on
+ * the same curve; the billboards track the projection frame-by-frame */
 #mapwrap.rotating .nm-streetlabel,
 #mapwrap.rotating .nm-homelabel,
 #mapwrap.rotating .nm-routelabel {
@@ -253,19 +253,10 @@ body.map-dragging, body.map-dragging * {
 }
 .nm-spot-hit { fill: transparent; cursor: pointer; r: calc(var(--uz, 1px) * 13); }
 .nm-spotlabel {
-  font-family: var(--sans); font-weight: 600; font-size: 9px;
-  letter-spacing: .04em; fill: #ffd9a8; opacity: 0; pointer-events: none;
-  paint-order: stroke; stroke: rgba(3,6,13,.75); stroke-width: .14em; stroke-linejoin: round;
-  transform-box: fill-box; transform-origin: center;
-  /* anchored AT the dot. The scale pivots on the text's BBOX CENTER, which
-   * sits ~2.6 user units above the baseline anchor — uncorrected, that error
-   * scales with zoom and floats the name far above its dot. The first
-   * translateY term cancels it exactly ((1-zf)·Δ), the second is the
-   * screen-constant gap; the counter-rotation keeps the lift pointing
-   * straight up on screen when the map is rotated. */
-  transform: rotate(calc(-1 * var(--bearing-eff, 0deg)))
-             translateY(calc((1 - var(--zf, 1)) * 2.6px + var(--uz, 1px) * -11))
-             scale(var(--zf, 1));
+  position: absolute; left: 0; top: 0; will-change: transform;
+  font-family: var(--sans); font-weight: 600; font-size: 10px;
+  letter-spacing: .04em; color: #ffd9a8; opacity: 0; white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(3,6,13,.95), 0 0 4px rgba(3,6,13,.85);
   transition: opacity .3s;
 }
 #mapwrap.zoomed2 .nm-spotlabel.vis { opacity: .95; }
