@@ -288,8 +288,8 @@ export class NightMap {
       host.classList.toggle("tiles-on", tilesOn);
       if (tilesOn) this._queueTiles();
       if (z < 0.85) { // close enough that detail matters — fetch it once
-        this.loadStreets("data/streets.min.geojson?v=n14");
-        this.loadDetail("data/detail.min.geojson?v=n14");
+        this.loadStreets("data/streets.min.geojson?v=n15");
+        this.loadDetail("data/detail.min.geojson?v=n15");
       }
       this._queueCull();
     }
@@ -312,7 +312,38 @@ export class NightMap {
       this.svg.parentElement.classList.remove("moving");
       if (this._labelPt) this.setLabel(this._labelPt, this._labelText);
       this._syncHover();
+      this._snapZoom();
     }, ms);
+  }
+
+  /* rest-snap: continuous zoom must resample tile bitmaps at fractional
+   * scales — soft at "certain zoom levels" by construction. So when a USER
+   * zoom gesture settles over the tile tier, ease the last few % so the
+   * current level lands at EXACTLY 1 device pixel per bitmap pixel. Free
+   * zoom while moving, pixel-perfect wherever you stop. */
+  _snapZoom() {
+    if (!this._userZoomed) return;
+    if (this._glideRaf || this._anim || this._panning) return; // still moving — stay armed
+    this._userZoomed = false; // past here the gesture is spent either way
+    const host = this.svg.parentElement;
+    if (!host.classList.contains("explore")) return;
+    const bm = NightMap.BASEMAPS[this._basemap || "night"];
+    if (!bm) return;
+    const b = this.box;
+    if (b.w / this.cityBox.w >= 0.34) return; // schematic scale: nothing raster to snap
+    const f = this._frame();
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const native = bm.native || 512;
+    // current level in fractional tile-z terms, snapped to the nearest whole
+    const cur = Math.log2((360 * this._pxPerLng * f.scale * dpr) / native);
+    const z = Math.max(12, Math.min(bm.maxZ || 18, Math.round(cur)));
+    const perfect = (native * 2 ** z) / (360 * this._pxPerLng * dpr); // fScale at devScale 1
+    const ratio = f.scale / perfect;
+    if (Math.abs(ratio - 1) < 0.004) return;            // already pixel-true
+    if (Math.abs(Math.log2(ratio)) > 0.42) return;      // >~34% off — respect the user's zoom
+    const nb = this._clampBox(this._scaleBox(b, ratio, 0.5, 0.5));
+    if (Math.abs(nb.w - b.w * ratio) > b.w * 0.002) return; // clamp fought back — stay put
+    this.animateTo(nb, 180);
   }
 
   /* ------------- real-map detail tier: OSM/CARTO dark raster tiles --------
@@ -366,10 +397,15 @@ export class NightMap {
     // names baked into the raster (streets, neighborhoods) blur first
     const fScale = Math.max((this.svg.clientWidth || 1) / b.w, (this.svg.clientHeight || 1) / b.h);
     const dpr = Math.min(3, window.devicePixelRatio || 1);
-    const target = ((bm.native || 512) * 1.08) / dpr;
+    // no slack: a tile bitmap may be downsampled mid-motion but NEVER
+    // upscaled — upscaling is the fuzz. Rest points then snap to exactly
+    // 1 device px per bitmap px (see _snapZoom)
+    const target = (bm.native || 512) / dpr;
     const need = (360 * this._pxPerLng * fScale) / target;
     const capZ = bm.maxZ || 18;
-    const zt = Math.max(12, Math.min(capZ, Math.ceil(Math.log2(need))));
+    // the -0.002 keeps a freshly SNAPPED scale (exactly 1.0 device px per
+    // bitmap px) from flapping a level on floating-point noise
+    const zt = Math.max(12, Math.min(capZ, Math.ceil(Math.log2(need) - 0.002)));
     const n = 2 ** zt;
     const xOf = (lng) => Math.floor(((lng + 180) / 360) * n);
     const yOf = (lat) => Math.floor(((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2) * n);
@@ -786,6 +822,7 @@ export class NightMap {
         const [a, b] = [...ptrs.values()];
         const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
         const f = this._clampFactor(pinch.box, pinch.d / d);
+        this._userZoomed = true; // arm the rest-snap
         this._dragMoved = true;
         this._panning = true;
         this._beginMove();
@@ -824,6 +861,7 @@ export class NightMap {
       if (!active()) return;
       e.preventDefault();
       this._cancelAnim();
+      this._userZoomed = true; // arm the rest-snap
       // trackpad pinch arrives as ctrl+wheel — give it a stronger gear
       const k = e.ctrlKey ? 0.0042 : 0.0013;
       const f = clampFactor(this.box, Math.exp(e.deltaY * k));
@@ -845,6 +883,7 @@ export class NightMap {
     svg.addEventListener("dblclick", (e) => {
       if (!active()) return;
       e.preventDefault();
+      this._userZoomed = true; // arm the rest-snap
       const { fx, fy } = this._anchorFractions(e.clientX, e.clientY);
       this.animateTo(clampBox(this._scaleBox(this.box, clampFactor(this.box, 1 / 1.7), fx, fy)), 500);
     });
@@ -936,6 +975,7 @@ export class NightMap {
   zoomBy(f, fx = 0.5, fy = 0.5) {
     this._stopGlide();
     this._cancelAnim();
+    this._userZoomed = true; // arm the rest-snap
     const fac = this._clampFactor(this.box, f);
     const b = this._clampBox(this._scaleBox(this.box, fac, fx, fy));
     return this.animateTo(b, 320);
