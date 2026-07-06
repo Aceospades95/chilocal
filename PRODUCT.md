@@ -150,6 +150,22 @@ on lakefront parkland outside every official polygon snap to the nearest
 boundary instead of orphaning. All of it at 36 KB gzipped and measurably
 zero cost to pan/zoom frame times.
 
+**Round 7 — deploys you can trust, zoom that goes to the block, and the
+flag (v4.6):** every data file is now fetched with the same `?v=` cache-
+buster as the code and `index.html` is served `no-cache` — a redeploy can
+no longer be half-invisible behind a browser or CDN cache (the footer
+carries a **build stamp** so "which build am I on?" has a two-second
+answer). Max zoom deepened 2.5× — a ~500 m viewport that reads individual
+buildings — with tile levels chosen per device pixel up to z19, the next
+level pre-warmed into the HTTP cache just before each switch, and a levels
+lift on CARTO's near-black deep tiles so block-level zoom reads like a lit
+street instead of a void. Explore groups can no longer share a display
+name (searching "the loop" lands on the real nine-spot Loop, not the
+one-venue Grant Park group that borrowed the name). And the city's own
+colors: the flag of Chicago (night edition) sits beside the wordmark, the
+six-pointed star is the favicon and the PWA icon, four stars crown every
+locked date, and the footer says where this thing was made.
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on

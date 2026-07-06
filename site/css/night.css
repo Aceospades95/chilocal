@@ -51,7 +51,14 @@ header > * { pointer-events: auto; }
 .wordmark {
   font-family: var(--serif); font-weight: 700; font-size: 21px; letter-spacing: .3px;
   cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 9px;
 }
+/* the flag of Chicago, night edition: two cooled-blue stripes, four coral
+ * stars — the same palette the whole app is built from */
+.wm-flag { width: 30px; height: 18px; flex: none; }
+@media (max-width: 430px) { .wm-flag { display: none; } } /* tight phone headers */
+.wm-flag .fl-stripe { fill: rgba(100, 216, 255, .55); }
+.wm-flag .fl-stars path { fill: var(--coral); }
 .wordmark .dot { color: var(--coral); }
 .wm-sub {
   font-style: italic; font-weight: 400; font-size: 15px; color: var(--amber);
@@ -268,6 +275,9 @@ body.map-dragging, body.map-dragging * {
 .nm-waterbody { fill: #0b1d36; stroke: #16305a; stroke-width: .5; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity .5s; }
 #mapwrap.zoomed .nm-park { opacity: .55; }
 #mapwrap.zoomed .nm-waterbody { opacity: .9; }
+/* once real tiles carry the cartography, our simplified park/water shapes
+ * would sit slightly offset over the genuine ones — hand over completely */
+#mapwrap.tiles-on .nm-park, #mapwrap.tiles-on .nm-waterbody { opacity: 0; }
 
 /* real-map tile tier: fades in past neighborhood zoom; the schematic
  * neighborhood layer thins to a tinted overlay so streets/buildings read */
@@ -276,8 +286,17 @@ body.map-dragging, body.map-dragging * {
 /* per-IMAGE brightness lift (a filter on the whole group would blow the
  * browser's filter-raster budget at deep zoom; single tiles are small) */
 .nm-tile { filter: brightness(1.5) saturate(1.08); }
+/* CARTO's dark style gets VERY dim at block level (z17+): land sits at
+ * ~#0e1013 and multiplying near-black stays near-black. contrast(<1) is a
+ * levels lift — it raises the black floor toward mid-gray — so deep zoom
+ * reads like a lit street, not a void. */
+#mapwrap.zoomed2:not(.bm-sat) .nm-tile { filter: brightness(1.7) contrast(0.72) saturate(1.15); }
 #mapwrap.bm-sat .nm-tile { filter: brightness(.72) saturate(.88); }
+#mapwrap.bm-sat.zoomed2 .nm-tile { filter: brightness(.82) saturate(.92); }
 #mapwrap.tiles-on .nm-hood { fill-opacity: .10; }
+/* block-level: you're looking at ONE street now — the neighborhood tint has
+ * done its job, get out of the light */
+#mapwrap.tiles-on.zoomed2 .nm-hood { fill-opacity: .04; }
 #mapwrap.bm-sat.tiles-on .nm-hood { fill-opacity: .05; }
 #mapwrap.tiles-on .nm-hoodg.hov .nm-hood { fill-opacity: .26; }
 #mapwrap.tiles-on .nm-hoodg.sel .nm-hood { fill-opacity: .10; }
@@ -416,7 +435,11 @@ body[data-screen="explore"] #map-controls { display: flex; }
   background:
     radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(2,4,9,.55) 100%),
     linear-gradient(to top, rgba(2,4,9,.7), transparent 30%);
+  transition: opacity .5s ease;
 }
+/* the atmosphere is for the diorama; over real cartography at depth it
+ * just eats the little light the dark tiles have */
+#mapwrap.tiles-on .nm-vignette { opacity: .35; }
 .nm-sweep {
   position: absolute; inset: -30%; pointer-events: none; opacity: 0;
   background: conic-gradient(from 0deg, transparent 0 78%, rgba(100,216,255,.10) 88%, rgba(100,216,255,.22) 92%, transparent 100%);
@@ -503,6 +526,13 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .btn.ghost.accent { border-color: rgba(100, 216, 255, .35); }
 .btn .tp { display: block; font-size: 11px; color: var(--skyblue); margin-top: 2px; letter-spacing: .04em; }
 .secondary-row .btn { flex: 1; }
+
+/* locked screen: the four stars of the flag under "It's decided." */
+.lk-stars { color: var(--coral); letter-spacing: .55em; font-size: 13px; margin: 2px 0 10px; opacity: .85; text-indent: .55em; }
+/* footer chicago mark + build stamp (the honest answer to "what am I running?") */
+.ft-chi { white-space: nowrap; }
+.ft-chi .ft-stars { color: var(--coral); font-weight: 400; letter-spacing: .18em; }
+.ft-chi .build { color: var(--muted); font-style: normal; opacity: .65; margin-left: 4px; }
 
 .linkish { background: none; border: 0; color: var(--skyblue); font-size: 13px; padding: 0; }
 .linkish:hover { text-decoration: underline; }
