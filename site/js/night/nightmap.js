@@ -341,7 +341,7 @@ export class NightMap {
     const step = () => {
       this._layoutLabels();
       if (performance.now() - t0 < ms) this._projRaf = requestAnimationFrame(step);
-      else { this._projRaf = null; this._queueCull(); }
+      else { this._projRaf = null; this._queueCull(); this._forceReraster(); }
     };
     this._projRaf = requestAnimationFrame(step);
   }
@@ -368,8 +368,8 @@ export class NightMap {
       host.classList.toggle("tiles-on", tilesOn);
       if (tilesOn) this._queueTiles();
       if (z < 0.85) { // close enough that detail matters — fetch it once
-        this.loadStreets("data/streets.min.geojson?v=n17");
-        this.loadDetail("data/detail.min.geojson?v=n17");
+        this.loadStreets("data/streets.min.geojson?v=n18");
+        this.loadDetail("data/detail.min.geojson?v=n18");
       }
       this._layoutLabels(); // billboards track the camera every frame
       this._queueCull();
@@ -394,7 +394,24 @@ export class NightMap {
       if (this._labelPt) this.setLabel(this._labelPt, this._labelText);
       this._syncHover();
       this._snapZoom();
+      this._forceReraster();
     }, ms);
+  }
+
+  /* Some engines stretch the tilted SVG layer's CACHED raster through a
+   * viewBox zoom and only re-rasterize on a compositing change — which is
+   * why crossing the tile switch (a big class flip) suddenly reads crisp
+   * while every zoom level between reads fuzzy, vector L lines included.
+   * Give every camera REST that same kick: a one-frame compositing hint
+   * flip forces the layer to re-rasterize at the zoom you're actually at. */
+  _forceReraster() {
+    const st = this.svg.style;
+    st.willChange = "transform";
+    if (this._rrRaf) cancelAnimationFrame(this._rrRaf);
+    this._rrRaf = requestAnimationFrame(() => {
+      this._rrRaf = null;
+      st.willChange = "auto";
+    });
   }
 
   /* rest-snap: continuous zoom must resample tile bitmaps at fractional
