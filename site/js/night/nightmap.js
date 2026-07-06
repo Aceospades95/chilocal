@@ -86,6 +86,7 @@ export class NightMap {
       <g id="nm-detail"></g>
       <g id="nm-streets"></g>
       <g id="nm-metra"></g>
+      <g id="nm-divvy"></g>
       <g id="nm-transit"></g>
       <g id="nm-fx"></g>
       <g id="nm-route"></g>
@@ -1019,8 +1020,10 @@ export class NightMap {
     if (opts.camera === false) return;
     const bb = this.hoodBBoxes.get(name);
     const aspect = this._aspect();
-    // tight framing: the selected neighborhood IS the subject
-    let w = Math.max(bb.w * 2.0, 190), h = Math.max(bb.h * 2.1, 190 / aspect);
+    // FULL-SCREEN framing: the selected neighborhood fills the visible
+    // window (insets below push it out of the panel's shadow); small
+    // hoods clamp so the tile detail stays within its sharpest levels
+    let w = Math.max(bb.w * 1.18, 60), h = Math.max(bb.h * 1.22, 60 / aspect);
     if (w / h < aspect) w = h * aspect; else h = w / aspect;
     let box = { x: bb.x + bb.w / 2 - w / 2, y: bb.y + bb.h / 2 - h / 2, w, h };
     const ins = opts.inset || {};
@@ -1167,6 +1170,27 @@ export class NightMap {
     }
   }
 
+  /* Divvy bike-share stations — a dusting of dock lights (GBFS, keyless) */
+  async loadDivvy(url) {
+    if (this._divvyLoaded) return;
+    this._divvyLoaded = true;
+    const data = await fetch(url).then((r) => r.json()).catch(() => null);
+    if (!data) { this._divvyLoaded = false; return; }
+    const host = this.svg.querySelector("#nm-divvy");
+    const frag = document.createDocumentFragment();
+    for (const st of data.stations) {
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", this.px(st.lng).toFixed(1));
+      c.setAttribute("cy", this.py(st.lat).toFixed(1));
+      c.setAttribute("class", "nm-dock");
+      const t = document.createElementNS(NS, "title");
+      t.textContent = `🚲 ${st.n}${st.cap ? ` · ${st.cap} docks` : ""}`;
+      c.appendChild(t);
+      frag.appendChild(c);
+    }
+    host.appendChild(frag);
+  }
+
   async loadStreets(url) {
     if (this._streetsLoaded) return;
     this._streetsLoaded = true;
@@ -1246,10 +1270,11 @@ export class NightMap {
     const o = { x: this.px(origin.lng), y: this.py(origin.lat) };
     const d = { x: this.px(dest.lng), y: this.py(dest.lat) };
     const second = opts.second ? { x: this.px(opts.second.lng), y: this.py(opts.second.lat) } : null;
+    const third = opts.third ? { x: this.px(opts.third.lng), y: this.py(opts.third.lat) } : null;
 
-    // frame origin + dest (+ second) with generous padding
-    const xs = [o.x, d.x, ...(second ? [second.x] : [])];
-    const ys = [o.y, d.y, ...(second ? [second.y] : [])];
+    // frame origin + dest (+ crawl stops) with generous padding
+    const xs = [o.x, d.x, ...(second ? [second.x] : []), ...(third ? [third.x] : [])];
+    const ys = [o.y, d.y, ...(second ? [second.y] : []), ...(third ? [third.y] : [])];
     let mnx = Math.min(...xs), mxx = Math.max(...xs);
     let mny = Math.min(...ys), mxy = Math.max(...ys);
     let w = mxx - mnx, h = mxy - mny;
@@ -1305,12 +1330,31 @@ export class NightMap {
     home.setAttribute("class", "nm-home");
     pinsG.appendChild(home);
 
-    // curved route
+    // gently-bowed route from HOME BASE to the pick — labeled at both ends
+    // so the line means something: where you start, how far it really is
     const dx = d.x - o.x, dy = d.y - o.y;
     const dist = Math.hypot(dx, dy) || 1;
-    const bow = Math.min(dist * 0.22, u * 16);
+    const bow = Math.min(dist * 0.12, u * 8);
     const mx = (o.x + d.x) / 2 - (dy / dist) * bow;
     const my = (o.y + d.y) / 2 + (dx / dist) * bow;
+    if (opts.originName) {
+      const hl = document.createElementNS(NS, "text");
+      hl.setAttribute("class", "nm-homelabel");
+      hl.setAttribute("x", o.x.toFixed(1));
+      hl.setAttribute("y", (o.y + u * 2.6).toFixed(1));
+      hl.setAttribute("text-anchor", "middle");
+      hl.textContent = `⌂ ${opts.originName}`;
+      routeG.appendChild(hl);
+    }
+    if (opts.mi != null) {
+      const ml = document.createElementNS(NS, "text");
+      ml.setAttribute("class", "nm-routelabel");
+      ml.setAttribute("x", mx.toFixed(1));
+      ml.setAttribute("y", (my - u * 1.2).toFixed(1));
+      ml.setAttribute("text-anchor", "middle");
+      ml.textContent = `~${opts.mi.toFixed(1)} mi as the crow flies`;
+      routeG.appendChild(ml);
+    }
     const path = document.createElementNS(NS, "path");
     path.setAttribute("d", `M ${o.x} ${o.y} Q ${mx} ${my} ${d.x} ${d.y}`);
     path.setAttribute("class", "nm-routeline");
@@ -1337,18 +1381,21 @@ export class NightMap {
     pinsG.appendChild(g);
     if (opts.label) this.setLabel(dest, opts.label);
 
-    if (second) {
+    // walk hops: hero → second (→ third, when it's a crawl)
+    const chain = [d, second, third].filter(Boolean);
+    for (let i = 1; i < chain.length; i++) {
+      const a = chain[i - 1], b = chain[i];
       const hop = document.createElementNS(NS, "path");
-      const hdx = second.x - d.x, hdy = second.y - d.y;
+      const hdx = b.x - a.x, hdy = b.y - a.y;
       const hd = Math.hypot(hdx, hdy) || 1;
-      const hmx = (d.x + second.x) / 2 - (hdy / hd) * Math.min(hd * 0.3, u * 5);
-      const hmy = (d.y + second.y) / 2 + (hdx / hd) * Math.min(hd * 0.3, u * 5);
-      hop.setAttribute("d", `M ${d.x} ${d.y} Q ${hmx} ${hmy} ${second.x} ${second.y}`);
+      const hmx = (a.x + b.x) / 2 - (hdy / hd) * Math.min(hd * 0.3, u * 5);
+      const hmy = (a.y + b.y) / 2 + (hdx / hd) * Math.min(hd * 0.3, u * 5);
+      hop.setAttribute("d", `M ${a.x} ${a.y} Q ${hmx} ${hmy} ${b.x} ${b.y}`);
       hop.setAttribute("class", "nm-hopline");
       hop.setAttribute("stroke-width", (u * 0.32).toFixed(2));
       routeG.appendChild(hop);
       const dot = document.createElementNS(NS, "circle");
-      dot.setAttribute("cx", second.x); dot.setAttribute("cy", second.y);
+      dot.setAttribute("cx", b.x); dot.setAttribute("cy", b.y);
       dot.setAttribute("r", (u * 0.8).toFixed(2));
       dot.setAttribute("class", "nm-second");
       pinsG.appendChild(dot);

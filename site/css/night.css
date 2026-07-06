@@ -206,6 +206,14 @@ body.map-dragging, body.map-dragging * {
 }
 
 .nm-routeline { fill: none; stroke: var(--amber); stroke-linecap: round; opacity: .95; }
+.nm-homelabel, .nm-routelabel {
+  font-family: var(--sans); font-weight: 600; font-size: 10.5px;
+  paint-order: stroke; stroke: rgba(3,6,13,.8); stroke-width: .16em; stroke-linejoin: round;
+  pointer-events: none; transform-box: fill-box; transform-origin: center;
+  transform: scale(var(--zf, 1));
+}
+.nm-homelabel { fill: #9fd8f0; }
+.nm-routelabel { fill: rgba(255, 214, 170, .9); font-style: italic; font-weight: 500; }
 .nm-hopline   { fill: none; stroke: var(--skyblue); stroke-linecap: round; stroke-dasharray: 3 5; opacity: .8; }
 .nm-home   { fill: var(--skyblue); opacity: .95; }
 .nm-second { fill: var(--skyblue); }
@@ -289,6 +297,17 @@ body.map-dragging, body.map-dragging * {
 #mapwrap.show-transit #nm-transit { opacity: 1; }
 #nm-metra { opacity: 0; pointer-events: none; transition: opacity .45s ease; }
 #mapwrap.show-metra #nm-metra { opacity: 1; }
+/* Divvy docks: a faint dusting at city scale, real markers once zoomed */
+#nm-divvy { opacity: 0; pointer-events: none; transition: opacity .45s ease; }
+#mapwrap.show-divvy #nm-divvy { opacity: .5; }
+#mapwrap.show-divvy.zoomed #nm-divvy { opacity: 1; }
+.nm-dock {
+  pointer-events: none;
+  r: calc(var(--uz, 1px) * 1.4);
+  fill: #52c5ee; stroke: rgba(6, 10, 18, .85);
+  stroke-width: calc(var(--uz, 1px) * .5);
+}
+#mapwrap.zoomed2 .nm-dock { r: calc(var(--uz, 1px) * 1.9); }
 .nm-metra {
   fill: none; stroke: #94a2b8; stroke-width: 1.5; stroke-dasharray: 7 5;
   opacity: .7; vector-effect: non-scaling-stroke;
@@ -534,6 +553,26 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 }
 .spinner span:nth-child(2) { animation-delay: .16s; background: var(--coral); box-shadow: 0 0 14px rgba(255,75,92,.8); }
 .spinner span:nth-child(3) { animation-delay: .32s; background: var(--skyblue); box-shadow: 0 0 14px rgba(100,216,255,.8); }
+.spinner.sm { margin: 14px 0 4px; justify-content: flex-start; }
+.spinner.sm span { width: 8px; height: 8px; }
+
+/* two-phone room dialog */
+#tworoom .tr-code { font-family: var(--serif); letter-spacing: .3em; color: var(--amber); }
+#tworoom .tr-opt { display: block; width: 100%; text-align: left; margin-top: 9px; }
+#tworoom #tr-code-in {
+  width: 100%; margin: 12px 0 4px; padding: 12px 14px; font-size: 26px;
+  letter-spacing: .5em; text-align: center; text-transform: uppercase;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 10px; color: var(--ink);
+}
+#tworoom .tr-hero { font-family: var(--serif); font-style: italic; font-size: 26px; margin: 6px 0 2px; }
+#tworoom .tr-why { font-family: var(--serif); font-style: italic; color: var(--muted); margin: 10px 0; }
+#tworoom .cta.slim, #tworoom .btn { margin-top: 12px; }
+
+/* live arrivals + tonight's event — quiet accents, not billboards */
+.tips.live { color: var(--skyblue); }
+.tips.evt a, .ex-meta.evt a { color: var(--amber); }
+.ex-meta.evt { color: var(--amber); }
 @keyframes think { 0%, 100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(-9px); opacity: 1; } }
 #think-line {
   font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--text);
@@ -602,6 +641,8 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .then-walk { color: var(--muted); letter-spacing: .02em; margin-left: 6px; }
 .then-name { font-family: var(--serif); font-weight: 700; font-size: 19px; }
 .then-take { font-size: 13px; color: var(--muted); line-height: 1.5; margin-top: 3px; }
+.then-line.last { margin-top: 10px; }
+.crawl-link { display: block; margin-top: 10px; color: var(--amber); font-size: 13px; }
 
 .actions { display: flex; gap: 9px; margin: 4px 0 14px; }
 .actions .btn { flex: 1; white-space: nowrap; }

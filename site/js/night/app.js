@@ -2,11 +2,11 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n10";
-import { buildContext } from "./context.js?v=n10";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n10";
-import { NightMap } from "./nightmap.js?v=n10";
-import { sharePlan } from "./share.js?v=n10";
+import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n11";
+import { buildContext } from "./context.js?v=n11";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n11";
+import { NightMap } from "./nightmap.js?v=n11";
+import { sharePlan } from "./share.js?v=n11";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -32,6 +32,77 @@ const S = {
 
 /* ?debug=1 → the engine shows its work (scores, reason codes, filter drops) */
 const DEBUG = new URLSearchParams(location.search).has("debug");
+
+/* ------------------------ companion API (optional) ------------------------
+ * A tiny server (server/server.mjs) unlocks live CTA arrivals, tonight's
+ * events, and two-phone mode. Default: same-origin /api (a proxy route on
+ * the host). ?api=http://host:8787 overrides for LAN testing (persisted).
+ * If the probe fails, every server feature simply stays hidden. */
+const API_BASE = (() => {
+  try {
+    const p = new URLSearchParams(location.search).get("api");
+    if (p != null) {
+      if (p === "") localStorage.removeItem("chilocal.api");
+      else localStorage.setItem("chilocal.api", p);
+    }
+    return (p || localStorage.getItem("chilocal.api") || "").replace(/\/+$/, "");
+  } catch { return ""; }
+})();
+const api = (path, opts) => fetch(API_BASE + path, opts);
+
+function probeApi() {
+  api("/api/health", { signal: AbortSignal.timeout(2500) })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((h) => {
+      S.api = h;
+      if (h?.events) loadEvents();
+      if (h?.rooms) { const tp = $("#btn-two .tp"); if (tp) tp.textContent = "one phone or two"; }
+    })
+    .catch(() => { S.api = null; });
+}
+
+/* events → venues: match by venue name (both directions) or ~100m proximity.
+ * A matched venue gets v._event and the engine treats it as a real, cited
+ * reason ("🎫 tonight here"). Unmatched events are ignored — we never show
+ * an event at a place we can't place. */
+async function loadEvents() {
+  try {
+    const evs = await api("/api/events/today", { signal: AbortSignal.timeout(7000) }).then((r) => r.json());
+    if (!Array.isArray(evs) || !evs.length) return;
+    const nrm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    let hits = 0;
+    for (const v of S.baseVenues) {
+      const vn = nrm(v.name), vo = nrm(v.nameOsm);
+      const ev = evs.find((e) => {
+        const en = nrm(e.venue);
+        if (en && en.length >= 5 && (en === vn || en === vo || en.includes(vn) || vn.includes(en))) return true;
+        return e.lat && e.lng && Math.abs(e.lat - v.lat) < 0.0011 && Math.abs(e.lng - v.lng) < 0.0015;
+      });
+      if (ev) { v._event = { name: ev.name, time: ev.time, url: ev.url }; hits++; }
+    }
+    if (hits) refreshVenues();
+  } catch { /* events are a bonus, never a blocker */ }
+}
+
+/* live CTA arrivals (via the companion proxy — the CTA API has no CORS).
+ * Fills a placeholder span after render; on any failure it stays empty. */
+async function fillArrivals(sel, v) {
+  const st = nearestL(v);
+  const el = $(sel);
+  if (!el || !st?.id || !S.api?.cta) return;
+  try {
+    const d = await api(`/api/cta/arrivals?mapid=${st.id}`, { signal: AbortSignal.timeout(6000) }).then((r) => r.json());
+    if (!d?.arrivals?.length) return;
+    const by = new Map();
+    for (const a of d.arrivals) {
+      const k = `${a.route} → ${a.dest}`;
+      if (!by.has(k)) by.set(k, []);
+      if (by.get(k).length < 2) by.get(k).push(a.app ? "due" : `${a.min} min`);
+    }
+    const line = [...by].slice(0, 3).map(([k, ts]) => `${k}: ${ts.join(", ")}`).join(" · ");
+    el.textContent = ` · live at ${d.station || st.n}: ${line}`;
+  } catch { /* silence — the static walk-time line still stands */ }
+}
 
 /* place my-places into the live pool (engine + explore see them as venues) */
 function refreshVenues() {
@@ -79,6 +150,7 @@ async function boot() {
   // CTA knowledge: station list is tiny — fetch in the background, degrade silently
   fetch("data/cta-stations.min.json").then((r) => r.json())
     .then((d) => { S.stations = d.stations; }).catch(() => { S.stations = null; });
+  probeApi(); // companion server (live arrivals, events, two-phone) — optional
   S.visitor = !!prefs.visitor;
   S.baseVenues = venuesRaw.venues;
   S.geo = geo;
@@ -124,6 +196,7 @@ async function boot() {
   $$("#tilt-seg button").forEach((b) => b.classList.toggle("on", b.dataset.t === (prefs.tilt || "mid")));
   if (prefs.ovTransit) toggleOverlay("transit", true);
   if (prefs.ovMetra) toggleOverlay("metra", true);
+  if (prefs.ovDivvy) toggleOverlay("divvy", true);
   if (prefs.ovStreets) toggleOverlay("streets", true);
 
   renderContextChip();
@@ -136,6 +209,7 @@ async function boot() {
 function newSession() {
   S.session = { excluded: new Set(), vetoed: new Set(), roll: 0 };
   S.vetoes = { p1: 1, p2: 1 };
+  clearRemote(); // any fresh flow abandons a live two-phone room
 }
 
 /* ------------------------------ screens ---------------------------------- */
@@ -265,12 +339,20 @@ function startTwo() {
 
 function renderTwoForm(who) {
   const p = S[who];
-  $("#two-title").innerHTML = who === "p1"
-    ? `Player one — <i>your call</i>`
-    : `Player two — <i>no pressure</i>`;
-  $("#two-sub").textContent = who === "p1"
-    ? "Pick up to two vibes, answer four quick calls. Then hand it over."
-    : "Your turn. They can't see this.";
+  if (S.remote?.role === "guest") {
+    $("#two-title").innerHTML = `Your picks — <i>no peeking</i>`;
+    $("#two-sub").textContent = "They can't see this. The engine finds the overlap.";
+  } else if (S.remote?.role === "host") {
+    $("#two-title").innerHTML = `Your picks — <i>code ${esc(S.remote.code)}</i>`;
+    $("#two-sub").textContent = "Your partner joins with the code on their phone. No peeking either way.";
+  } else {
+    $("#two-title").innerHTML = who === "p1"
+      ? `Player one — <i>your call</i>`
+      : `Player two — <i>no pressure</i>`;
+    $("#two-sub").textContent = who === "p1"
+      ? "Pick up to two vibes, answer four quick calls. Then hand it over."
+      : "Your turn. They can't see this.";
+  }
 
   $("#two-vibes").innerHTML = VIBES.map((v) => `
     <button class="vibe-card sm ${p.vibes.includes(v.id) ? "on" : ""}" data-v="${v.id}">
@@ -305,28 +387,223 @@ function validateTwo(who) {
   const p = S[who];
   const done = p.vibes.length >= 1 && Object.keys(p.picks).length === BINARIES.length;
   $("#two-next").disabled = !done;
-  $("#two-next").textContent = who === "p1" ? "Done — pass the phone →" : "Decide our night →";
+  $("#two-next").textContent =
+    S.remote?.role === "guest" ? "Send my picks →" :
+    S.remote?.role === "host" ? "Done — waiting on them →" :
+    who === "p1" ? "Done — pass the phone →" : "Decide our night →";
+}
+
+/* both players' answers are in — fold them into engine inputs and decide */
+function finishTwo() {
+  const asPrefs = (p) => ({
+    vibes: p.vibes,
+    quiet: p.picks.quiet === "b" ? 1 : 0,
+    classic: p.picks.classic === "a" ? 1 : 0,
+  });
+  S.p1e = asPrefs(S.p1); S.p2e = asPrefs(S.p2);
+  const cheap = [S.p1, S.p2].filter((p) => p.picks.cheap === "a").length;
+  const close = [S.p1, S.p2].filter((p) => p.picks.close === "a").length;
+  S.budget = cheap >= 1 ? 2 : 3;                    // anyone says cheap → cheap wins
+  S.dial = close === 2 ? "walk" : close === 1 ? "hop" : "any";
+  S.mode = "two";
+  runDecision();
 }
 
 function twoNext() {
+  if (S.remote?.role === "guest") return guestSend();
+  if (S.remote?.role === "host") return hostWaitForGuest();
   if (S.twoStep === "p1") {
     S.twoStep = "pass";
     show("pass");
   } else if (S.twoStep === "p2") {
-    // fold answers into engine inputs
-    const asPrefs = (p) => ({
-      vibes: p.vibes,
-      quiet: p.picks.quiet === "b" ? 1 : 0,
-      classic: p.picks.classic === "a" ? 1 : 0,
-    });
-    S.p1e = asPrefs(S.p1); S.p2e = asPrefs(S.p2);
-    const cheap = [S.p1, S.p2].filter((p) => p.picks.cheap === "a").length;
-    const close = [S.p1, S.p2].filter((p) => p.picks.close === "a").length;
-    S.budget = cheap >= 1 ? 2 : 3;                    // anyone says cheap → cheap wins
-    S.dial = close === 2 ? "walk" : close === 1 ? "hop" : "any";
-    S.mode = "two";
-    runDecision();
+    finishTwo();
   }
+}
+
+/* --------------------- two-phone rooms (companion server) ------------------
+ * Same roulette, no phone-passing: host gets a 4-letter code, both pick
+ * blind on their own phones, the plan lands on the host's screen and a
+ * summary (with the guest's one veto) lands on the guest's. */
+function clearRemote() {
+  if (S.remote?.timer) clearInterval(S.remote.timer);
+  S.remote = null;
+  const dlg = $("#tworoom");
+  if (dlg?.open) dlg.close();
+}
+
+function chooseTwoMode() {
+  if (!S.api?.rooms) { startTwo(); return; } // no server → classic pass-the-phone
+  const dlg = $("#tworoom");
+  $("#tr-body").innerHTML = `
+    <h3>Decide together</h3>
+    <p class="mutep">One phone or two — either way, no peeking and one veto each.</p>
+    <button class="btn ghost tr-opt" id="tr-same">🤝 Same phone — pass it</button>
+    <button class="btn ghost tr-opt" id="tr-host">🔗 Two phones — get a code</button>
+    <button class="btn ghost tr-opt" id="tr-join">⌨️ Join with their code</button>`;
+  $("#tr-same").onclick = () => { dlg.close(); startTwo(); };
+  $("#tr-host").onclick = hostRoom;
+  $("#tr-join").onclick = joinRoomForm;
+  dlg.showModal();
+}
+
+async function hostRoom() {
+  $("#tr-body").innerHTML = `<h3>Getting a code…</h3>`;
+  try {
+    const r = await api("/api/room", { method: "POST", signal: AbortSignal.timeout(5000) }).then((x) => x.json());
+    if (!r.code) throw new Error();
+    S.remote = { role: "host", code: r.code, timer: null, seenVeto: 0 };
+    $("#tr-body").innerHTML = `
+      <h3>Room <b class="tr-code">${esc(r.code)}</b></h3>
+      <p class="mutep">Your partner: <b>Decide together → Join with their code</b> on their phone. Codes last 2 hours.</p>
+      <button class="cta slim" id="tr-start"><span class="cta-big">Make my picks →</span></button>`;
+    $("#tr-start").onclick = () => {
+      $("#tworoom").close();
+      S.p1 = { vibes: [], picks: {} };
+      S.p2 = null;
+      S.twoStep = "p1";
+      renderTwoForm("p1");
+      show("two");
+    };
+  } catch {
+    $("#tr-body").innerHTML = `<h3>Couldn't reach the room server.</h3>
+      <p class="mutep">Pass the phone instead — same game.</p>
+      <button class="cta slim" id="tr-fallback"><span class="cta-big">Same phone →</span></button>`;
+    $("#tr-fallback").onclick = () => { $("#tworoom").close(); startTwo(); };
+  }
+}
+
+function joinRoomForm() {
+  $("#tr-body").innerHTML = `
+    <h3>Join their room</h3>
+    <input id="tr-code-in" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters"/>
+    <p class="mutep" id="tr-join-err"></p>
+    <button class="cta slim" id="tr-join-go" disabled><span class="cta-big">Join →</span></button>`;
+  const inp = $("#tr-code-in"), go = $("#tr-join-go");
+  inp.oninput = () => { inp.value = inp.value.toUpperCase().replace(/[^A-Z]/g, ""); go.disabled = inp.value.length !== 4; };
+  inp.focus();
+  go.onclick = async () => {
+    go.disabled = true;
+    try {
+      const r = await api(`/api/room/${inp.value}`, { signal: AbortSignal.timeout(5000) }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+      S.remote = { role: "guest", code: inp.value, timer: null, shownRoll: -1 };
+      $("#tworoom").close();
+      S.p1 = { vibes: [], picks: {} }; // the guest's own answers live in p1 locally
+      S.twoStep = "p1";
+      renderTwoForm("p1");
+      show("two");
+    } catch (e) {
+      $("#tr-join-err").textContent = /no such room/i.test(e.message) ? "No room with that code — check it with them." : "Couldn't reach the room server.";
+      go.disabled = false;
+    }
+  };
+}
+
+function hostWaitForGuest() {
+  const dlg = $("#tworoom");
+  $("#tr-body").innerHTML = `
+    <h3>Room <b class="tr-code">${esc(S.remote.code)}</b></h3>
+    <p class="mutep">Waiting for their picks… They join with the code, pick blind, hit send.</p>
+    <div class="spinner sm"><span></span><span></span><span></span></div>`;
+  if (!dlg.open) dlg.showModal();
+  if (S.remote.timer) clearInterval(S.remote.timer);
+  S.remote.timer = setInterval(async () => {
+    if (!S.remote || S.remote.role !== "host") return;
+    try {
+      const r = await api(`/api/room/${S.remote.code}`, { signal: AbortSignal.timeout(5000) }).then((x) => x.json());
+      if (r.guest?.vibes?.length) {
+        clearInterval(S.remote.timer); S.remote.timer = null;
+        S.p2 = { vibes: r.guest.vibes, picks: r.guest.picks || {} };
+        if (dlg.open) dlg.close();
+        finishTwo(); // → decide → reveal on this phone; plan posts to the room
+      }
+    } catch { /* keep polling — transient network is fine */ }
+  }, 2500);
+}
+
+async function guestSend() {
+  try {
+    await api(`/api/room/${S.remote.code}/submit`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(5000),
+      body: JSON.stringify({ role: "guest", prefs: { vibes: S.p1.vibes, picks: S.p1.picks } }),
+    });
+  } catch { toast("Couldn't send — try again."); return; }
+  guestWait();
+}
+
+function guestWait() {
+  const dlg = $("#tworoom");
+  const render = (room) => {
+    const p = room?.plan;
+    if (!p) {
+      $("#tr-body").innerHTML = `
+        <h3>Sent. No peeking.</h3>
+        <p class="mutep">The reveal lands on their phone — the plan summary shows here too.</p>
+        <div class="spinner sm"><span></span><span></span><span></span></div>`;
+      return;
+    }
+    S.remote.shownRoll = p.roll;
+    $("#tr-body").innerHTML = `
+      <p class="kicker">TONIGHT'S PLAN${p.roll ? ` · TAKE ${p.roll + 1}` : ""} · CHOSEN FOR BOTH OF YOU</p>
+      <h3 class="tr-hero">${esc(p.hero)}</h3>
+      <p class="mutep">${esc(p.hood)}${p.second ? ` · then ${esc(p.second)}` : ""}${p.third ? ` · then ${esc(p.third)}` : ""}</p>
+      ${p.why ? `<p class="tr-why">“${esc(p.why)}”</p>` : ""}
+      ${room.vetoUsed
+        ? `<p class="mutep">Your veto is spent. It's decided.</p>`
+        : `<button class="btn ghost" id="tr-veto">🙅 Use our one veto</button>`}`;
+    const vb = $("#tr-veto");
+    if (vb) vb.onclick = async () => {
+      vb.disabled = true;
+      try {
+        await api(`/api/room/${S.remote.code}/submit`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(5000),
+          body: JSON.stringify({ role: "guest", veto: true }),
+        });
+        $("#tr-body").insertAdjacentHTML("beforeend", `<p class="mutep">Vetoed. They're rerolling…</p>`);
+      } catch { vb.disabled = false; toast("Couldn't send the veto — try again."); }
+    };
+  };
+  render(null);
+  if (!dlg.open) dlg.showModal();
+  if (S.remote.timer) clearInterval(S.remote.timer);
+  S.remote.timer = setInterval(async () => {
+    if (!S.remote || S.remote.role !== "guest") return;
+    try {
+      const r = await api(`/api/room/${S.remote.code}`, { signal: AbortSignal.timeout(5000) }).then((x) => x.json());
+      if (r.plan && r.plan.roll !== S.remote.shownRoll) render(r);
+      else if (r.vetoUsed && $("#tr-veto")) render(r);
+    } catch { /* keep polling */ }
+  }, 2500);
+}
+
+/* host: publish each revealed plan to the room + watch for the guest's veto */
+function postRoomPlan() {
+  if (S.remote?.role !== "host" || !S.plan?.hero) return;
+  const p = S.plan;
+  api(`/api/room/${S.remote.code}/submit`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role: "host", plan: {
+      hero: p.hero.v.name, hood: p.hero.v.hood, why: p.why,
+      second: p.second?.venue.name || null, third: p.third?.venue.name || null,
+      roll: S.session.roll } }),
+  }).catch(() => { /* summary is a courtesy; the host screen is the source */ });
+  if (S.remote.timer) clearInterval(S.remote.timer);
+  S.remote.timer = setInterval(async () => {
+    if (!S.remote || S.remote.role !== "host") return;
+    try {
+      const r = await api(`/api/room/${S.remote.code}`, { signal: AbortSignal.timeout(5000) }).then((x) => x.json());
+      if (r.veto > S.remote.seenVeto) {
+        S.remote.seenVeto = r.veto;
+        S.vetoes.p2 = 0;
+        S.session.vetoed.add(S.plan.hero.v.id);
+        S.session.roll++;
+        toast("They used the veto. Recalculating…");
+        runDecision(); // new reveal reposts the plan
+      }
+    } catch { /* keep polling */ }
+  }, 3000);
 }
 
 /* ------------------------------ deciding --------------------------------- */
@@ -436,14 +713,18 @@ function metaLine(v) {
 }
 
 /* CTA knowledge: the nearest L station within a real walk */
-function lNote(v) {
-  if (!S.stations) return "";
+function nearestL(v) {
+  if (!S.stations) return null;
   let best = null;
   for (const st of S.stations) {
     const mi = haversineMi(v, st);
     if (!best || mi < best.mi) best = { ...st, mi };
   }
-  if (!best || best.mi > 0.9) return "";
+  return best && best.mi <= 0.9 ? best : null;
+}
+function lNote(v) {
+  const best = nearestL(v);
+  if (!best) return "";
   const min = Math.max(2, Math.round(best.mi * 20));
   return `🚇 ${best.n} (${best.l.join("/")}) · ~${min} min walk`;
 }
@@ -469,6 +750,8 @@ function planRisks(plan) {
   // additional risks belong in it.
   if (plan.second && !plan.second.venue._hours)
     risks.push(`${plan.second.venue.name}'s hours are unverified — check the second stop too.`);
+  if (plan.third && !plan.third.venue._hours)
+    risks.push(`${plan.third.venue.name}'s hours are unverified — check the last stop too.`);
   if (v.tips?.some((tip) => /cash/i.test(tip)))
     risks.push("Cash only — hit an ATM on the way.");
   if (!S.ctx.ok) risks.push("Weather didn't load, so this pick ignores tonight's sky.");
@@ -507,10 +790,12 @@ function renderReveal() {
   $("#rv-why").innerHTML = `<span class="why-k">Why tonight:</span> ${esc(why)}${S.plan.widened ? esc(` (We loosened the ${S.plan.widened} dial — the strict version came up empty.)`) : ""}`;
   const rvL = lNote(v);
   $("#rv-hours").innerHTML = hoursLine(v) +
-    (rvL ? ` <span class="tips">· ${esc(rvL)}</span>` : "") +
+    (v._event ? ` <span class="tips evt">· 🎫 tonight here: ${v._event.url ? `<a href="${esc(v._event.url)}" target="_blank" rel="noopener">${esc(v._event.name)}</a>` : esc(v._event.name)}${v._event.time ? ` (${esc(v._event.time)})` : ""}</span>` : "") +
+    (rvL ? ` <span class="tips">· ${esc(rvL)}<span class="tips live" id="rv-cta-live"></span></span>` : "") +
     (v.vibes.includes("dinner") && !v.mine ? ` · <a href="${esc(reserveUrl(v))}" target="_blank" rel="noopener">find a table ↗</a>` : "") +
     (v.tips?.length ? ` <span class="tips">· ${v.tips.map(esc).join(" · ")}</span>` : "") +
     (v.approx ? ` <span class="tips">· location approximate — it's a stroll, not one door</span>` : "");
+  if (rvL) fillArrivals("#rv-cta-live", v);
 
   // honesty section: collapsible, only when there's something real to flag
   const risks = planRisks(S.plan);
@@ -523,12 +808,20 @@ function renderReveal() {
   } else riskEl.hidden = true;
 
   const sec = $("#rv-second");
+  const third = S.plan.third;
   if (second) {
     sec.hidden = false;
     sec.innerHTML = `
       <div class="then-line"><span class="then-k">THEN</span> <span class="then-walk">${esc(travelLabel(second.mi))}</span></div>
       <div class="then-name">${esc(second.venue.name)}</div>
-      <div class="then-take">${esc(second.venue.take)}</div>`;
+      <div class="then-take">${esc(second.venue.take)}</div>` +
+      (third ? `
+      <div class="then-line last"><span class="then-k">LAST CALL</span> <span class="then-walk">${esc(travelLabel(third.mi))}</span></div>
+      <div class="then-name">${esc(third.venue.name)}</div>
+      <div class="then-take">${esc(third.venue.take)}</div>`
+      : (crawlOption() ? `<button id="rv-crawl" class="linkish crawl-link">🍸 Make it a crawl — add a third stop</button>` : ""));
+    const cb = $("#rv-crawl");
+    if (cb) cb.onclick = makeCrawl;
   } else sec.hidden = true;
 
   // saved state
@@ -563,8 +856,25 @@ function renderReveal() {
   const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
   const inset = desktop ? { right: 470 / vw } : { bottom: Math.min(0.58, 520 / vh) };
   requestAnimationFrame(() => {
-    S.map.reveal(origin(), v, { second: second?.venue || null, fast: S.session.roll > 0, inset, label: v.hood });
+    S.map.reveal(origin(), v, { second: second?.venue || null, third: third?.venue || null,
+      fast: S.session.roll > 0 || !!third, inset,
+      label: v.hood, originName: origin().name, mi: haversineMi(origin(), v) });
   });
+  postRoomPlan(); // two-phone: mirror the plan to the guest's screen
+}
+
+/* the crawl: chain a walkable third stop onto tonight's plan */
+function crawlOption() {
+  const { hero, second } = S.plan;
+  if (!second) return null;
+  return buildCrawl(hero.v, second, S.venues, { budget: S.budget }, S.ctx);
+}
+function makeCrawl() {
+  const crawl = crawlOption();
+  if (!crawl) { toast(`No walkable third stop near ${S.plan.second.venue.name}.`); return; }
+  S.plan.second = crawl.second;
+  S.plan.third = crawl.third;
+  renderReveal();
 }
 
 function promoteAlt(i) {
@@ -573,6 +883,7 @@ function promoteAlt(i) {
   const oldHero = S.plan.hero;
   S.plan.alts[i] = oldHero;
   S.plan.hero = alt;
+  S.plan.third = null; // the crawl was chained off the old hero's stops
   S.session.excluded.add(alt.v.id);
   const input = { vibe: S.mode === "out" ? S.vibe : null, budget: S.budget };
   // recompute pairing + why for the new hero
@@ -607,9 +918,10 @@ function lockIn() {
   heroBtn.textContent = v.name;
   heroBtn.onclick = () => openVenueProfile(v.id);
   $("#lk-meta").innerHTML = metaLine(v);
-  const sec = S.plan.second;
+  const sec = S.plan.second, thr = S.plan.third;
   const secEl = $("#lk-second");
-  secEl.textContent = sec ? `then ${sec.venue.name} — ${travelLabel(sec.mi)}` : "";
+  secEl.textContent = sec ? `then ${sec.venue.name} — ${travelLabel(sec.mi)}` +
+    (thr ? `, then ${thr.venue.name} — ${travelLabel(thr.mi)}` : "") : "";
   secEl.style.display = sec ? "" : "none";
   secEl.onclick = sec ? () => openVenueProfile(sec.venue.id) : null;
   secEl.classList.toggle("clicky", !!sec);
@@ -800,7 +1112,7 @@ function resetToAsk() {
 function wireStatic() {
   $("#btn-surprise").onclick = () => { S.mode = "out"; S.vibe = null; newSession(); runDecision(); };
   $("#btn-dial").onclick = () => { S.mode = "out"; renderVibes(); show("vibes"); };
-  $("#btn-two").onclick = () => { newSession(); startTwo(); };
+  $("#btn-two").onclick = () => { newSession(); chooseTwoMode(); };
   $("#btn-stayin").onclick = openStayIn;
   $("#go-dial").onclick = () => { newSession(); runDecision(); };
   $("#two-next").onclick = twoNext;
@@ -817,6 +1129,7 @@ function wireStatic() {
   });
   $("#ov-transit").onclick = () => toggleOverlay("transit");
   $("#ov-metra").onclick = () => toggleOverlay("metra");
+  $("#ov-divvy").onclick = () => toggleOverlay("divvy");
   $("#ov-streets").onclick = () => toggleOverlay("streets");
   $$("#bm-seg button").forEach((b) => b.onclick = () => {
     S.map.setBasemap(b.dataset.b);
@@ -1029,11 +1342,13 @@ function toggleOverlay(kind, force) {
       S.map.loadTransit("data/cta-lines.min.geojson");
       S.map.loadStations("data/cta-stations.min.json");
     } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson");
+    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json");
     else S.map.loadStreets("data/streets.min.geojson");
   }
   const prefs = loadPrefs();
   savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
               ovMetra: $("#ov-metra").classList.contains("on"),
+              ovDivvy: $("#ov-divvy").classList.contains("on"),
               ovStreets: $("#ov-streets").classList.contains("on") });
 }
 
@@ -1092,7 +1407,8 @@ function renderExplore() {
       <button class="ex-back" id="ex-back">← ${esc(groups.get(S.ex.hood)?.display || "back")}</button>
       <p class="ex-kicker">${esc(v.cat).toUpperCase()}${v.mine ? " · ◆ YOURS" : ""}</p>
       <h2 class="ex-title">${esc(v.name)}</h2>
-      <p class="ex-meta">${esc(v.hood)} · ${"$".repeat(v.price)} · ${esc(travelLabel(haversineMi(origin(), v)))}${lNote(v) ? `<br/>${esc(lNote(v))}` : ""}</p>
+      <p class="ex-meta">${esc(v.hood)} · ${"$".repeat(v.price)} · ${esc(travelLabel(haversineMi(origin(), v)))}${lNote(v) ? `<br/>${esc(lNote(v))}<span class="tips live" id="ex-cta-live"></span>` : ""}</p>
+      ${v._event ? `<p class="ex-meta evt">🎫 tonight here: ${v._event.url ? `<a href="${esc(v._event.url)}" target="_blank" rel="noopener">${esc(v._event.name)}</a>` : esc(v._event.name)}${v._event.time ? ` (${esc(v._event.time)})` : ""}</p>` : ""}
       <p class="ex-venue-take">${esc(v.take)}</p>
       <div class="prof-chips">
         ${v.vibes.map((vb) => { const V = VIBES.find((x) => x.id === vb); return V ? `<span class="pc hot">${V.icon} ${esc(V.name)}</span>` : ""; }).join("")}
@@ -1144,6 +1460,7 @@ function renderExplore() {
       renderExplore();
       toast("Removed.");
     });
+    fillArrivals("#ex-cta-live", v);
     exAfterCam(() => { if (S.ex.venue === v.id) S.map.markSpot(v); });
     return;
   }

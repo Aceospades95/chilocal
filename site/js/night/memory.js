@@ -63,10 +63,12 @@ export function lockDate(m, plan, vibe) {
   m.dates.push({
     n, iso: localISO(),
     heroId: plan.hero.v.id, heroName: plan.hero.v.name,
-    secondId: plan.second?.venue.id || null, hood: plan.hero.v.hood, vibe: vibe || null,
+    secondId: plan.second?.venue.id || null, thirdId: plan.third?.venue.id || null,
+    hood: plan.hero.v.hood, vibe: vibe || null,
   });
   m.been[plan.hero.v.id] = (m.been[plan.hero.v.id] || 0) + 1;
   if (plan.second) m.been[plan.second.venue.id] = (m.been[plan.second.venue.id] || 0) + 1;
+  if (plan.third) m.been[plan.third.venue.id] = (m.been[plan.third.venue.id] || 0) + 1;
   m.hoodVisits[plan.hero.v.hood] = (m.hoodVisits[plan.hero.v.hood] || 0) + 1;
   const i = m.saved.indexOf(plan.hero.v.id);
   if (i >= 0) m.saved.splice(i, 1);

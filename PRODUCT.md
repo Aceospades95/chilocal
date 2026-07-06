@@ -103,6 +103,33 @@ the device position with its reported accuracy circle — the honest answer
 to "how much should I trust this dot." A 4-second timeout on the weather
 fetch means a hung API can never hold boot hostage.
 
+**Round 4 — the night gets longer and the map gets honest (v4.3):**
+Selecting a neighborhood now frames it **essentially full-screen** — the
+camera commits to the place instead of hovering politely above it. The
+Tonight **swoop line means something now**: it starts at a labeled home-base
+dot ("⌂ Logan Square"), carries "~2.3 mi as the crow flies" at its midpoint,
+and bows only gently — it's a distance diagram, not decoration. **Divvy**
+joins the overlays (🚲 chip: all 2,000+ dock stations from the official GBFS
+feed, a dusting at city scale, real markers when zoomed) and every
+1–4-mile trip now shows a bike estimate next to the ride time. And the
+**crawl builder**: any plan with a second stop offers "🍸 Make it a crawl" —
+a third walkable stop (nightcap rules: ≤0.72 mi legs, late-open favored)
+chained onto the night, drawn as a second hop on the map, logged whole,
+and shared as one three-line card.
+
+**The companion server (optional, `server/`):** a zero-dependency Node
+container that the static site quietly probes at boot — unreachable means
+every feature below simply stays hidden. With it: **live CTA arrivals** on
+any venue near an L stop ("live at California: Blue → O'Hare: 4 min, 12
+min" — proxied CTA Train Tracker, key server-side only), an **events
+layer** (Ticketmaster Discovery matched to our venues by name+coords; a
+match becomes "🎫 tonight here", a scoring boost, and a citable why-line —
+never shown for venues we can't place), and **two-phone mode**: "Decide
+together" now offers one phone or two — the host gets a 4-letter room
+code, both partners pick blind on their own phones, the reveal lands on
+the host's screen while the guest gets the plan summary and holds the
+veto for real. Rooms are in-memory, 2-hour TTL, no accounts.
+
 **The personal layer:** ♡ wishlist anywhere; "✓ been here" from any profile
 (feeds the engine's novelty memory); **add your own places** (pin-on-map
 picker, on-device, `◆ yours`, instantly pickable) with **"Suggest to
@@ -190,20 +217,25 @@ served by the same nginx image as before.
 
 ## Roadmap (in order)
 
-1. **Get-in-tonight actions** — dinner picks now carry a keyless
-   "find a table ↗" OpenTable deep link (search, not availability — honest).
-   The real version — live availability (Resy/OpenTable/Tock APIs) and events
-   (Do312 / Ticketmaster / Songkick) so "a show" can name the actual show —
-   needs API keys → Jacob's call.
-2. **Stay in, done right** — the funnel's "In" branch is a teaser by design
+1. ~~Two-phone mode~~ · ~~events layer~~ · ~~live CTA arrivals~~ — **built**
+   (v4.3, companion server). Activation needs: deploy `chilocal-api` on
+   Unraid, add the `/api` proxy route, and set the free `CTA_TRAIN_KEY` +
+   `TM_KEY` env vars (see `DEPLOY.md`).
+2. **Hours coverage** — 61/179 venues have OSM-verified hours; the pipeline
+   now emits `scripts/hours-wanted.md` (114 venues, direct OSM edit links).
+   Growing this means contributing hours upstream — never guessing.
+3. **Get-in-tonight actions** — dinner picks carry a keyless "find a table ↗"
+   OpenTable deep link (search, not availability — honest). The real
+   version — live availability (Resy/OpenTable/Tock APIs) — needs partner
+   API access → Jacob's call.
+4. **Stay in, done right** — the funnel's "In" branch is a teaser by design
    (scope discipline). v2: cook-something tied to what's fresh (Green City
    Market calendar), movie roulette, board-game picks, order-in cuisine wheel.
-3. **Live data layer** — swap `venues.json` for the `/api` contract in
+5. **Live data layer** — swap `venues.json` for the `/api` contract in
    `API.md` backed by the existing Next.js + PostGIS stack; nightly
    license-liveness re-checks; venue photos (owner-provided or licensed only).
-4. **Two-phone mode** — same roulette over a shared session code instead of
-   pass-the-phone.
-5. **CTA transit hints** — "3 stops on the Blue Line" via CTA open GTFS.
+6. **CTA trip hints** — "3 stops on the Blue Line" via CTA open GTFS (the
+   arrivals proxy is live; routing is the next step).
 
 ## Dev
 
