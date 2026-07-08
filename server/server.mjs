@@ -17,17 +17,105 @@
  *   docker run -e CTA_TRAIN_KEY=... -e TM_KEY=... -p 8787:8787 chilocal-api
  */
 import { createServer } from "node:http";
+import { randomBytes, scrypt, timingSafeEqual, createHash } from "node:crypto";
+import { DatabaseSync } from "node:sqlite";
+import { mkdirSync } from "node:fs";
 
 const PORT = +(process.env.PORT || 8787);
 const CTA_KEY = process.env.CTA_TRAIN_KEY || "";
 const TM_KEY = process.env.TM_KEY || "";
+const DATA_DIR = process.env.DATA_DIR || ".";
+
+/* ------------------------------- accounts --------------------------------
+ * Email + password, done the boring-secure way and nothing more:
+ *   - scrypt password hashes (memory-hard, node:crypto, per-user salt)
+ *   - opaque session tokens in HttpOnly SameSite=Lax cookies; only the
+ *     token's SHA-256 touches disk, so a leaked DB can't replay sessions
+ *   - SQLite on YOUR box (node:sqlite, zero dependencies) — no third party
+ *   - rate-limited auth endpoints, generic error copy, no hash ever leaves
+ * Accounts require the same-origin /api proxy route (SameSite cookies do
+ * not travel cross-site — that's a feature). */
+mkdirSync(DATA_DIR, { recursive: true });
+const db = new DatabaseSync(`${DATA_DIR}/chilocal.db`);
+db.exec(`
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    pass_salt TEXT NOT NULL,
+    pass_hash TEXT NOT NULL,
+    created INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    created INTEGER NOT NULL,
+    expires INTEGER NOT NULL
+  );
+`);
+const SESS_TTL = 30 * 24 * 3600_000;
+const sha256 = (s) => createHash("sha256").update(s).digest("hex");
+const scryptHash = (pw, salt) => new Promise((res, rej) =>
+  scrypt(pw, salt, 64, (e, k) => (e ? rej(e) : res(k))));
+async function hashPassword(pw) {
+  const salt = randomBytes(16).toString("hex");
+  return { salt, hash: (await scryptHash(pw, salt)).toString("hex") };
+}
+async function verifyPassword(pw, salt, hash) {
+  const k = await scryptHash(pw, salt);
+  const h = Buffer.from(hash, "hex");
+  return k.length === h.length && timingSafeEqual(k, h);
+}
+const pubUser = (u) => ({ id: u.id, email: u.email, name: u.name, created: u.created });
+function createSession(res, req, userId) {
+  const token = randomBytes(32).toString("hex");
+  const now = Date.now();
+  db.prepare("INSERT INTO sessions (token_hash, user_id, created, expires) VALUES (?,?,?,?)")
+    .run(sha256(token), userId, now, now + SESS_TTL);
+  const secure = (req.headers["x-forwarded-proto"] || "").includes("https") ? "; Secure" : "";
+  res.setHeader("Set-Cookie",
+    `chilocal_sess=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESS_TTL / 1000}${secure}`);
+}
+function readSession(req) {
+  const m = /(?:^|;\s*)chilocal_sess=([a-f0-9]{64})/.exec(req.headers.cookie || "");
+  if (!m) return null;
+  const row = db.prepare(
+    `SELECT u.id, u.email, u.name, u.created, s.token_hash, s.expires FROM sessions s
+     JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?`).get(sha256(m[1]));
+  if (!row || row.expires < Date.now()) return null;
+  if (row.expires - Date.now() < SESS_TTL / 2) // rolling renewal
+    db.prepare("UPDATE sessions SET expires = ? WHERE token_hash = ?")
+      .run(Date.now() + SESS_TTL, row.token_hash);
+  return row;
+}
+function clearSession(req, res) {
+  const m = /(?:^|;\s*)chilocal_sess=([a-f0-9]{64})/.exec(req.headers.cookie || "");
+  if (m) db.prepare("DELETE FROM sessions WHERE token_hash = ?").run(sha256(m[1]));
+  res.setHeader("Set-Cookie", "chilocal_sess=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
+}
+setInterval(() => db.prepare("DELETE FROM sessions WHERE expires < ?").run(Date.now()), 6 * 3600_000).unref();
+
+/* auth endpoints get a per-IP budget so passwords can't be guessed in bulk */
+const authHits = new Map();
+function rateLimited(req) {
+  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() ||
+             req.socket.remoteAddress || "?";
+  const now = Date.now();
+  const e = authHits.get(ip) || { n: 0, reset: now + 10 * 60_000 };
+  if (now > e.reset) { e.n = 0; e.reset = now + 10 * 60_000; }
+  e.n++;
+  authHits.set(ip, e);
+  if (authHits.size > 5000) authHits.clear();
+  return e.n > 25;
+}
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /* ------------------------------ tiny helpers ------------------------------ */
 const json = (res, code, obj) => {
   const body = JSON.stringify(obj);
   res.writeHead(code, {
     "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": "*",
     "Cache-Control": "no-store",
   });
   res.end(body);
@@ -159,10 +247,15 @@ const cleanPlan = (p) => {
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, "http://x");
   const path = url.pathname.replace(/\/+$/, "") || "/";
+  // credentialed CORS: reflect the origin (cookies never ride on "*")
+  if (req.headers.origin) {
+    res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Vary", "Origin");
+  }
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       "Access-Control-Max-Age": "86400",
     });
@@ -170,7 +263,68 @@ const server = createServer(async (req, res) => {
   }
   try {
     if (path === "/api/health" && req.method === "GET")
-      return json(res, 200, { ok: true, cta: !!CTA_KEY, events: !!TM_KEY, rooms: true });
+      return json(res, 200, { ok: true, cta: !!CTA_KEY, events: !!TM_KEY, rooms: true, auth: true });
+
+    /* ------------------------------ accounts ------------------------------ */
+    if (path.startsWith("/api/auth/")) {
+      if (req.method !== "GET" && rateLimited(req))
+        return json(res, 429, { error: "Too many tries — take a breather and try again in a few minutes." });
+
+      if (path === "/api/auth/signup" && req.method === "POST") {
+        const b = await readBody(req);
+        const email = String(b.email || "").trim().toLowerCase();
+        const password = String(b.password || "");
+        const name = String(b.name || "").trim().slice(0, 40) || email.split("@")[0];
+        if (!EMAIL_RE.test(email) || email.length > 254)
+          return json(res, 400, { error: "That doesn't look like an email address." });
+        if (password.length < 8 || password.length > 200)
+          return json(res, 400, { error: "Passwords need at least 8 characters." });
+        const { salt, hash } = await hashPassword(password);
+        try {
+          const r = db.prepare("INSERT INTO users (email, name, pass_salt, pass_hash, created) VALUES (?,?,?,?,?)")
+            .run(email, name, salt, hash, Date.now());
+          createSession(res, req, Number(r.lastInsertRowid));
+          const u = db.prepare("SELECT id, email, name, created FROM users WHERE id = ?").get(Number(r.lastInsertRowid));
+          return json(res, 200, { user: pubUser(u) });
+        } catch (e) {
+          if (String(e.message).includes("UNIQUE"))
+            return json(res, 409, { error: "That email already has an account — sign in instead." });
+          throw e;
+        }
+      }
+
+      if (path === "/api/auth/login" && req.method === "POST") {
+        const b = await readBody(req);
+        const email = String(b.email || "").trim().toLowerCase();
+        const u = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+        // same message either way — no fishing for which emails exist
+        if (!u || !(await verifyPassword(String(b.password || ""), u.pass_salt, u.pass_hash)))
+          return json(res, 401, { error: "Email or password is wrong." });
+        createSession(res, req, u.id);
+        return json(res, 200, { user: pubUser(u) });
+      }
+
+      if (path === "/api/auth/logout" && req.method === "POST") {
+        clearSession(req, res);
+        return json(res, 200, { ok: true });
+      }
+
+      if (path === "/api/auth/me" && req.method === "GET") {
+        const s = readSession(req);
+        return json(res, 200, { user: s ? pubUser(s) : null });
+      }
+
+      if (path === "/api/auth/profile" && req.method === "PATCH") {
+        const s = readSession(req);
+        if (!s) return json(res, 401, { error: "Sign in first." });
+        const b = await readBody(req);
+        const name = String(b.name || "").trim().slice(0, 40);
+        if (!name) return json(res, 400, { error: "A name can't be empty." });
+        db.prepare("UPDATE users SET name = ? WHERE id = ?").run(name, s.id);
+        return json(res, 200, { user: { ...pubUser(s), name } });
+      }
+      return json(res, 404, { error: "not found" });
+    }
 
     if (path === "/api/cta/arrivals" && req.method === "GET") {
       if (!CTA_KEY) return json(res, 503, { error: "CTA_TRAIN_KEY not configured" });
@@ -222,5 +376,5 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`chilocal-api on :${PORT} — cta:${CTA_KEY ? "on" : "off"} events:${TM_KEY ? "on" : "off"} rooms:on`);
+  console.log(`chilocal-api on :${PORT} — cta:${CTA_KEY ? "on" : "off"} events:${TM_KEY ? "on" : "off"} rooms:on auth:on (db: ${DATA_DIR}/chilocal.db)`);
 });

@@ -69,9 +69,27 @@ The same GitHub workflow now also publishes
 - Repository: `ghcr.io/<you>/chilocal-api:latest`
 - Network: `bridge`
 - Port: container `8787` → host `8787`
+- **Path: container `/data` → host `/mnt/user/appdata/chilocal-api`**
+  (the account database `chilocal.db` lives here — this mapping is what
+  makes accounts survive container updates; back this folder up)
 - Variables (optional): `CTA_TRAIN_KEY`, `TM_KEY`
 - Apply. Check: `curl http://<server-ip>:8787/api/health`
-  → `{"ok":true,"cta":true,"events":true,"rooms":true}`
+  → `{"ok":true,"cta":true,"events":true,"rooms":true,"auth":true}`
+
+## Accounts (signup/login)
+
+The server stores users in SQLite on your box — no third-party auth, no
+cloud. Passwords are scrypt-hashed with per-user salts; sessions are
+opaque tokens in HttpOnly SameSite cookies (only the token's SHA-256
+touches disk); auth endpoints are rate-limited per IP.
+
+Two infrastructure notes, both your call:
+1. Accounts REQUIRE the same-origin `/api` proxy route (above) — session
+   cookies deliberately don't travel cross-site.
+2. For strangers to actually join, the basic-auth wall in front of
+   chilocal.omnia-house.com has to come off (Nginx Proxy Manager →
+   proxy host → Access List → none). Until then, accounts work for
+   anyone who has the basic-auth credentials.
 
 ## Wire it to the site
 
