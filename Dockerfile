@@ -12,12 +12,16 @@ COPY site ./site
 RUN bash scripts/fetch-data.sh \
     || echo "NOTE: data fetch skipped — using bundled samples + live fallback."
 
-# ---- Stage 2: tiny static web server --------------------------------------
+# ---- Stage 2: tiny static web server, members-only ------------------------
+# The nginx config is a TEMPLATE: the official image substitutes set env
+# vars at startup, so API_UPSTREAM (where the auth server lives) is
+# overridable per deployment without rebuilding.
 FROM nginx:1.27-alpine
 LABEL org.opencontainers.image.title="chilocal" \
-      org.opencontainers.image.description="Interactive Chicago neighborhood boundary map"
+      org.opencontainers.image.description="ChiLocal — members-only Chicago night engine"
 COPY --from=data /app/site /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+ENV API_UPSTREAM=192.168.1.19:8787
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s \
-  CMD wget -qO /dev/null http://localhost/ || exit 1
+  CMD wget -qO /dev/null http://localhost/gate.html || exit 1

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ChiLocal — members only</title>
+<meta name="theme-color" content="#070c16"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23070c16'/%3E%3Cpath fill='%23ff4b5c' d='M12 3.2 13.3 8.5 17.9 5.6 15 10.2 20.3 11.5 15 12.8 17.9 17.4 13.3 14.5 12 19.8 10.7 14.5 6.1 17.4 9 12.8 3.7 11.5 9 10.2 6.1 5.6 10.7 8.5Z'/%3E%3C/svg%3E"/>
+<style>
+/* self-contained on purpose: every other asset on this site is gated */
+:root { --night:#070c16; --panel:#0d1524; --line:#1c2a44; --text:#f2ecdc; --muted:#8e99ad;
+        --amber:#ffb45c; --coral:#ff4b5c; --sky:#64d8ff; }
+* { box-sizing: border-box; }
+html, body { margin:0; height:100%; }
+body { background:#04070e; color:var(--text); display:grid; place-items:center;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+.card { width:min(380px, 92vw); background:linear-gradient(to bottom, rgba(13,21,36,.96), rgba(7,11,21,.98));
+        border:1px solid var(--line); border-radius:18px; padding:26px 24px 20px;
+        box-shadow:0 24px 60px rgba(0,0,0,.55); }
+.flag { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.flag svg { width:34px; height:20px; }
+.wm { font-family:Georgia,serif; font-weight:700; font-size:22px; }
+.wm .dot { color:var(--coral); }
+h1 { font-family:Georgia,serif; font-style:italic; font-weight:400; font-size:17px;
+     color:var(--muted); margin:0 0 18px; }
+.tabs { display:flex; gap:4px; background:rgba(255,255,255,.05); border-radius:10px; padding:3px; margin-bottom:14px; }
+.tabs button { flex:1; background:none; border:0; color:var(--muted); padding:8px; border-radius:8px;
+               font-size:13px; cursor:pointer; }
+.tabs button.on { background:var(--panel); color:var(--text); box-shadow:0 1px 6px rgba(0,0,0,.4); }
+input { display:block; width:100%; margin:9px 0; padding:12px 13px; font-size:14px; color:var(--text);
+        background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.14); border-radius:10px; }
+input:focus { outline:none; border-color:var(--sky); }
+.err { color:var(--coral); font-size:12.5px; min-height:16px; margin:4px 0 0; }
+button.go { width:100%; margin-top:12px; padding:13px; font-size:15px; font-weight:600; cursor:pointer;
+            color:#1c0f08; background:linear-gradient(135deg, var(--amber), #ff8f4f);
+            border:0; border-radius:12px; }
+button.go:disabled { opacity:.6; }
+.fine { font-size:10.5px; color:var(--muted); opacity:.8; margin-top:14px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="flag">
+    <svg viewBox="0 0 44 26" aria-hidden="true">
+      <rect x="0" y="4" width="44" height="4.4" rx="1" fill="rgba(100,216,255,.55)"/>
+      <rect x="0" y="17.6" width="44" height="4.4" rx="1" fill="rgba(100,216,255,.55)"/>
+      <g fill="#ff4b5c">
+        <path d="M7 8.8 7.8 11.9 10.5 10.2 8.8 12.9 11.9 13.7 8.8 14.5 10.5 17.2 7.8 15.5 7 18.6 6.2 15.5 3.5 17.2 5.2 14.5 2.1 13.7 5.2 12.9 3.5 10.2 6.2 11.9Z"/>
+        <path transform="translate(10 0)" d="M7 8.8 7.8 11.9 10.5 10.2 8.8 12.9 11.9 13.7 8.8 14.5 10.5 17.2 7.8 15.5 7 18.6 6.2 15.5 3.5 17.2 5.2 14.5 2.1 13.7 5.2 12.9 3.5 10.2 6.2 11.9Z"/>
+        <path transform="translate(20 0)" d="M7 8.8 7.8 11.9 10.5 10.2 8.8 12.9 11.9 13.7 8.8 14.5 10.5 17.2 7.8 15.5 7 18.6 6.2 15.5 3.5 17.2 5.2 14.5 2.1 13.7 5.2 12.9 3.5 10.2 6.2 11.9Z"/>
+        <path transform="translate(30 0)" d="M7 8.8 7.8 11.9 10.5 10.2 8.8 12.9 11.9 13.7 8.8 14.5 10.5 17.2 7.8 15.5 7 18.6 6.2 15.5 3.5 17.2 5.2 14.5 2.1 13.7 5.2 12.9 3.5 10.2 6.2 11.9Z"/>
+      </g>
+    </svg>
+    <span class="wm">Chi<span class="dot">·</span>Local</span>
+  </div>
+  <h1>The night decides itself — members only.</h1>
+  <div class="tabs">
+    <button id="t-login" class="on">Sign in</button>
+    <button id="t-signup">Create account</button>
+  </div>
+  <form id="f" novalidate>
+    <input id="name" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
+    <input id="email" type="email" placeholder="Email" autocomplete="email" required/>
+    <input id="pass" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" required/>
+    <p class="err" id="err"></p>
+    <button class="go" id="go" type="submit">Sign in →</button>
+  </form>
+  <p class="fine">Signup is open — join yourself. Passwords are scrypt-hashed on our own server, sessions live in a secure HttpOnly cookie, and nothing about you leaves the building.</p>
+</div>
+<script>
+let tab = "login";
+const $ = (s) => document.querySelector(s);
+function setTab(t) {
+  tab = t;
+  $("#t-login").classList.toggle("on", t === "login");
+  $("#t-signup").classList.toggle("on", t === "signup");
+  $("#name").hidden = t === "login";
+  $("#pass").autocomplete = t === "login" ? "current-password" : "new-password";
+  $("#go").textContent = t === "login" ? "Sign in →" : "Create account →";
+  $("#err").textContent = "";
+}
+$("#t-login").onclick = () => setTab("login");
+$("#t-signup").onclick = () => setTab("signup");
+$("#f").onsubmit = async (e) => {
+  e.preventDefault();
+  const go = $("#go"), err = $("#err");
+  go.disabled = true;
+  err.textContent = "";
+  try {
+    const r = await fetch("/api/auth/" + (tab === "login" ? "login" : "signup"), {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(8000),
+      body: JSON.stringify({ email: $("#email").value, password: $("#pass").value, name: $("#name").value }),
+    }).then((x) => x.json());
+    if (r.error) { err.textContent = r.error; return; }
+    location.replace("/"); // session cookie set — the door opens
+  } catch {
+    err.textContent = "Can't reach the sign-in server — it may be down. Try again shortly.";
+  } finally { go.disabled = false; }
+};
+// already signed in? straight through
+fetch("/api/auth/me", { credentials: "include", signal: AbortSignal.timeout(3000) })
+  .then((r) => r.json()).then((d) => { if (d.user) location.replace("/"); }).catch(() => {});
+</script>
+</body>
+</html>
