@@ -217,6 +217,16 @@ one email, one password. Sessions persist for 30 days, rolling. Next step
 when wanted: sync the personal layer (nights, wishlist, home base) to the
 account so it follows you across devices.
 
+**Round 14 — members only (v6.1):** the entire site now lives behind the
+login. Enforcement is real, not cosmetic: nginx checks every request for
+the app, its code, and its data against the session (`auth_request` to
+the companion API) and bounces strangers to a self-contained gate page —
+night-styled, flag up top, sign-in and open signup side by side. Gated
+responses are `private` so no CDN can leak them. In the app, the same
+gate renders client-side (dev + defense in depth); logging out lands you
+back at the door, signing in lands you on the normal homepage. Signup
+stays open — the door has a bell, not a bouncer.
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on

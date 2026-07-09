@@ -76,6 +76,25 @@ The same GitHub workflow now also publishes
 - Apply. Check: `curl http://<server-ip>:8787/api/health`
   → `{"ok":true,"cta":true,"events":true,"rooms":true,"auth":true}`
 
+## MEMBERS ONLY — the whole site is behind login
+
+The site container now enforces auth at nginx (`auth_request`): every
+request for the app, its code, and its data must carry a valid session
+cookie, or it 302s to `/gate.html` — a self-contained sign-in / signup
+page. Signup stays open, so people can join themselves.
+
+- The site container asks the API container on every request. Set
+  `API_UPSTREAM` on the **site** container if your API isn't at the
+  default `192.168.1.19:8787`.
+- **The API container must be running** — if it's down, everyone
+  (including you) sees only the gate. Locked means locked.
+- Gated assets are served `Cache-Control: private` so Cloudflare can
+  never hand cached content to anonymous visitors. Purge the CF cache
+  once after this deploy to evict anything cached under the old public
+  headers.
+- With the whole site behind its own login, the NPM basic-auth wall is
+  now redundant — remove it whenever you're ready to let people join.
+
 ## Accounts (signup/login)
 
 The server stores users in SQLite on your box — no third-party auth, no

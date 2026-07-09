@@ -640,6 +640,38 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .ex-row .aka { font-size: 11px; color: var(--amber); font-weight: 400; margin-left: 6px; }
 .ex-aka { font-size: 12px; color: var(--muted); margin: 2px 0 10px; line-height: 1.6; }
 
+/* the gate: members only — the one screen an unsigned visitor gets */
+#gate {
+  position: fixed; inset: 0; z-index: 200;
+  display: grid; place-items: center;
+  background: radial-gradient(120% 100% at 50% 20%, #0a1020 0%, #04070e 70%);
+}
+#gate[hidden] { display: none; } /* the ID selector would out-rank [hidden] */
+.gate-card {
+  width: min(380px, 92vw);
+  background: linear-gradient(to bottom, rgba(13,21,36,.96), rgba(7,11,21,.98));
+  border: 1px solid var(--line); border-radius: 18px;
+  padding: 26px 24px 20px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.55);
+}
+.gate-flag { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.gate-flag svg { width: 34px; height: 20px; }
+.gate-flag .fl-stripe { fill: rgba(100,216,255,.55); }
+.gate-flag .fl-stars path { fill: var(--coral); }
+.gate-wm { font-family: var(--serif); font-weight: 700; font-size: 22px; }
+.gate-wm .dot { color: var(--coral); }
+.gate-sub { font-family: var(--serif); font-style: italic; font-weight: 400;
+            font-size: 17px; color: var(--muted); margin: 0 0 18px; }
+#gate-tabs { margin-bottom: 12px; }
+#gate input {
+  display: block; width: 100%; margin: 9px 0; padding: 12px 13px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 10px; color: var(--text); font-size: 14px;
+}
+#gate input:focus { outline: none; border-color: var(--skyblue); }
+#gate .cta.slim { width: 100%; margin-top: 12px; }
+.gate-fine { font-size: 10.5px; margin-top: 14px; opacity: .8; }
+
 /* account avatar + dropdown */
 .acct { position: relative; }
 .avatar {

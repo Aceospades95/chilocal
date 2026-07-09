@@ -314,6 +314,13 @@ const server = createServer(async (req, res) => {
         return json(res, 200, { user: s ? pubUser(s) : null });
       }
 
+      // nginx auth_request hits this for EVERY gated asset: status only,
+      // 204 = session valid, 401 = show the gate. Cheap by design.
+      if (path === "/api/auth/check" && req.method === "GET") {
+        res.writeHead(readSession(req) ? 204 : 401, { "Cache-Control": "no-store" });
+        return res.end();
+      }
+
       if (path === "/api/auth/profile" && req.method === "PATCH") {
         const s = readSession(req);
         if (!s) return json(res, 401, { error: "Sign in first." });
