@@ -636,8 +636,53 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .spinner.sm { margin: 14px 0 4px; justify-content: flex-start; }
 .spinner.sm span { width: 8px; height: 8px; }
 
+/* micro-neighborhood names: search annotation + hood panel line */
+.ex-row .aka { font-size: 11px; color: var(--amber); font-weight: 400; margin-left: 6px; }
+.ex-aka { font-size: 12px; color: var(--muted); margin: 2px 0 10px; line-height: 1.6; }
+
+/* account avatar + dropdown */
+.acct { position: relative; }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%; padding: 0;
+  background: var(--panel-2); border: 1px solid var(--line);
+  font-size: 14px; line-height: 1; display: grid; place-items: center;
+  transition: border-color .15s, box-shadow .15s;
+}
+.avatar:hover { border-color: var(--skyblue); }
+.avatar.in {
+  background: linear-gradient(135deg, var(--coral), #b32740);
+  border-color: rgba(255,255,255,.25); color: #fff;
+  font-family: var(--serif); font-weight: 700; font-size: 15px;
+}
+.acct-menu {
+  position: absolute; right: 0; top: 40px; z-index: 60; min-width: 210px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 6px; box-shadow: 0 14px 34px rgba(0,0,0,.5);
+}
+.acct-menu .am-head { padding: 9px 11px 10px; border-bottom: 1px solid var(--line-soft); margin-bottom: 5px; }
+.acct-menu .am-head b { display: block; font-family: var(--serif); font-size: 15px; }
+.acct-menu .am-head span { font-size: 11.5px; color: var(--muted); }
+.acct-menu .am-item {
+  display: block; width: 100%; text-align: left; background: none; border: 0;
+  padding: 9px 11px; border-radius: 8px; font-size: 13.5px; color: var(--text);
+}
+.acct-menu .am-item:hover { background: var(--panel-2); }
+.acct-menu .am-item.join { color: var(--amber); }
+.acct-menu .am-note { padding: 7px 11px; font-size: 11px; color: var(--muted); }
+
+/* auth dialog */
+#auth #auth-tabs { margin-bottom: 14px; }
+#auth input {
+  display: block; width: 100%; margin: 9px 0; padding: 11px 13px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 10px; color: var(--text); font-size: 14px;
+}
+#auth input:focus { outline: none; border-color: var(--skyblue); }
+#auth .auth-err { color: var(--coral); font-size: 12.5px; margin: 4px 0 0; }
+#auth .cta.slim { width: 100%; margin-top: 12px; }
+#auth .auth-fine { font-size: 11px; margin-top: 14px; opacity: .75; }
+
 /* settings dialog */
-.chip-btn.gear { padding: 5px 9px; font-size: 14px; line-height: 1; }
 #settings .set-row {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; margin: 13px 0;

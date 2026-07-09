@@ -2,15 +2,15 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n18";
-import { buildContext } from "./context.js?v=n18";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n18";
-import { NightMap } from "./nightmap.js?v=n18";
-import { sharePlan } from "./share.js?v=n18";
+import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n20";
+import { buildContext } from "./context.js?v=n20";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n20";
+import { NightMap } from "./nightmap.js?v=n20";
+import { sharePlan } from "./share.js?v=n20";
 
 // the build tag also lives in the footer — the first question when a deploy
 // "didn't take" is always "which build am I actually looking at?"
-console.info("ChiLocal · build v=n18");
+console.info("ChiLocal · build v=n20");
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -52,7 +52,7 @@ const API_BASE = (() => {
     return (p || localStorage.getItem("chilocal.api") || "").replace(/\/+$/, "");
   } catch { return ""; }
 })();
-const api = (path, opts) => fetch(API_BASE + path, opts);
+const api = (path, opts = {}) => fetch(API_BASE + path, { credentials: "include", ...opts });
 
 function probeApi() {
   api("/api/health", { signal: AbortSignal.timeout(2500) })
@@ -61,8 +61,95 @@ function probeApi() {
       S.api = h;
       if (h?.events) loadEvents();
       if (h?.rooms) { const tp = $("#btn-two .tp"); if (tp) tp.textContent = "one phone or two"; }
+      if (h?.auth) authMe();
+      renderAcct();
     })
-    .catch(() => { S.api = null; });
+    .catch(() => { S.api = null; renderAcct(); });
+}
+
+/* ------------------------------ accounts ---------------------------------
+ * The avatar (top right) is the door: sign in / join, settings, log out.
+ * Sessions are HttpOnly cookies — the page never sees a token. */
+async function authMe() {
+  try {
+    const d = await api("/api/auth/me", { signal: AbortSignal.timeout(4000) }).then((r) => r.json());
+    S.user = d.user || null;
+  } catch { S.user = null; }
+  renderAcct();
+}
+
+function renderAcct() {
+  const chip = $("#acct-chip");
+  if (S.user) {
+    chip.textContent = (S.user.name || S.user.email)[0].toUpperCase();
+    chip.classList.add("in");
+  } else {
+    chip.textContent = "👤";
+    chip.classList.remove("in");
+  }
+  const menu = $("#acct-menu");
+  menu.innerHTML = S.user ? `
+      <div class="am-head"><b>${esc(S.user.name)}</b><span>${esc(S.user.email)}</span></div>
+      <button class="am-item" data-a="settings">⚙ Settings</button>
+      <button class="am-item" data-a="logout">Log out</button>` :
+    (S.api?.auth ? `
+      <button class="am-item join" data-a="auth">★ Sign in / join ChiLocal</button>
+      <button class="am-item" data-a="settings">⚙ Settings</button>` : `
+      <button class="am-item" data-a="settings">⚙ Settings</button>
+      <div class="am-note">accounts arrive with the companion server</div>`);
+  $$(".am-item", menu).forEach((b) => b.onclick = () => {
+    menu.hidden = true;
+    if (b.dataset.a === "settings") $("#settings").showModal();
+    if (b.dataset.a === "auth") openAuth("login");
+    if (b.dataset.a === "logout") {
+      api("/api/auth/logout", { method: "POST" }).catch(() => {});
+      S.user = null;
+      renderAcct();
+      toast("Logged out. The city's still here.");
+    }
+  });
+}
+
+function openAuth(tab) {
+  const dlg = $("#auth");
+  const setTab = (t) => {
+    $$("#auth-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
+    $("#au-name").hidden = t === "login";
+    $("#au-pass").autocomplete = t === "login" ? "current-password" : "new-password";
+    $("#auth-title").textContent = t === "login" ? "Welcome back" : "Join ChiLocal";
+    $("#auth-sub").textContent = t === "login" ? "Your nights, on any device." : "A name, an email, a password — that's the whole form.";
+    $("#auth-go .cta-big").textContent = t === "login" ? "Sign in →" : "Create account →";
+    $("#auth-err").hidden = true;
+    dlg.dataset.tab = t;
+  };
+  $$("#auth-tabs button").forEach((b) => b.onclick = () => setTab(b.dataset.t));
+  setTab(tab || "login");
+  $("#auth-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const t = dlg.dataset.tab;
+    const err = $("#auth-err");
+    err.hidden = true;
+    const go = $("#auth-go");
+    go.disabled = true;
+    try {
+      const r = await api(`/api/auth/${t === "login" ? "login" : "signup"}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(8000),
+        body: JSON.stringify({ email: $("#au-email").value, password: $("#au-pass").value,
+                               name: $("#au-name").value }),
+      }).then((x) => x.json());
+      if (r.error) { err.textContent = r.error; err.hidden = false; return; }
+      S.user = r.user;
+      dlg.close();
+      $("#au-pass").value = "";
+      renderAcct();
+      toast(t === "login" ? `Welcome back, ${r.user.name}.` : `Welcome to the city, ${r.user.name}.`);
+    } catch {
+      err.textContent = "Couldn't reach the server — try again.";
+      err.hidden = false;
+    } finally { go.disabled = false; }
+  };
+  dlg.showModal();
 }
 
 /* events → venues: match by venue name (both directions) or ~100m proximity.
@@ -149,13 +236,17 @@ async function boot() {
   S.mem = loadMemory();
 
   const [venuesRaw, geo, ctx] = await Promise.all([
-    fetch("data/venues.json?v=n18").then((r) => r.json()),
-    fetch("data/neighborhoods.min.geojson?v=n18").then((r) => r.json()),
+    fetch("data/venues.json?v=n20").then((r) => r.json()),
+    fetch("data/neighborhoods.min.geojson?v=n20").then((r) => r.json()),
     buildContext(),
   ]);
   // CTA knowledge: station list is tiny — fetch in the background, degrade silently
-  fetch("data/cta-stations.min.json?v=n18").then((r) => r.json())
+  fetch("data/cta-stations.min.json?v=n20").then((r) => r.json())
     .then((d) => { S.stations = d.stations; }).catch(() => { S.stations = null; });
+  // micro-neighborhood names (Bronzeville, Ravenswood, Buena Park…) — the
+  // names locals use, resolved to the official boundary that contains them
+  fetch("data/hood-aliases.json?v=n20").then((r) => r.json())
+    .then((d) => { S.hoodAliases = d.aliases; }).catch(() => { S.hoodAliases = null; });
   probeApi(); // companion server (live arrivals, events, two-phone) — optional
   S.visitor = !!prefs.visitor;
   S.baseVenues = venuesRaw.venues;
@@ -243,7 +334,7 @@ function setView(view) {
   if (view === "explore") {
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n18");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n20");
     if (S.ex.hood) S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
     else S.exCam = S.map.cityView(exInset(), tiltZoom());
     renderExplore();
@@ -1413,7 +1504,13 @@ function applySettings(prefs) {
     inp.value = acc[inp.dataset.var] || ACCENT_DEFAULTS[inp.dataset.var];
 }
 function wireSettings() {
-  $("#settings-chip").onclick = () => $("#settings").showModal();
+  const chip = $("#acct-chip"), menu = $("#acct-menu");
+  chip.onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; };
+  document.addEventListener("click", (e) => {
+    if (!menu.hidden && !menu.contains(e.target)) menu.hidden = true;
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menu.hidden = true; });
+  renderAcct();
   for (const inp of $$("#settings input[type=color]")) {
     inp.oninput = () => {
       document.documentElement.style.setProperty(inp.dataset.var, inp.value);
@@ -1446,11 +1543,11 @@ function toggleOverlay(kind, force) {
   S.map.setOverlay(kind, on);
   if (on) {
     if (kind === "transit") {
-      S.map.loadTransit("data/cta-lines.min.geojson?v=n18");
-      S.map.loadStations("data/cta-stations.min.json?v=n18");
-    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n18");
-    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n18");
-    else S.map.loadStreets("data/streets.min.geojson?v=n18");
+      S.map.loadTransit("data/cta-lines.min.geojson?v=n20");
+      S.map.loadStations("data/cta-stations.min.json?v=n20");
+    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n20");
+    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n20");
+    else S.map.loadStreets("data/streets.min.geojson?v=n20");
   }
   const prefs = loadPrefs();
   savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
@@ -1584,6 +1681,7 @@ function renderExplore() {
       <h2 class="ex-title">${esc(display)}</h2>
       ${display !== S.ex.hood ? `<p class="ex-sub">officially “${esc(S.ex.hood)}”</p>` : ""}
       ${take ? `<p class="ex-take">${esc(take)}</p>` : ""}
+      ${(S.hoodAliases?.[S.ex.hood] || []).length ? `<p class="ex-aka">In here: ${(S.hoodAliases[S.ex.hood]).map(esc).join(" · ")}</p>` : ""}
       ${g ? `
         <div class="fchips" id="ex-vchips">
           <button data-v="all" class="${S.ex.vibe === "all" ? "on" : ""}">All (${g.venues.length})</button>
@@ -1647,17 +1745,38 @@ function renderExplore() {
     const box = $("#ex-results");
     const q = norm(S.ex.q.trim());
     if (q) {
+      // micro-neighborhood names resolve to the official hood that holds
+      // them — "bronzeville" finds Grand Boulevard, "pilsen" Lower West Side
+      const aliasOf = (key, g) => {
+        if (fuzzyHas(g.display, q) || fuzzyHas(key, q)) return null;
+        return (S.hoodAliases?.[key] || []).find((a) => fuzzyHas(a, q)) || false;
+      };
       const hoodHits = [...groups.entries()]
-        .filter(([key, g]) => fuzzyHas(g.display, q) || fuzzyHas(key, q))
+        .map(([key, g]) => ({ key, g, via: aliasOf(key, g) }))
+        .filter((h) => h.via !== false)
         .slice(0, 4);
+      // hoods with no venues yet have no group — but Bronzeville must still
+      // find Grand Boulevard, and every official polygon deserves a result
+      if (hoodHits.length < 4) {
+        const inGroups = new Set(groups.keys());
+        for (const f of S.geo.features) {
+          const key = f.properties.name;
+          if (inGroups.has(key)) continue;
+          const via = fuzzyHas(key, q) ? null
+            : ((S.hoodAliases?.[key] || []).find((a) => fuzzyHas(a, q)) || false);
+          if (via === false) continue;
+          hoodHits.push({ key, g: null, via });
+          if (hoodHits.length >= 4) break;
+        }
+      }
       const venueHits = S.venues.filter((v) =>
         (fuzzyHas(v.name, q) || fuzzyHas(v.cat, q) ||
          v.vibes.some((vb) => fuzzyHas(vibeName(vb), q))) &&
         (!S.ex.price || v.price <= S.ex.price) &&
         (!S.ex.open || openState(v._hours, S.ctx.day, S.ctx.minutes)?.open)).slice(0, 12);
-      box.innerHTML = hoodHits.map(([key, g]) => `
+      box.innerHTML = hoodHits.map(({ key, g, via }) => `
           <button class="ex-row" data-hood="${esc(key)}">
-            <span class="n">${esc(g.display)}</span><span class="c">${g.venues.length} spots →</span>
+            <span class="n">${esc(g ? g.display : key)}${via ? ` <span class="aka">incl. ${esc(via)}</span>` : ""}</span><span class="c">${g ? `${g.venues.length} spots` : "explore"} →</span>
           </button>`).join("") +
         venueHits.map((v) => `
           <button class="ex-row" data-id="${esc(v.id)}">
@@ -1794,7 +1913,7 @@ function openVenueProfile(id) {
     $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === "explore"));
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n18");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n20");
     show("explore");
   }
   S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });

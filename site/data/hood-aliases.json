@@ -1,0 +1,206 @@
+{
+ "note": "Micro-neighborhood and common-usage names, mapped to the OFFICIAL city boundary that contains them. Names reflect local usage; the boundaries stay the City of Chicago's own (y6yq-dbs2).",
+ "aliases": {
+  "West Ridge": [
+   "Arcadia Terrace",
+   "Peterson Park",
+   "West Rogers Park"
+  ],
+  "New City": [
+   "Back of The Yards",
+   "Canaryville"
+  ],
+  "Belmont Cragin": [
+   "Belmont Central",
+   "Cragin",
+   "Hanson Park",
+   "Kelvyn Park"
+  ],
+  "Hermosa": [
+   "Belmont Gardens"
+  ],
+  "Dunning": [
+   "Belmont Heights",
+   "Belmont Terrace",
+   "Irving Woods",
+   "Schorsch Village"
+  ],
+  "Ashburn": [
+   "Beverly View",
+   "Marycrest",
+   "Parkview",
+   "Scottdale",
+   "Wrightwood"
+  ],
+  "Morgan Park": [
+   "Beverly Woods",
+   "Kennedy Park",
+   "West Morgan Park"
+  ],
+  "Norwood Park": [
+   "Big Oaks",
+   "Norwood Park East",
+   "Norwood Park West",
+   "Old Norwood Park",
+   "Oriole Park",
+   "Union Ridge"
+  ],
+  "Lincoln Square": [
+   "Bowmanville",
+   "Budlong Woods",
+   "Ravenswood"
+  ],
+  "Grand Boulevard": [
+   "Bronzeville"
+  ],
+  "North Park": [
+   "Brynford Park",
+   "Hollywood Park",
+   "Pulaski Park",
+   "Rivers Edge",
+   "Sauganash Woods"
+  ],
+  "Uptown": [
+   "Buena Park",
+   "Sheridan Park"
+  ],
+  "Clearing": [
+   "Chrysler Village"
+  ],
+  "Pullman": [
+   "Cottage Grove Heights"
+  ],
+  "Near South Side": [
+   "Dearborn Park",
+   "Motor Row District",
+   "Prairie District",
+   "Prairie Shores",
+   "South Loop"
+  ],
+  "Loop": [
+   "New East Side"
+  ],
+  "Garfield Park": [
+   "East Garfield Park",
+   "West Garfield Park"
+  ],
+  "Rogers Park": [
+   "East Rogers Park"
+  ],
+  "Sauganash,Forest Glen": [
+   "Edgebrook",
+   "Old Edgebrook",
+   "Sauganash",
+   "South Edgebrook",
+   "Wildwood"
+  ],
+  "West Lawn": [
+   "Ford City"
+  ],
+  "West Loop": [
+   "Fulton Market District"
+  ],
+  "West Town": [
+   "Fulton River District",
+   "Noble Square",
+   "River West"
+  ],
+  "Jefferson Park": [
+   "Gladstone Park"
+  ],
+  "River North": [
+   "Goose Island",
+   "Near North"
+  ],
+  "Grand Crossing": [
+   "Greater Grand Crossing"
+  ],
+  "North Center": [
+   "Hamlin Park Neighbors",
+   "Roscoe Village"
+  ],
+  "Douglas": [
+   "The Gap"
+  ],
+  "Little Italy, UIC": [
+   "Illinois Medical District",
+   "Tri-Taylor",
+   "University Village"
+  ],
+  "Irving Park": [
+   "Kilbourn Park",
+   "Mayfair",
+   "Old Irving Park",
+   "South Old Irving Park",
+   "The Villa District"
+  ],
+  "Andersonville": [
+   "Lakewood-Balmoral"
+  ],
+  "North Lawndale": [
+   "Lawndale"
+  ],
+  "Garfield Ridge": [
+   "Sleepy Hollow",
+   "Vittum Park"
+  ],
+  "Edgewater": [
+   "Magnolia Glen"
+  ],
+  "Chicago Lawn": [
+   "Marquette Park"
+  ],
+  "Lake View": [
+   "Northalsted",
+   "Southport Corridor"
+  ],
+  "Galewood": [
+   "North Austin"
+  ],
+  "Kenwood": [
+   "North Kenwood"
+  ],
+  "Albany Park": [
+   "North Mayfair"
+  ],
+  "Old Town": [
+   "Old Town Triangle"
+  ],
+  "Logan Square": [
+   "Palmer Square"
+  ],
+  "Lincoln Park": [
+   "Park West",
+   "Ranch Triangle",
+   "Sheffield Neighbors",
+   "West DePaul"
+  ],
+  "Lower West Side": [
+   "Pilsen"
+  ],
+  "O'Hare": [
+   "Schorsch Forest View"
+  ],
+  "Austin": [
+   "South Austin"
+  ],
+  "United Center": [
+   "United Center Park"
+  ],
+  "Beverly": [
+   "West Beverly"
+  ],
+  "Englewood": [
+   "West Englewood"
+  ],
+  "Humboldt Park": [
+   "West Humboldt Park"
+  ],
+  "Woodlawn": [
+   "West Woodlawn"
+  ],
+  "Sheffield & DePaul": [
+   "Wrightwood Neighbors"
+  ]
+ }
+}

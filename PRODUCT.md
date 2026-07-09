@@ -204,6 +204,19 @@ now **arrive pixel-true**: select/reveal targets nudge up to ±16% (never
 enough to crop the framing) so the tiles land at exactly one device pixel
 per bitmap pixel instead of a slightly-soft in-between scale.
 
+**Round 13 — people can join (v6):** real accounts, done the boring-secure
+way: email + password signup and login (scrypt-hashed, per-user salts,
+never stored readable), server-side sessions in HttpOnly SameSite cookies
+(only a hash of the token touches disk), per-IP rate limiting, and generic
+error copy that doesn't leak which emails exist. Storage is SQLite **on
+Jacob's own box** via Node's built-in driver — the companion server stays
+zero-dependency and nobody's identity leaves the building. The UI: an
+**avatar in the top right** (your initial once you're in), with a dropdown
+for Sign in / join, **Settings**, and Log out; the join dialog is one name,
+one email, one password. Sessions persist for 30 days, rolling. Next step
+when wanted: sync the personal layer (nights, wishlist, home base) to the
+account so it follows you across devices.
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on

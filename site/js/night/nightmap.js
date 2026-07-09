@@ -368,8 +368,8 @@ export class NightMap {
       host.classList.toggle("tiles-on", tilesOn);
       if (tilesOn) this._queueTiles();
       if (z < 0.85) { // close enough that detail matters — fetch it once
-        this.loadStreets("data/streets.min.geojson?v=n18");
-        this.loadDetail("data/detail.min.geojson?v=n18");
+        this.loadStreets("data/streets.min.geojson?v=n20");
+        this.loadDetail("data/detail.min.geojson?v=n20");
       }
       this._layoutLabels(); // billboards track the camera every frame
       this._queueCull();
