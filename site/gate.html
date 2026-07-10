@@ -27,15 +27,26 @@ h1 { font-family:Georgia,serif; font-style:italic; font-weight:400; font-size:17
 .tabs button { flex:1; background:none; border:0; color:var(--muted); padding:8px; border-radius:8px;
                font-size:13px; cursor:pointer; }
 .tabs button.on { background:var(--panel); color:var(--text); box-shadow:0 1px 6px rgba(0,0,0,.4); }
+h2 { font-size:14px; font-weight:600; margin:0 0 2px; }
+.sub { font-size:12px; color:var(--muted); margin:0 0 8px; }
 input { display:block; width:100%; margin:9px 0; padding:12px 13px; font-size:14px; color:var(--text);
         background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.14); border-radius:10px; }
 input:focus { outline:none; border-color:var(--sky); }
+.chk { display:flex; gap:9px; align-items:flex-start; margin:11px 1px 2px; font-size:12px;
+       color:var(--muted); line-height:1.45; cursor:pointer; }
+.chk input { display:inline-block; width:auto; margin:2px 0 0; accent-color:var(--amber); }
 .err { color:var(--coral); font-size:12.5px; min-height:16px; margin:4px 0 0; }
+.note { color:var(--sky); font-size:12.5px; margin:0 0 8px; }
 button.go { width:100%; margin-top:12px; padding:13px; font-size:15px; font-weight:600; cursor:pointer;
             color:#1c0f08; background:linear-gradient(135deg, var(--amber), #ff8f4f);
             border:0; border-radius:12px; }
 button.go:disabled { opacity:.6; }
+.aux { display:block; margin-top:11px; font-size:12px; color:var(--muted); text-align:center;
+       background:none; border:0; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.aux:hover { color:var(--text); }
 .fine { font-size:10.5px; color:var(--muted); opacity:.8; margin-top:14px; line-height:1.5; }
+.fine a { color:inherit; }
+[hidden] { display:none !important; } /* author styles above must never resurrect hidden fields */
 </style>
 </head>
 <body>
@@ -54,54 +65,115 @@ button.go:disabled { opacity:.6; }
     <span class="wm">Chi<span class="dot">·</span>Local</span>
   </div>
   <h1>The night decides itself — members only.</h1>
-  <div class="tabs">
-    <button id="t-login" class="on">Sign in</button>
-    <button id="t-signup">Create account</button>
+  <p class="note" id="note" hidden></p>
+  <div class="tabs" id="tabs">
+    <button id="t-login" class="on" type="button">Sign in</button>
+    <button id="t-signup" type="button">Create account</button>
   </div>
   <form id="f" novalidate>
+    <h2 id="mh">Welcome back</h2>
+    <p class="sub" id="ms">Sign in with your email and password.</p>
     <input id="name" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
     <input id="email" type="email" placeholder="Email" autocomplete="email" required/>
     <input id="pass" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" required/>
+    <label class="chk" id="digest-row" hidden>
+      <input type="checkbox" id="digest"/>
+      <span>Email me a short weekly digest of what's good in the city. Optional — unsubscribe anytime.</span>
+    </label>
     <p class="err" id="err"></p>
     <button class="go" id="go" type="submit">Sign in →</button>
+    <button class="aux" id="forgot" type="button" hidden>Forgot password?</button>
   </form>
-  <p class="fine">Signup is open — join yourself. Passwords are scrypt-hashed on our own server, sessions live in a secure HttpOnly cookie, and nothing about you leaves the building.</p>
+  <p class="fine">Signup is open — join yourself. Passwords are scrypt-hashed on our own server, sessions live in a secure HttpOnly cookie, and nothing about you leaves the building. <a href="/privacy.html">Privacy policy</a></p>
 </div>
 <script>
-let tab = "login";
 const $ = (s) => document.querySelector(s);
-function setTab(t) {
-  tab = t;
-  $("#t-login").classList.toggle("on", t === "login");
-  $("#t-signup").classList.toggle("on", t === "signup");
-  $("#name").hidden = t === "login";
-  $("#pass").autocomplete = t === "login" ? "current-password" : "new-password";
-  $("#go").textContent = t === "login" ? "Sign in →" : "Create account →";
+const params = new URLSearchParams(location.search);
+const resetToken = params.get("reset") || "";
+let mode = resetToken ? "reset" : "login";
+let emailOn = false; // /api/health says whether reset links can actually be sent
+
+const COPY = {
+  login:  { h: "Welcome back", s: "Sign in with your email and password.", go: "Sign in →" },
+  signup: { h: "Create your account", s: "Pick a name, and you're in — it takes ten seconds.", go: "Create account →" },
+  forgot: { h: "Reset your password", s: "We'll email you a one-hour reset link.", go: "Email me a reset link →" },
+  reset:  { h: "Set a new password", s: "Choose a new password for your account.", go: "Save new password →" },
+};
+function setMode(m) {
+  mode = m;
+  $("#t-login").classList.toggle("on", m === "login");
+  $("#t-signup").classList.toggle("on", m === "signup");
+  $("#tabs").hidden = m === "reset";
+  $("#mh").textContent = COPY[m].h;
+  $("#ms").textContent = COPY[m].s;
+  $("#go").textContent = COPY[m].go;
+  $("#name").hidden = m !== "signup";
+  $("#digest-row").hidden = m !== "signup";
+  $("#email").hidden = m === "reset";
+  $("#pass").hidden = m === "forgot";
+  $("#pass").placeholder = m === "reset" ? "New password (8+ characters)" : "Password (8+ characters)";
+  $("#pass").autocomplete = m === "login" ? "current-password" : "new-password";
+  $("#forgot").hidden = !(m === "login" && emailOn);
   $("#err").textContent = "";
 }
-$("#t-login").onclick = () => setTab("login");
-$("#t-signup").onclick = () => setTab("signup");
+$("#t-login").onclick = () => setMode("login");
+$("#t-signup").onclick = () => setMode("signup");
+$("#forgot").onclick = () => setMode("forgot");
+
+function say(msg) { const n = $("#note"); n.textContent = msg; n.hidden = !msg; }
+if (params.get("verified") === "1") say("Email verified — welcome in. Sign in below.");
+if (params.get("verified") === "0") say("That verification link is invalid or expired.");
+
 $("#f").onsubmit = async (e) => {
   e.preventDefault();
   const go = $("#go"), err = $("#err");
   go.disabled = true;
   err.textContent = "";
+  const post = (path, body) => fetch("/api/auth/" + path, {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(8000),
+    body: JSON.stringify(body),
+  }).then((x) => x.json());
   try {
-    const r = await fetch("/api/auth/" + (tab === "login" ? "login" : "signup"), {
-      method: "POST", credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(8000),
-      body: JSON.stringify({ email: $("#email").value, password: $("#pass").value, name: $("#name").value }),
-    }).then((x) => x.json());
+    if (mode === "forgot") {
+      const r = await post("forgot", { email: $("#email").value });
+      if (r.error) { err.textContent = r.error; return; }
+      say("If that email has an account, a reset link is on its way. Check your inbox.");
+      setMode("login");
+      return;
+    }
+    if (mode === "reset") {
+      const r = await post("reset", { token: resetToken, password: $("#pass").value });
+      if (r.error) { err.textContent = r.error; return; }
+      say("Password changed — sign in with it below.");
+      history.replaceState(null, "", "/gate.html");
+      $("#pass").value = "";
+      setMode("login");
+      return;
+    }
+    const body = mode === "login"
+      ? { email: $("#email").value, password: $("#pass").value }
+      : { email: $("#email").value, password: $("#pass").value,
+          name: $("#name").value, wantsDigest: $("#digest").checked };
+    const r = await post(mode, body);
     if (r.error) { err.textContent = r.error; return; }
     location.replace("/"); // session cookie set — the door opens
   } catch {
     err.textContent = "Can't reach the sign-in server — it may be down. Try again shortly.";
   } finally { go.disabled = false; }
 };
-// already signed in? straight through
-fetch("/api/auth/me", { credentials: "include", signal: AbortSignal.timeout(3000) })
-  .then((r) => r.json()).then((d) => { if (d.user) location.replace("/"); }).catch(() => {});
+
+setMode(mode);
+// "Forgot password?" only appears when the server can actually send email
+fetch("/api/health", { signal: AbortSignal.timeout(3000) })
+  .then((r) => r.json())
+  .then((h) => { emailOn = !!h.email; if (mode === "login") setMode("login"); })
+  .catch(() => {});
+// already signed in? straight through (but let a reset link finish its job)
+if (!resetToken)
+  fetch("/api/auth/me", { credentials: "include", signal: AbortSignal.timeout(3000) })
+    .then((r) => r.json()).then((d) => { if (d.user) location.replace("/"); }).catch(() => {});
 </script>
 </body>
 </html>

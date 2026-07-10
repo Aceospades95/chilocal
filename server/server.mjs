@@ -45,7 +45,9 @@ db.exec(`
     name TEXT NOT NULL,
     pass_salt TEXT NOT NULL,
     pass_hash TEXT NOT NULL,
-    created INTEGER NOT NULL
+    created INTEGER NOT NULL,
+    wants_digest INTEGER NOT NULL DEFAULT 0,
+    verified INTEGER NOT NULL DEFAULT 0
   );
   CREATE TABLE IF NOT EXISTS sessions (
     token_hash TEXT PRIMARY KEY,
@@ -53,7 +55,58 @@ db.exec(`
     created INTEGER NOT NULL,
     expires INTEGER NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS tokens (
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    expires INTEGER NOT NULL
+  );
 `);
+// migrations for databases created before these columns existed
+for (const ddl of ["ALTER TABLE users ADD COLUMN wants_digest INTEGER NOT NULL DEFAULT 0",
+                   "ALTER TABLE users ADD COLUMN verified INTEGER NOT NULL DEFAULT 0"]) {
+  try { db.exec(ddl); } catch { /* column already there */ }
+}
+
+/* ------------------------------ email (optional) ---------------------------
+ * Password reset + verification need an outbound email provider. NONE is
+ * configured yet — the flows below are feature-flagged OFF until these env
+ * vars are set on the container, and nothing blocks signup/login meanwhile.
+ *
+ *   TODO(jacob) to flip email on:
+ *     EMAIL_API_KEY  — API key from your provider (Resend/Postmark-style)
+ *     EMAIL_FROM     — verified sender, e.g. "ChiLocal <night@omnia-house.com>"
+ *     EMAIL_API_URL  — optional; defaults to Resend's endpoint
+ *     PUBLIC_URL     — optional; defaults to https://chilocal.omnia-house.com
+ *   The payload shape matches Resend (https://resend.com/docs) — for another
+ *   provider, adjust sendEmail() below. */
+const EMAIL_KEY = process.env.EMAIL_API_KEY || "";
+const EMAIL_FROM = process.env.EMAIL_FROM || "";
+const EMAIL_URL = process.env.EMAIL_API_URL || "https://api.resend.com/emails";
+const PUBLIC_URL = (process.env.PUBLIC_URL || "https://chilocal.omnia-house.com").replace(/\/+$/, "");
+const emailOn = () => !!(EMAIL_KEY && EMAIL_FROM);
+async function sendEmail(to, subject, html) {
+  const r = await fetch(EMAIL_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${EMAIL_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!r.ok) throw new Error(`email provider ${r.status}`);
+}
+function makeToken(kind, userId, ttlMs) {
+  const raw = randomBytes(32).toString("hex");
+  db.prepare("INSERT INTO tokens (token_hash, user_id, kind, expires) VALUES (?,?,?,?)")
+    .run(sha256(raw), userId, kind, Date.now() + ttlMs);
+  return raw;
+}
+function useToken(kind, raw) {
+  if (!/^[a-f0-9]{64}$/.test(raw || "")) return null;
+  const row = db.prepare("SELECT * FROM tokens WHERE token_hash = ? AND kind = ?").get(sha256(raw), kind);
+  if (!row) return null;
+  db.prepare("DELETE FROM tokens WHERE token_hash = ?").run(row.token_hash); // single use
+  return row.expires >= Date.now() ? row : null;
+}
 const SESS_TTL = 30 * 24 * 3600_000;
 const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 const scryptHash = (pw, salt) => new Promise((res, rej) =>
@@ -67,7 +120,8 @@ async function verifyPassword(pw, salt, hash) {
   const h = Buffer.from(hash, "hex");
   return k.length === h.length && timingSafeEqual(k, h);
 }
-const pubUser = (u) => ({ id: u.id, email: u.email, name: u.name, created: u.created });
+const pubUser = (u) => ({ id: u.id, email: u.email, name: u.name, created: u.created,
+                          wantsDigest: !!u.wants_digest, verified: !!u.verified });
 function createSession(res, req, userId) {
   const token = randomBytes(32).toString("hex");
   const now = Date.now();
@@ -81,7 +135,8 @@ function readSession(req) {
   const m = /(?:^|;\s*)chilocal_sess=([a-f0-9]{64})/.exec(req.headers.cookie || "");
   if (!m) return null;
   const row = db.prepare(
-    `SELECT u.id, u.email, u.name, u.created, s.token_hash, s.expires FROM sessions s
+    `SELECT u.id, u.email, u.name, u.created, u.wants_digest, u.verified,
+            u.pass_salt, u.pass_hash, s.token_hash, s.expires FROM sessions s
      JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?`).get(sha256(m[1]));
   if (!row || row.expires < Date.now()) return null;
   if (row.expires - Date.now() < SESS_TTL / 2) // rolling renewal
@@ -94,7 +149,10 @@ function clearSession(req, res) {
   if (m) db.prepare("DELETE FROM sessions WHERE token_hash = ?").run(sha256(m[1]));
   res.setHeader("Set-Cookie", "chilocal_sess=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
 }
-setInterval(() => db.prepare("DELETE FROM sessions WHERE expires < ?").run(Date.now()), 6 * 3600_000).unref();
+setInterval(() => {
+  db.prepare("DELETE FROM sessions WHERE expires < ?").run(Date.now());
+  db.prepare("DELETE FROM tokens WHERE expires < ?").run(Date.now());
+}, 6 * 3600_000).unref();
 
 /* auth endpoints get a per-IP budget so passwords can't be guessed in bulk */
 const authHits = new Map();
@@ -255,7 +313,7 @@ const server = createServer(async (req, res) => {
   }
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
-      "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       "Access-Control-Max-Age": "86400",
     });
@@ -263,7 +321,7 @@ const server = createServer(async (req, res) => {
   }
   try {
     if (path === "/api/health" && req.method === "GET")
-      return json(res, 200, { ok: true, cta: !!CTA_KEY, events: !!TM_KEY, rooms: true, auth: true });
+      return json(res, 200, { ok: true, cta: !!CTA_KEY, events: !!TM_KEY, rooms: true, auth: true, email: emailOn() });
 
     /* ------------------------------ accounts ------------------------------ */
     if (path.startsWith("/api/auth/")) {
@@ -279,12 +337,24 @@ const server = createServer(async (req, res) => {
           return json(res, 400, { error: "That doesn't look like an email address." });
         if (password.length < 8 || password.length > 200)
           return json(res, 400, { error: "Passwords need at least 8 characters." });
+        const wantsDigest = b.wantsDigest === true ? 1 : 0;
         const { salt, hash } = await hashPassword(password);
         try {
-          const r = db.prepare("INSERT INTO users (email, name, pass_salt, pass_hash, created) VALUES (?,?,?,?,?)")
-            .run(email, name, salt, hash, Date.now());
-          createSession(res, req, Number(r.lastInsertRowid));
-          const u = db.prepare("SELECT id, email, name, created FROM users WHERE id = ?").get(Number(r.lastInsertRowid));
+          // no email provider configured → nobody could ever click a verify
+          // link, so accounts are born verified and the flow stays invisible
+          const r = db.prepare(
+            "INSERT INTO users (email, name, pass_salt, pass_hash, created, wants_digest, verified) VALUES (?,?,?,?,?,?,?)")
+            .run(email, name, salt, hash, Date.now(), wantsDigest, emailOn() ? 0 : 1);
+          const id = Number(r.lastInsertRowid);
+          createSession(res, req, id);
+          if (emailOn()) {
+            const t = makeToken("verify", id, 7 * 24 * 3600_000);
+            sendEmail(email, "Verify your ChiLocal email",
+              `<p>Welcome to ChiLocal, ${name}.</p><p><a href="${PUBLIC_URL}/api/auth/verify?token=${t}">` +
+              `Click here to verify your email.</a> The link is good for a week.</p>`)
+              .catch((e) => console.error("verify email failed:", e.message));
+          }
+          const u = db.prepare("SELECT * FROM users WHERE id = ?").get(id);
           return json(res, 200, { user: pubUser(u) });
         } catch (e) {
           if (String(e.message).includes("UNIQUE"))
@@ -325,10 +395,72 @@ const server = createServer(async (req, res) => {
         const s = readSession(req);
         if (!s) return json(res, 401, { error: "Sign in first." });
         const b = await readBody(req);
-        const name = String(b.name || "").trim().slice(0, 40);
-        if (!name) return json(res, 400, { error: "A name can't be empty." });
-        db.prepare("UPDATE users SET name = ? WHERE id = ?").run(name, s.id);
-        return json(res, 200, { user: { ...pubUser(s), name } });
+        const out = { ...pubUser(s) };
+        if ("name" in b) {
+          const name = String(b.name || "").trim().slice(0, 40);
+          if (!name) return json(res, 400, { error: "A name can't be empty." });
+          db.prepare("UPDATE users SET name = ? WHERE id = ?").run(name, s.id);
+          out.name = name;
+        }
+        if ("wantsDigest" in b) {
+          const w = b.wantsDigest === true ? 1 : 0;
+          db.prepare("UPDATE users SET wants_digest = ? WHERE id = ?").run(w, s.id);
+          out.wantsDigest = !!w;
+        }
+        return json(res, 200, { user: out });
+      }
+
+      // ---- password reset & email verification (feature-flagged on email) ----
+      if (path === "/api/auth/forgot" && req.method === "POST") {
+        if (!emailOn())
+          return json(res, 503, { error: "Password reset isn't configured yet." });
+        const b = await readBody(req);
+        const email = String(b.email || "").trim().toLowerCase();
+        const u = EMAIL_RE.test(email) ? db.prepare("SELECT * FROM users WHERE email = ?").get(email) : null;
+        if (u) {
+          const t = makeToken("reset", u.id, 3600_000); // 1 hour
+          sendEmail(email, "Reset your ChiLocal password",
+            `<p>Someone (hopefully you) asked to reset your ChiLocal password.</p>` +
+            `<p><a href="${PUBLIC_URL}/gate.html?reset=${t}">Set a new password</a> — the link is good for one hour.</p>` +
+            `<p>If this wasn't you, ignore this email; your password is unchanged.</p>`)
+            .catch((e) => console.error("reset email failed:", e.message));
+        }
+        // same answer whether or not the email exists — no fishing for accounts
+        return json(res, 200, { ok: true });
+      }
+
+      if (path === "/api/auth/reset" && req.method === "POST") {
+        const b = await readBody(req);
+        const password = String(b.password || "");
+        if (password.length < 8 || password.length > 200)
+          return json(res, 400, { error: "Passwords need at least 8 characters." });
+        const t = useToken("reset", String(b.token || ""));
+        if (!t) return json(res, 400, { error: "That reset link is invalid or expired — request a new one." });
+        const { salt, hash } = await hashPassword(password);
+        db.prepare("UPDATE users SET pass_salt = ?, pass_hash = ? WHERE id = ?").run(salt, hash, t.user_id);
+        // a reset means the old password may be compromised: everyone out
+        db.prepare("DELETE FROM sessions WHERE user_id = ?").run(t.user_id);
+        return json(res, 200, { ok: true });
+      }
+
+      if (path === "/api/auth/verify" && req.method === "GET") {
+        const t = useToken("verify", url.searchParams.get("token") || "");
+        if (t) db.prepare("UPDATE users SET verified = 1 WHERE id = ?").run(t.user_id);
+        res.writeHead(302, { Location: `/gate.html?verified=${t ? 1 : 0}`, "Cache-Control": "no-store" });
+        return res.end();
+      }
+
+      if (path === "/api/auth/account" && req.method === "DELETE") {
+        const s = readSession(req);
+        if (!s) return json(res, 401, { error: "Sign in first." });
+        const b = await readBody(req);
+        if (!(await verifyPassword(String(b.password || ""), s.pass_salt, s.pass_hash)))
+          return json(res, 401, { error: "That password is wrong." });
+        db.prepare("DELETE FROM sessions WHERE user_id = ?").run(s.id);
+        db.prepare("DELETE FROM tokens WHERE user_id = ?").run(s.id);
+        db.prepare("DELETE FROM users WHERE id = ?").run(s.id);
+        res.setHeader("Set-Cookie", "chilocal_sess=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
+        return json(res, 200, { ok: true });
       }
       return json(res, 404, { error: "not found" });
     }

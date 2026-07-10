@@ -2,15 +2,15 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n21";
-import { buildContext } from "./context.js?v=n21";
-import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n21";
-import { NightMap } from "./nightmap.js?v=n21";
-import { sharePlan } from "./share.js?v=n21";
+import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n22";
+import { buildContext } from "./context.js?v=n22";
+import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated } from "./memory.js?v=n22";
+import { NightMap } from "./nightmap.js?v=n22";
+import { sharePlan } from "./share.js?v=n22";
 
 // the build tag also lives in the footer — the first question when a deploy
 // "didn't take" is always "which build am I actually looking at?"
-console.info("ChiLocal · build v=n21");
+console.info("ChiLocal · build v=n22");
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -99,7 +99,7 @@ function renderAcct() {
       <div class="am-note">accounts arrive with the companion server</div>`);
   $$(".am-item", menu).forEach((b) => b.onclick = () => {
     menu.hidden = true;
-    if (b.dataset.a === "settings") $("#settings").showModal();
+    if (b.dataset.a === "settings") { renderAcctSettings(); $("#settings").showModal(); }
     if (b.dataset.a === "auth") openAuth("login");
     if (b.dataset.a === "logout") {
       // revoke server-side, then reload: nginx (or the client gate)
@@ -116,6 +116,7 @@ function openAuth(tab) {
   const setTab = (t) => {
     $$("#auth-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
     $("#au-name").hidden = t === "login";
+    $("#au-digest-row").hidden = t === "login";
     $("#au-pass").autocomplete = t === "login" ? "current-password" : "new-password";
     $("#auth-title").textContent = t === "login" ? "Welcome back" : "Join ChiLocal";
     $("#auth-sub").textContent = t === "login" ? "Your nights, on any device." : "A name, an email, a password — that's the whole form.";
@@ -133,11 +134,14 @@ function openAuth(tab) {
     const go = $("#auth-go");
     go.disabled = true;
     try {
+      const body = t === "login"
+        ? { email: $("#au-email").value, password: $("#au-pass").value }
+        : { email: $("#au-email").value, password: $("#au-pass").value,
+            name: $("#au-name").value, wantsDigest: $("#au-digest").checked };
       const r = await api(`/api/auth/${t === "login" ? "login" : "signup"}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(8000),
-        body: JSON.stringify({ email: $("#au-email").value, password: $("#au-pass").value,
-                               name: $("#au-name").value }),
+        body: JSON.stringify(body),
       }).then((x) => x.json());
       if (r.error) { err.textContent = r.error; err.hidden = false; return; }
       S.user = r.user;
@@ -237,16 +241,16 @@ async function boot() {
   S.mem = loadMemory();
 
   const [venuesRaw, geo, ctx] = await Promise.all([
-    fetch("data/venues.json?v=n21").then((r) => r.json()),
-    fetch("data/neighborhoods.min.geojson?v=n21").then((r) => r.json()),
+    fetch("data/venues.json?v=n22").then((r) => r.json()),
+    fetch("data/neighborhoods.min.geojson?v=n22").then((r) => r.json()),
     buildContext(),
   ]);
   // CTA knowledge: station list is tiny — fetch in the background, degrade silently
-  fetch("data/cta-stations.min.json?v=n21").then((r) => r.json())
+  fetch("data/cta-stations.min.json?v=n22").then((r) => r.json())
     .then((d) => { S.stations = d.stations; }).catch(() => { S.stations = null; });
   // micro-neighborhood names (Bronzeville, Ravenswood, Buena Park…) — the
   // names locals use, resolved to the official boundary that contains them
-  fetch("data/hood-aliases.json?v=n21").then((r) => r.json())
+  fetch("data/hood-aliases.json?v=n22").then((r) => r.json())
     .then((d) => { S.hoodAliases = d.aliases; }).catch(() => { S.hoodAliases = null; });
   probeApi(); // companion server (live arrivals, events, two-phone) — optional
   S.visitor = !!prefs.visitor;
@@ -335,7 +339,7 @@ function setView(view) {
   if (view === "explore") {
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n21");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n22");
     if (S.ex.hood) S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
     else S.exCam = S.map.cityView(exInset(), tiltZoom());
     renderExplore();
@@ -1536,6 +1540,53 @@ function wireSettings() {
   };
 }
 
+/* the account block inside Settings: digest opt-in + delete-my-account.
+ * Refreshed each time the dialog opens, since S.user can change. */
+function renderAcctSettings() {
+  const box = $("#set-acct");
+  box.hidden = !S.user;
+  if (!S.user) return;
+  const dig = $("#set-digest");
+  dig.checked = !!S.user.wantsDigest;
+  dig.onchange = async () => {
+    const want = dig.checked;
+    try {
+      const r = await api("/api/auth/profile", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(6000),
+        body: JSON.stringify({ wantsDigest: want }),
+      }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+      S.user = r.user;
+      toast(want ? "You're on the weekly digest list." : "Off the digest list — no more emails.");
+    } catch {
+      dig.checked = !want; // server didn't take it — don't lie in the UI
+      toast("Couldn't save that — try again.");
+    }
+  };
+  const err = $("#del-err");
+  err.hidden = true;
+  $("#del-pass").value = "";
+  $("#del-go").onclick = async () => {
+    err.hidden = true;
+    const go = $("#del-go");
+    go.disabled = true;
+    try {
+      const r = await api("/api/auth/account", {
+        method: "DELETE", headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(8000),
+        body: JSON.stringify({ password: $("#del-pass").value }),
+      }).then((x) => x.json());
+      if (r.error) { err.textContent = r.error; err.hidden = false; return; }
+      // account gone, cookie cleared — the reload lands at the gate
+      location.reload();
+    } catch {
+      err.textContent = "Couldn't reach the server — try again.";
+      err.hidden = false;
+    } finally { go.disabled = false; }
+  };
+}
+
 /* overlays + tilt (persisted) */
 function toggleOverlay(kind, force) {
   const btn = $("#ov-" + kind);
@@ -1544,11 +1595,11 @@ function toggleOverlay(kind, force) {
   S.map.setOverlay(kind, on);
   if (on) {
     if (kind === "transit") {
-      S.map.loadTransit("data/cta-lines.min.geojson?v=n21");
-      S.map.loadStations("data/cta-stations.min.json?v=n21");
-    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n21");
-    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n21");
-    else S.map.loadStreets("data/streets.min.geojson?v=n21");
+      S.map.loadTransit("data/cta-lines.min.geojson?v=n22");
+      S.map.loadStations("data/cta-stations.min.json?v=n22");
+    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n22");
+    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n22");
+    else S.map.loadStreets("data/streets.min.geojson?v=n22");
   }
   const prefs = loadPrefs();
   savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
@@ -1914,7 +1965,7 @@ function openVenueProfile(id) {
     $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === "explore"));
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n21");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n22");
     show("explore");
   }
   S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
@@ -1965,7 +2016,15 @@ function showGate(reachable) {
   gate.hidden = false;
   const setTab = (t) => {
     $$("#gate-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
+    // the two modes must LOOK different: sign in is email+password, signup
+    // adds a name and the (unchecked) weekly-digest opt-in
+    $("#gate-mh").textContent = t === "login" ? "Welcome back" : "Create your account";
+    $("#gate-ms").textContent = t === "login"
+      ? "Sign in with your email and password."
+      : "Pick a name, and you're in — it takes ten seconds.";
     $("#ga-name").hidden = t === "login";
+    $("#ga-digest-row").hidden = t === "login";
+    $("#ga-forgot").hidden = !(t === "login" && S.api?.email);
     $("#ga-pass").autocomplete = t === "login" ? "current-password" : "new-password";
     $("#gate-go .cta-big").textContent = t === "login" ? "Sign in →" : "Create account →";
     $("#gate-err").hidden = true;
@@ -1973,6 +2032,12 @@ function showGate(reachable) {
   };
   $$("#gate-tabs button").forEach((b) => b.onclick = () => setTab(b.dataset.t));
   setTab("login");
+  // "Forgot password?" is real only once an email provider is configured —
+  // health says so; until then the link stays hidden
+  api("/api/health", { signal: AbortSignal.timeout(2500) })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((h) => { S.api = h; if (gate.dataset.tab === "login") setTab("login"); })
+    .catch(() => {});
   const err = $("#gate-err");
   if (!reachable) {
     err.textContent = "Can't reach the sign-in server right now — try again shortly.";
@@ -1985,11 +2050,14 @@ function showGate(reachable) {
     go.disabled = true;
     try {
       const t = gate.dataset.tab;
+      const body = t === "login"
+        ? { email: $("#ga-email").value, password: $("#ga-pass").value }
+        : { email: $("#ga-email").value, password: $("#ga-pass").value,
+            name: $("#ga-name").value, wantsDigest: $("#ga-digest").checked };
       const r = await api(`/api/auth/${t === "login" ? "login" : "signup"}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(8000),
-        body: JSON.stringify({ email: $("#ga-email").value, password: $("#ga-pass").value,
-                               name: $("#ga-name").value }),
+        body: JSON.stringify(body),
       }).then((x) => x.json());
       if (r.error) { err.textContent = r.error; err.hidden = false; return; }
       S.user = r.user;

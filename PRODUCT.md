@@ -227,6 +227,19 @@ gate renders client-side (dev + defense in depth); logging out lands you
 back at the door, signing in lands you on the normal homepage. Signup
 stays open — the door has a bell, not a bouncer.
 
+**Round 15 — consumer-ready (v6.2):** the gate's two modes now look like
+two modes — **Sign in** is email + password, **Create account** adds the
+name and an **unchecked weekly-digest opt-in** (that checkbox IS the
+mailing list: consent recorded per member, flippable later in Settings,
+exported with one command — `export-digest.mjs` → CSV). A public,
+plain-words **privacy page** (`/privacy.html`) is linked from every form,
+and Settings grew a **Your account** block: the digest toggle plus
+**Delete my account** — password-confirmed, immediate, total. Password
+reset and email verification are **built end-to-end but feature-flagged
+off** until an email provider key lands on the API container (see
+DEPLOY.md); until then nothing blocks signup or login and "Forgot
+password?" stays hidden rather than lying.
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on
