@@ -110,6 +110,49 @@ Two infrastructure notes, both your call:
    proxy host → Access List → none). Until then, accounts work for
    anyone who has the basic-auth credentials.
 
+## Email — password reset + verification (OFF until you add a provider)
+
+The full flows are built and tested, but they stay **feature-flagged off**
+until the API container gets provider credentials — signup and login are
+never blocked by this. While off: "Forgot password?" is hidden everywhere,
+`/api/auth/forgot` answers a clean 503, and new accounts are created
+already-verified (nobody could click a link that can't be sent).
+
+**TODO(jacob) — to flip email on**, add these variables to the
+`chilocal-api` container and restart it (no rebuild needed):
+
+| variable | value |
+|---|---|
+| `EMAIL_API_KEY` | API key from your provider (Resend/Postmark-style) |
+| `EMAIL_FROM` | a sender the provider has verified, e.g. `ChiLocal <night@omnia-house.com>` |
+| `EMAIL_API_URL` | optional — defaults to Resend's `https://api.resend.com/emails` |
+| `PUBLIC_URL` | optional — defaults to `https://chilocal.omnia-house.com` |
+
+The payload shape matches Resend (resend.com — free tier is plenty at this
+size; you'd verify the omnia-house.com domain there, then use a
+`…@omnia-house.com` sender). For a different provider, adjust `sendEmail()`
+in `server/server.mjs`. Once the vars are set, `/api/health` reports
+`"email":true` and the gate grows a working "Forgot password?" link;
+new signups get a one-week verification link automatically.
+
+## The weekly digest list (CSV export)
+
+Members opt in with an **unchecked-by-default** checkbox at signup (or in
+Settings → Your account) — that flag is the consent record, and the delete
+button in Settings erases them from it. To pull the current list:
+
+```bash
+docker exec chilocal-api node --experimental-sqlite export-digest.mjs > digest.csv
+# → email,name,joined — one row per opted-in member
+```
+
+## Privacy page
+
+`/privacy.html` is deliberately **public** (it's in nginx's anonymous
+allowlist next to the gate) so people can read it before handing over an
+email. It's linked from the gate, the signup dialog, and Settings. If what
+the app stores ever changes, update that page in the same PR.
+
 ## Wire it to the site
 
 The frontend calls **same-origin `/api/...`** by default. In Nginx Proxy

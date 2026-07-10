@@ -5,7 +5,7 @@ FROM node:22-alpine
 LABEL org.opencontainers.image.title="chilocal-api" \
       org.opencontainers.image.description="ChiLocal companion API: accounts, CTA arrivals proxy, events, two-phone rooms"
 WORKDIR /app
-COPY server.mjs .
+COPY server.mjs export-digest.mjs ./
 ENV NODE_ENV=production DATA_DIR=/data
 RUN mkdir -p /data && chown node:node /data
 VOLUME ["/data"]

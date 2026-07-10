@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ChiLocal — privacy</title>
+<meta name="theme-color" content="#070c16"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23070c16'/%3E%3Cpath fill='%23ff4b5c' d='M12 3.2 13.3 8.5 17.9 5.6 15 10.2 20.3 11.5 15 12.8 17.9 17.4 13.3 14.5 12 19.8 10.7 14.5 6.1 17.4 9 12.8 3.7 11.5 9 10.2 6.1 5.6 10.7 8.5Z'/%3E%3C/svg%3E"/>
+<style>
+/* self-contained on purpose: this page is public, everything else is gated */
+:root { --night:#070c16; --panel:#0d1524; --line:#1c2a44; --text:#f2ecdc; --muted:#8e99ad;
+        --amber:#ffb45c; --coral:#ff4b5c; --sky:#64d8ff; }
+* { box-sizing: border-box; }
+html, body { margin:0; }
+body { background:#04070e; color:var(--text); padding:40px 16px 60px;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+.page { max-width:640px; margin:0 auto; }
+.wm { font-family:Georgia,serif; font-weight:700; font-size:22px; }
+.wm .dot { color:var(--coral); }
+h1 { font-family:Georgia,serif; font-weight:400; font-size:26px; margin:18px 0 4px; }
+.updated { color:var(--muted); font-size:12.5px; margin:0 0 26px; }
+h2 { font-size:15px; margin:26px 0 8px; color:var(--amber); }
+p, li { font-size:14px; line-height:1.65; color:#d9d3c4; }
+ul { padding-left:20px; }
+b { color:var(--text); }
+a { color:var(--sky); }
+.card { background:linear-gradient(to bottom, rgba(13,21,36,.96), rgba(7,11,21,.98));
+        border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin:16px 0; }
+.card p { margin:6px 0; font-size:13px; }
+.back { display:inline-block; margin-top:30px; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <span class="wm">Chi<span class="dot">·</span>Local</span>
+  <h1>Privacy, in plain words</h1>
+  <p class="updated">Last updated July 2026</p>
+
+  <p>ChiLocal is a members-only night-out picker for Chicago, run by one person —
+  not a company harvesting data. This page says exactly what the site stores,
+  why, and how to make it all disappear.</p>
+
+  <h2>What we store</h2>
+  <ul>
+    <li><b>Your email address</b> — it's your login, and how we'd send you a
+      password reset or (only if you opted in) the weekly digest.</li>
+    <li><b>The name you gave us</b> — so the app can say hi. Any nickname is fine.</li>
+    <li><b>A scrypt hash of your password</b> — the password itself is never
+      stored, never readable, never transmitted anywhere after signup.</li>
+    <li><b>Your weekly-digest choice</b> — the checkbox at signup (or in
+      Settings). Unchecked means no email, ever, beyond account essentials.</li>
+    <li><b>Session tokens</b> — random, stored only as hashes, expiring after
+      30 days, so you stay signed in.</li>
+  </ul>
+  <p>That's the whole list. All of it lives in one SQLite database on our own
+  server — not in anyone's cloud.</p>
+
+  <h2>What we don't do</h2>
+  <ul>
+    <li>No analytics, trackers, ad pixels, or fingerprinting scripts.</li>
+    <li>No selling, renting, or sharing your data with anyone — full stop.</li>
+    <li>No third-party sign-in, so no login provider watching you.</li>
+    <li>No location storage — the "find me" feature runs entirely in your
+      browser and nothing about where you are is sent to us.</li>
+    <li>No marketing email unless you ticked the digest box yourself, and every
+      digest carries an off switch (also in Settings → Your account).</li>
+  </ul>
+
+  <h2>Cookies</h2>
+  <p>Exactly one: <b>chilocal_sess</b>, the HttpOnly cookie that keeps you
+  signed in. There are no advertising or cross-site cookies of any kind.</p>
+
+  <h2>Map imagery</h2>
+  <p>The map's background detail comes from OpenStreetMap-based tile servers
+  (CARTO, Esri). When your browser fetches those images, those services see
+  your IP address the way any image host does — we send them nothing about
+  you, and no account data ever leaves our server.</p>
+
+  <h2>Deleting your account</h2>
+  <p>Settings → Your account → <b>Delete my account</b>. It asks for your
+  password, then erases your account, sessions, and email from the database
+  immediately — no grace period, no soft delete, no "we'll keep it for
+  analytics." Gone is gone.</p>
+
+  <div class="card">
+    <p><b>Questions or requests?</b> Reply to any email ChiLocal has sent you,
+    or ask the person who gave you access — this is a small members-only site
+    and a human reads everything.</p>
+  </div>
+
+  <a class="back" href="/gate.html">← back to the door</a>
+</div>
+</body>
+</html>

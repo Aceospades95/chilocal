@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://c.basemaps.cartocdn.com" crossorigin/>
 <link rel="preconnect" href="https://d.basemaps.cartocdn.com" crossorigin/>
 <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin/>
-<link rel="stylesheet" href="css/night.css?v=n21"/>
+<link rel="stylesheet" href="css/night.css?v=n22"/>
 <!-- the Chicago star, six points, in night coral — the city on the tab -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23070c16'/%3E%3Cpath fill='%23ff4b5c' d='M12 3.2 13.3 8.5 17.9 5.6 15 10.2 20.3 11.5 15 12.8 17.9 17.4 13.3 14.5 12 19.8 10.7 14.5 6.1 17.4 9 12.8 3.7 11.5 9 10.2 6.1 5.6 10.7 8.5Z'/%3E%3C/svg%3E"/>
 </head>
@@ -45,14 +45,21 @@
       <button data-t="login" class="on">Sign in</button>
       <button data-t="signup">Create account</button>
     </div>
+    <h2 class="gate-mh" id="gate-mh">Welcome back</h2>
+    <p class="mutep gate-ms" id="gate-ms">Sign in with your email and password.</p>
     <form id="gate-form" novalidate>
       <input id="ga-name" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
       <input id="ga-email" type="email" placeholder="Email" autocomplete="email" required/>
       <input id="ga-pass" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" required/>
+      <label class="digest-row" id="ga-digest-row" hidden>
+        <input type="checkbox" id="ga-digest"/>
+        <span>Email me a short weekly digest of what's good in the city. Optional — unsubscribe anytime.</span>
+      </label>
       <p class="auth-err" id="gate-err" hidden></p>
       <button class="cta slim" id="gate-go" type="submit"><span class="cta-big">Sign in →</span></button>
+      <a class="gate-aux" id="ga-forgot" href="/gate.html" hidden>Forgot password?</a>
     </form>
-    <p class="mutep gate-fine">Signup is open — join yourself. Passwords are scrypt-hashed on our own server; sessions live in a secure cookie.</p>
+    <p class="mutep gate-fine">Signup is open — join yourself. Passwords are scrypt-hashed on our own server; sessions live in a secure cookie. <a href="/privacy.html">Privacy policy</a></p>
   </div>
 </section>
 
@@ -297,10 +304,14 @@
       <input id="au-name" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
       <input id="au-email" type="email" placeholder="Email" autocomplete="email" required/>
       <input id="au-pass" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" minlength="8" required/>
+      <label class="digest-row" id="au-digest-row" hidden>
+        <input type="checkbox" id="au-digest"/>
+        <span>Email me a short weekly digest of what's good in the city. Optional — unsubscribe anytime.</span>
+      </label>
       <p class="auth-err" id="auth-err" hidden></p>
       <button class="cta slim" id="auth-go" type="submit"><span class="cta-big">Sign in →</span></button>
     </form>
-    <p class="mutep auth-fine">Your password is scrypt-hashed on our own server — never stored readable, never shared. Sessions live in a secure cookie.</p>
+    <p class="mutep auth-fine">Your password is scrypt-hashed on our own server — never stored readable, never shared. Sessions live in a secure cookie. <a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>
   </dialog>
 
   <dialog id="settings">
@@ -326,6 +337,21 @@
       </div>
     </div>
     <button class="btn ghost" id="set-reset">Reset to ChiLocal night</button>
+    <div class="set-acct" id="set-acct" hidden>
+      <h3>Your account</h3>
+      <label class="digest-row">
+        <input type="checkbox" id="set-digest"/>
+        <span>Weekly digest email — a short note on what's good in the city.</span>
+      </label>
+      <details class="set-danger">
+        <summary>Delete my account</summary>
+        <p class="mutep">This erases your account, sessions, and email from our server — immediately and for good. Type your password to confirm.</p>
+        <input id="del-pass" type="password" placeholder="Your password" autocomplete="current-password"/>
+        <p class="auth-err" id="del-err" hidden></p>
+        <button class="btn ghost danger" id="del-go">Delete everything</button>
+      </details>
+      <p class="mutep set-privacy"><a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>
+    </div>
   </dialog>
 
   <dialog id="tworoom">
@@ -346,10 +372,10 @@
 
   <footer>
     <span>Facts from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) &amp; <a href="https://data.cityofchicago.org" target="_blank" rel="noopener">Chicago open data</a> · weather by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> · opinions ours</span>
-    <span class="ft-chi">made in Chicago <b class="ft-stars">★★★★</b> <i class="build">build n21</i></span>
+    <span class="ft-chi">made in Chicago <b class="ft-stars">★★★★</b> <i class="build">build n22</i></span>
   </footer>
 </div>
 
-<script type="module" src="js/night/app.js?v=n21"></script>
+<script type="module" src="js/night/app.js?v=n22"></script>
 </body>
 </html>
