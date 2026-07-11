@@ -240,6 +240,31 @@ off** until an email provider key lands on the API container (see
 DEPLOY.md); until then nothing blocks signup or login and "Forgot
 password?" stays hidden rather than lying.
 
+**Round 16 — the whole city, in order (v7):** five renovations at once.
+(1) The reveal now reads as an **itinerary** — numbered stops on a lit rail
+("YOUR NIGHT, IN ORDER · ① start here · ② 12 min walk · ③ last call"),
+so the next stop is the plan, not a footnote. (2) The **passport** grew up:
+"lived" became **stamped**, the count now covers all 98 official
+neighborhoods, "stamp somewhere new" stays, and a **see-where-you've-been
+map view** dims every unstamped hood to a ghost while your stamps keep
+their light (plus a ★ on the label). (3) "Our nights" became **the night
+book** — one dialog, four tabs: The log (locked dates + recent engine
+suggestions you can ☆), Up next (starred plans with *make it tonight*,
+*remind me* — a calendar .ics, no email needed — and your saved spots),
+Your spots (places you added), Passport. Starring lives on the reveal as
+**☆ Up next**. (4) **Settings got honest**: every row explains itself, and
+new working options — open the app on Tonight or Explore, cinematic vs
+calm camera motion, and a map-book toggle. (5) **The map book itself**:
+`data/baseline.json`, ~900 real spots so every one of the 98 neighborhoods
+has at least ten places to explore. Built by cross-checking web research
+(Reddit, Block Club, Eater, TimeOut, Choose Chicago, South Side Weekly …)
+against OpenStreetMap and active Chicago business licenses — a researched
+name ships ONLY if the map data proves it exists. Map-book spots are
+explore-only (never Tonight-engine picks), show facts plus a sourced
+one-liner, and are labeled "not yet vetted by us." Rebuild:
+`node scripts/build-baseline.mjs` (inputs cached in `scripts/cache/`,
+research provenance in `scripts/baseline-recs.json`).
+
 **The companion server (optional, `server/`):** a zero-dependency Node
 container that the static site quietly probes at boot — unreachable means
 every feature below simply stays hidden. With it: **live CTA arrivals** on

@@ -850,20 +850,33 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .dbg tr.win td { color: var(--amber); }
 .dbg p { font-size: 11px; color: var(--muted); margin: 6px 0 0; }
 
-.then {
-  border-left: 2px solid var(--amber); padding: 4px 0 6px 14px; margin: 0 0 16px;
+.then { margin: 2px 0 16px; } /* hosts the itinerary — the rail draws itself */
+/* the itinerary: numbered stops on a rail — the plan reads as a route */
+.itin-k { font-size: 11px; letter-spacing: .18em; color: var(--amber); margin-bottom: 9px; }
+.itin-stop { display: flex; gap: 11px; position: relative; padding-bottom: 13px; }
+.itin-stop:last-of-type { padding-bottom: 2px; }
+.itin-stop::before { /* the rail connecting the dots */
+  content: ""; position: absolute; left: 10.5px; top: 22px; bottom: -1px;
+  width: 1.5px; background: linear-gradient(var(--amber), transparent 92%); opacity: .45;
 }
-.then-line { font-size: 11px; letter-spacing: .18em; color: var(--amber); margin-bottom: 3px; }
-.then-walk { color: var(--muted); letter-spacing: .02em; margin-left: 6px; }
-.then-name { font-family: var(--serif); font-weight: 700; font-size: 19px; }
-.then-take { font-size: 13px; color: var(--muted); line-height: 1.5; margin-top: 3px; }
-.then-line.last { margin-top: 10px; }
+.itin-stop:last-of-type::before { display: none; }
+.itin-dot {
+  flex: 0 0 22px; height: 22px; border-radius: 50%; z-index: 1; margin-top: 1px;
+  background: linear-gradient(135deg, var(--amber), #ff8f4f); color: #1c0f08;
+  font-weight: 700; font-size: 12.5px; display: grid; place-items: center;
+  box-shadow: 0 0 10px rgba(255, 180, 92, .35);
+}
+.itin-name { font-family: var(--serif); font-weight: 700; font-size: 17px; }
+.itin-sub { color: var(--muted); font-size: 12px; margin-left: 7px; }
+.itin-take { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 2px; }
+.crawl-link { margin-left: 33px; }
 .crawl-link { display: block; margin-top: 10px; color: var(--amber); font-size: 13px; }
 
 .actions { display: flex; gap: 9px; margin: 4px 0 14px; }
 .actions .btn { flex: 1; white-space: nowrap; }
 .actions.column { flex-direction: column; }
 .btn.heart.on { color: var(--coral); border-color: rgba(255,75,92,.5); }
+.btn.star.on { color: var(--amber); border-color: rgba(255,180,92,.5); }
 
 .vetoes { display: flex; gap: 9px; margin: -4px 0 14px; }
 .vetoes button {
@@ -960,6 +973,51 @@ dialog textarea:focus { outline: none; border-color: var(--skyblue); }
 .night-row .nd { color: var(--muted); }
 .night-row .nh { color: var(--muted); }
 dialog h3 + .night-row { margin-top: 4px; }
+
+/* the night book: tabbed — log · up next · places · passport */
+.nb-tabs { width: 100%; margin-bottom: 14px; }
+.nb-tabs button { flex: 1; }
+.nb-hint { font-size: 11px; font-weight: 400; color: var(--muted); letter-spacing: 0; margin-left: 8px; }
+.night-row.gen { grid-template-columns: auto 1fr auto auto; align-items: baseline; gap: 8px; }
+.star-btn { background: none; border: 0; color: var(--amber); font-size: 15px; cursor: pointer; padding: 0 2px; }
+.star-btn:hover { text-shadow: 0 0 8px rgba(255, 180, 92, .8); }
+.upnext-row { padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+.upnext-row .un-main b { font-family: var(--serif); font-size: 15px; }
+.upnext-row .un-when { color: var(--muted); font-size: 11px; margin-left: 8px; }
+.upnext-row .un-acts { display: flex; gap: 14px; margin-top: 4px; }
+.upnext-row .un-acts .linkish { font-size: 12px; }
+.nb-pass-count { font-family: var(--serif); font-size: 18px; margin: 2px 0 6px; }
+.chip.stamp { color: var(--amber); }
+
+/* passport painted on the map: unstamped hoods go ghost-dim */
+#mapwrap.passport .nm-hoodg:not(.stamped) .nm-hood { fill-opacity: .16; }
+#mapwrap.passport.tiles-on .nm-hoodg:not(.stamped) .nm-hood { fill-opacity: .03; }
+#mapwrap.passport .nm-hoodg.stamped .nm-hood { fill-opacity: 1; }
+#mapwrap.passport.tiles-on .nm-hoodg.stamped .nm-hood { fill-opacity: .22; }
+#mapwrap.passport .nm-hoodlabel:not(.stamped) { opacity: .4; }
+.nm-hoodlabel.stamped::before { content: "★ "; color: var(--amber); }
+.ex-passport .linkish.on { color: var(--amber); }
+
+/* explore: the map book (baseline) rows + dots */
+.ex-basehead { font-size: 12px; letter-spacing: .14em; color: var(--muted); margin: 16px 0 4px; text-transform: uppercase; }
+.ex-basehead .nb-hint { text-transform: none; letter-spacing: 0; }
+.ex-row.base .n { font-weight: 400; }
+.ex-row.base { opacity: .85; }
+.rec-dot { color: var(--amber); font-size: 9px; vertical-align: 2px; }
+.nm-spot-dot.base { opacity: .55; }
+.nm-spotlabel.base { opacity: 0; font-size: 10px; }
+#mapwrap.zoomed2 .nm-spotlabel.base.vis { opacity: .7; }
+
+/* settings: section heads + per-row explanations */
+#settings .set-h { font-size: 11px; letter-spacing: .18em; color: var(--amber); margin: 18px 0 2px; }
+#settings .set-hint { display: block; font-size: 11px; color: var(--muted); opacity: .75; margin-top: 1px; }
+
+/* calm motion: kill the cinematic transitions app-wide (map camera glides
+ * are cut separately via the engine's reduced flag) */
+body.calm-motion *, body.calm-motion *::before, body.calm-motion *::after {
+  transition-duration: .06s !important;
+  animation-duration: .06s !important;
+}
 #nights-body h3 { font-size: 16px; margin: 14px 0 4px; color: var(--amber); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips .chip { background: var(--night); border: 1px solid var(--line-soft); padding: 5px 10px; border-radius: 999px; font-size: 12px; }

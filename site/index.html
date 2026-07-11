@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://c.basemaps.cartocdn.com" crossorigin/>
 <link rel="preconnect" href="https://d.basemaps.cartocdn.com" crossorigin/>
 <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin/>
-<link rel="stylesheet" href="css/night.css?v=n22"/>
+<link rel="stylesheet" href="css/night.css?v=n23"/>
 <!-- the Chicago star, six points, in night coral — the city on the tab -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23070c16'/%3E%3Cpath fill='%23ff4b5c' d='M12 3.2 13.3 8.5 17.9 5.6 15 10.2 20.3 11.5 15 12.8 17.9 17.4 13.3 14.5 12 19.8 10.7 14.5 6.1 17.4 9 12.8 3.7 11.5 9 10.2 6.1 5.6 10.7 8.5Z'/%3E%3C/svg%3E"/>
 </head>
@@ -227,6 +227,7 @@
           <button id="rv-lock" class="btn primary">Lock it in</button>
           <button id="rv-reroll" class="btn ghost">🎲 Reroll</button>
           <button id="rv-save" class="btn ghost heart">♡ Save</button>
+          <button id="rv-next" class="btn ghost star">☆ Up next</button>
         </div>
         <div id="rv-vetoes" class="vetoes" hidden></div>
         <div id="rv-alts" class="alts"></div>
@@ -272,7 +273,7 @@
 
   <dialog id="nights">
     <button class="x" aria-label="close">×</button>
-    <h3>Our nights</h3>
+    <h3>The night book</h3>
     <div id="nights-body"></div>
   </dialog>
 
@@ -317,11 +318,33 @@
   <dialog id="settings">
     <button class="x" aria-label="close">×</button>
     <h3>Make it yours</h3>
-    <p class="mutep">Colors and type, saved on this device. The map repaints live — play with it.</p>
-    <div class="set-row"><label>Route light</label><input type="color" id="set-amber" data-var="--amber"/></div>
-    <div class="set-row"><label>The star</label><input type="color" id="set-coral" data-var="--coral"/></div>
-    <div class="set-row"><label>Sky blue</label><input type="color" id="set-sky" data-var="--skyblue"/></div>
-    <div class="set-row col"><label>Map palette</label>
+    <p class="mutep">Saved on this device. The map repaints live — play with it.</p>
+
+    <h4 class="set-h">How it behaves</h4>
+    <div class="set-row col"><label>Open the app on <span class="set-hint">which mode greets you</span></label>
+      <div class="seg" id="set-start">
+        <button data-s="tonight">Tonight</button>
+        <button data-s="explore">Explore</button>
+      </div>
+    </div>
+    <div class="set-row col"><label>Camera motion <span class="set-hint">calm = no glides, instant jumps</span></label>
+      <div class="seg" id="set-motion">
+        <button data-m="full">Cinematic</button>
+        <button data-m="calm">Calm</button>
+      </div>
+    </div>
+    <div class="set-row col"><label>The book <span class="set-hint">map book = every neighborhood's unvetted spots</span></label>
+      <div class="seg" id="set-book">
+        <button data-b="all">Everything</button>
+        <button data-b="curated">Our picks only</button>
+      </div>
+    </div>
+
+    <h4 class="set-h">Colors &amp; type</h4>
+    <div class="set-row"><label>Route light <span class="set-hint">route trails, highlights, buttons</span></label><input type="color" id="set-amber" data-var="--amber"/></div>
+    <div class="set-row"><label>The star <span class="set-hint">tonight's pick, your marker, the ★</span></label><input type="color" id="set-coral" data-var="--coral"/></div>
+    <div class="set-row"><label>Sky blue <span class="set-hint">water, links, live transit</span></label><input type="color" id="set-sky" data-var="--skyblue"/></div>
+    <div class="set-row col"><label>Map palette <span class="set-hint">how the neighborhoods are painted</span></label>
       <div class="seg" id="set-pal">
         <button data-p="classic">Classic</button>
         <button data-p="neon">Neon</button>
@@ -329,7 +352,7 @@
         <button data-p="steel">Steel</button>
       </div>
     </div>
-    <div class="set-row col"><label>Name size</label>
+    <div class="set-row col"><label>Name size <span class="set-hint">neighborhood labels on the map</span></label>
       <div class="seg" id="set-lbl">
         <button data-l="0.88">A−</button>
         <button data-l="1">A</button>
@@ -372,10 +395,10 @@
 
   <footer>
     <span>Facts from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) &amp; <a href="https://data.cityofchicago.org" target="_blank" rel="noopener">Chicago open data</a> · weather by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> · opinions ours</span>
-    <span class="ft-chi">made in Chicago <b class="ft-stars">★★★★</b> <i class="build">build n22</i></span>
+    <span class="ft-chi">made in Chicago <b class="ft-stars">★★★★</b> <i class="build">build n23</i></span>
   </footer>
 </div>
 
-<script type="module" src="js/night/app.js?v=n22"></script>
+<script type="module" src="js/night/app.js?v=n23"></script>
 </body>
 </html>
