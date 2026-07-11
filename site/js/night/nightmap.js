@@ -368,8 +368,8 @@ export class NightMap {
       host.classList.toggle("tiles-on", tilesOn);
       if (tilesOn) this._queueTiles();
       if (z < 0.85) { // close enough that detail matters — fetch it once
-        this.loadStreets("data/streets.min.geojson?v=n22");
-        this.loadDetail("data/detail.min.geojson?v=n22");
+        this.loadStreets("data/streets.min.geojson?v=n23");
+        this.loadDetail("data/detail.min.geojson?v=n23");
       }
       this._layoutLabels(); // billboards track the camera every frame
       this._queueCull();
@@ -597,6 +597,17 @@ export class NightMap {
     this._labelWeights = weights; // polygonName -> venue count
     this._paintFaces();
     this._queueCull();
+  }
+
+  /* passport view: stamped hoods keep their color and get a star on the
+   * label; everywhere else drops to a dim ghost — been-there at a glance */
+  setStamps(set) {
+    this._stamps = set || null;
+    this.svg.parentElement.classList.toggle("passport", !!set);
+    for (const [name, g] of this.hoodGroups)
+      g.classList.toggle("stamped", !!(set && set.has(name)));
+    for (const [name, l] of this.hoodLabels)
+      l.classList.toggle("stamped", !!(set && set.has(name)));
   }
 
   /* Colors v2 — the city as eight named districts, every neighbor distinct.
@@ -1288,13 +1299,13 @@ export class NightMap {
       hit.setAttribute("class", "nm-spot-hit");
       const dot = document.createElementNS(NS, "circle");
       dot.setAttribute("cx", x.toFixed(1)); dot.setAttribute("cy", y.toFixed(1));
-      dot.setAttribute("class", "nm-spot-dot");
+      dot.setAttribute("class", "nm-spot-dot" + (p.base ? " base" : ""));
       dot.style.pointerEvents = "none";
       // the name tag is an HTML billboard anchored AT the dot: it renders
       // at true screen size (no scale chain to blur it) and the layout
       // pass lifts it a constant few px above the dot at any zoom
       const tag = document.createElement("div");
-      tag.className = "nm-spotlabel";
+      tag.className = "nm-spotlabel" + (p.base ? " base" : "");
       tag.dataset.ux = x.toFixed(1);
       tag.dataset.uy = y.toFixed(1);
       tag.textContent = p.name;

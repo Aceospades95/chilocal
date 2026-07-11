@@ -17,6 +17,7 @@ const DEFAULTS = () => ({
   saved: [],                  // wishlist ids
   hoodVisits: {},             // hood -> count
   generated: [],              // last 20 plans the engine produced (locked or not)
+  upNext: [],                 // starred plans: "we want to do this one soon"
 });
 
 export function loadMemory() {
@@ -42,6 +43,26 @@ export function logGenerated(m, plan) {
   });
   m.generated = m.generated.slice(0, 20);
   save(m);
+}
+
+/* Up next: a starred plan — hero (+ optional second/third) you've decided
+ * to do soon. Keyed by heroId+names so generated plans star cleanly. */
+export function starUpNext(m, entry) {
+  const key = (e) => `${e.heroName}|${e.secondName || ""}`;
+  const i = m.upNext.findIndex((e) => key(e) === key(entry));
+  if (i >= 0) { m.upNext.splice(i, 1); save(m); return false; }
+  m.upNext.unshift({ iso: localISO(), ...entry });
+  m.upNext = m.upNext.slice(0, 12);
+  save(m);
+  return true;
+}
+export function unstarUpNext(m, i) {
+  m.upNext.splice(i, 1);
+  save(m);
+}
+export function isUpNext(m, entry) {
+  const key = (e) => `${e.heroName}|${e.secondName || ""}`;
+  return m.upNext.some((e) => key(e) === key(entry));
 }
 
 export function toggleBeen(m, id) {
