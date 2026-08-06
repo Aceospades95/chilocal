@@ -3,6 +3,7 @@
  * No frameworks, no webfonts — Georgia italic carries the editorial voice. */
 
 :root {
+  color-scheme: dark;    /* dark scrollbars, selects, autofill — no white chrome */
   --ink:      #04070e;   /* page depth */
   --night:    #070c16;   /* base surface */
   --panel:    #0d1524;   /* raised surface */
@@ -32,18 +33,43 @@ body {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
-button { font-family: inherit; color: inherit; cursor: pointer; }
+button {
+  font-family: inherit; color: inherit; cursor: pointer;
+  /* phones: no gray tap flash, no accidental long-press text selection,
+   * no 300ms double-tap-zoom hesitation on rapid taps (map +/− etc.) */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+  touch-action: manipulation;
+}
 a { color: var(--skyblue); text-decoration: none; }
 a:hover { text-decoration: underline; }
+/* keyboard users get one consistent, visible ring — mouse users never see it */
+:focus-visible { outline: 2px solid var(--skyblue); outline-offset: 2px; }
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 
 #app { position: relative; height: 100dvh; display: flex; flex-direction: column; opacity: 0; transition: opacity .5s; }
 #app.ready { opacity: 1; }
+
+/* while data loads (first boot, and the beat after signing in) the page is
+ * otherwise pure black — give it a heartbeat instead of a void */
+body.booting::before {
+  content: ""; position: fixed; inset: 0; z-index: 150;
+  background: radial-gradient(120% 100% at 50% 20%, #0a1020 0%, #04070e 70%);
+}
+body.booting::after {
+  content: "Chi·Local"; position: fixed; z-index: 151;
+  left: 50%; top: 46%; transform: translate(-50%, -50%);
+  font-family: var(--serif); font-weight: 700; font-size: 26px; color: var(--text);
+  animation: boot-pulse 1.6s ease-in-out infinite;
+}
+@keyframes boot-pulse { 0%, 100% { opacity: .35; } 50% { opacity: .9; } }
 
 /* ------------------------------- header --------------------------------- */
 header {
   position: relative; z-index: 30;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px 10px;
+  /* viewport-fit=cover: keep the wordmark out from under the notch/status bar */
+  padding: calc(14px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) 10px calc(20px + env(safe-area-inset-left));
   pointer-events: none; /* the map runs underneath — only controls catch taps */
   user-select: none; -webkit-user-select: none;
 }
@@ -51,21 +77,23 @@ header > * { pointer-events: auto; }
 .wordmark {
   font-family: var(--serif); font-weight: 700; font-size: 21px; letter-spacing: .3px;
   cursor: pointer; user-select: none;
-  display: flex; align-items: center; gap: 9px;
+  /* no flex gap: "Chi", "·", "Local" are separate flex items and a gap
+   * spaces the wordmark's own letters apart — the flag carries the margin */
+  display: flex; align-items: center;
 }
+.wm-flag { margin-right: 9px; }
 /* the flag of Chicago, night edition: two cooled-blue stripes, four coral
  * stars — the same palette the whole app is built from */
 .wm-flag { width: 30px; height: 18px; flex: none; }
 @media (max-width: 430px) { .wm-flag { display: none; } } /* tight phone headers */
 .wm-flag .fl-stripe { fill: rgba(100, 216, 255, .55); }
 .wm-flag .fl-stars path { fill: var(--coral); }
-.wordmark .dot { color: var(--coral); }
-.wm-sub {
-  font-style: italic; font-weight: 400; font-size: 15px; color: var(--amber);
-  margin-left: 2px;
-}
+.wordmark .dot { color: var(--coral); padding: 0 1px; }
 .head-right { display: flex; align-items: center; gap: 10px; }
-.ctx { font-size: 12px; color: var(--muted); letter-spacing: .2px; white-space: nowrap; }
+.ctx {
+  font-size: 12px; color: var(--muted); letter-spacing: .2px; white-space: nowrap;
+  max-width: 34vw; overflow: hidden; text-overflow: ellipsis;
+}
 
 /* --------------------------------- map ----------------------------------- */
 #mapwrap::before {
@@ -243,15 +271,19 @@ body.map-dragging, body.map-dragging * {
 .nm-second { fill: var(--skyblue); }
 .nm-spot-core { fill: var(--coral); }
 .nm-spot-halo { fill: rgba(255, 75, 92, .3); }
+/* dot sizes carry a SCREEN-pixel floor (--upp = map units per screen px,
+ * set by the engine): --uz alone scales with viewport width, which tuned
+ * the dots for desktop and left them ~3px specks on phones */
 .nm-spot-dot {
   fill: var(--amber); opacity: .92;
-  r: calc(var(--uz, 1px) * 4.6);
-  stroke: rgba(6,10,18,.85); stroke-width: calc(var(--uz, 1px) * 1.4);
+  r: max(calc(var(--uz, 1px) * 4.6), calc(var(--upp, 1px) * 3.5));
+  stroke: rgba(6,10,18,.85); stroke-width: max(calc(var(--uz, 1px) * 1.4), calc(var(--upp, 1px) * 1));
   /* glow radius in --uz so it scales WITH the dot instead of ballooning
    * into a soft orb at deep zoom (filter units are user units) */
   filter: drop-shadow(0 0 calc(var(--uz, 1px) * 3) rgba(255,180,92,.9));
 }
-.nm-spot-hit { fill: transparent; cursor: pointer; r: calc(var(--uz, 1px) * 13); }
+/* hits get a 16px screen radius minimum — venue lights must be tappable */
+.nm-spot-hit { fill: transparent; cursor: pointer; r: max(calc(var(--uz, 1px) * 13), calc(var(--upp, 1px) * 16)); }
 .nm-spotlabel {
   position: absolute; left: 0; top: 0; will-change: transform;
   font-family: var(--sans); font-weight: 600; font-size: 10px;
@@ -307,13 +339,13 @@ body.map-dragging, body.map-dragging * {
   stroke-width: 1; vector-effect: non-scaling-stroke; stroke-dasharray: 4 4;
 }
 .nm-user-dot {
-  fill: var(--skyblue); r: calc(var(--uz, 1px) * 5);
-  stroke: rgba(6, 10, 18, .9); stroke-width: calc(var(--uz, 1px) * 1.6);
+  fill: var(--skyblue); r: max(calc(var(--uz, 1px) * 5), calc(var(--upp, 1px) * 5));
+  stroke: rgba(6, 10, 18, .9); stroke-width: max(calc(var(--uz, 1px) * 1.6), calc(var(--upp, 1px) * 1.2));
 }
 .nm-user-ring {
   fill: none; stroke: var(--skyblue); stroke-width: 1.4;
   vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
-  r: calc(var(--uz, 1px) * 5);
+  r: max(calc(var(--uz, 1px) * 5), calc(var(--upp, 1px) * 5));
   animation: user-pulse 2.4s ease-out infinite;
 }
 @keyframes user-pulse {
@@ -338,18 +370,18 @@ body.map-dragging, body.map-dragging * {
 #mapwrap.show-divvy.zoomed #nm-divvy { opacity: 1; }
 .nm-dock {
   pointer-events: none;
-  r: calc(var(--uz, 1px) * 1.4);
+  r: max(calc(var(--uz, 1px) * 1.4), calc(var(--upp, 1px) * 1.5));
   fill: #52c5ee; stroke: rgba(6, 10, 18, .85);
   stroke-width: calc(var(--uz, 1px) * .5);
 }
-#mapwrap.zoomed2 .nm-dock { r: calc(var(--uz, 1px) * 1.9); }
+#mapwrap.zoomed2 .nm-dock { r: max(calc(var(--uz, 1px) * 1.9), calc(var(--upp, 1px) * 2.2)); }
 .nm-metra {
   fill: none; stroke: #94a2b8; stroke-width: 1.5; stroke-dasharray: 7 5;
   opacity: .7; vector-effect: non-scaling-stroke;
 }
 .nm-station {
   pointer-events: none;
-  r: calc(var(--uz, 1px) * 2.6);
+  r: max(calc(var(--uz, 1px) * 2.6), calc(var(--upp, 1px) * 2.5));
   fill: #e8eef8; stroke: rgba(6, 10, 18, .9);
   stroke-width: calc(var(--uz, 1px) * 1);
 }
@@ -381,22 +413,25 @@ body.map-dragging, body.map-dragging * {
 }
 body[data-screen="explore"] #map-controls { display: flex; }
 #map-controls .seg { padding: 2px; }
-#map-controls .seg button { padding: 5px 11px; font-size: 11.5px; }
-#map-controls .ov-chips { display: flex; gap: 6px; }
+#map-controls .seg button { padding: 8px 12px; font-size: 11.5px; }
+#map-controls .ov-chips { display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100vw - 24px); }
 #map-controls .ov-chips button {
   background: rgba(13,21,36,.85); border: 1px solid var(--line-soft); color: var(--muted);
-  border-radius: 999px; padding: 6px 12px; font-size: 11.5px; transition: all .15s;
-  backdrop-filter: blur(6px);
+  border-radius: 999px; padding: 8px 13px; font-size: 11.5px; transition: all .15s;
+  backdrop-filter: blur(6px); white-space: nowrap;
 }
 #map-controls .ov-chips button.on { color: var(--text); border-color: var(--skyblue); box-shadow: 0 0 0 1px rgba(100,216,255,.4); }
-#map-controls .hint { font-size: 10.5px; color: #5d6880; letter-spacing: .04em; }
+#map-controls .hint {
+  font-size: 10.5px; color: var(--muted); letter-spacing: .04em;
+  background: rgba(4,7,14,.55); padding: 3px 9px; border-radius: 7px;
+}
 @media (max-width: 919px) {
   #map-controls { top: 104px; left: 12px; }
 }
 
 /* camera dock: bottom-right of the VISIBLE map, clear of the panel */
 #cam-dock {
-  position: absolute; z-index: 25; right: 16px; bottom: 30px;
+  position: absolute; z-index: 25; right: 16px; bottom: calc(30px + env(safe-area-inset-bottom));
   display: none; user-select: none; -webkit-user-select: none;
 }
 body[data-screen="explore"] #cam-dock { display: block; }
@@ -404,12 +439,19 @@ body[data-screen="explore"] #cam-dock { display: block; }
   display: flex; flex-direction: column; padding: 2px;
   backdrop-filter: blur(6px);
 }
-#cam-dock .seg button { padding: 8px 10px; font-size: 13px; min-width: 34px; }
+#cam-dock .seg button { padding: 10px 10px; font-size: 13.5px; min-width: 40px; }
 @media (min-width: 920px) {
   body:not(.ex-folded) #cam-dock { right: 446px; }
 }
 @media (max-width: 919px) {
   #cam-dock { right: 10px; bottom: calc(48% + 12px); }
+}
+/* landscape phone: the mid-height dock would sit on the header — go bottom
+ * corner and lay the cluster flat */
+@media (max-width: 919px) and (orientation: landscape) {
+  #cam-dock { bottom: calc(10px + env(safe-area-inset-bottom)); right: calc(10px + env(safe-area-inset-right)); }
+  #cam-dock .seg { flex-direction: row; }
+  #map-controls { top: 56px; }
 }
 
 /* the browse panel folds away — the map gets the whole stage */
@@ -499,7 +541,10 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .mutep { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 0 0 16px; }
 
 /* ---- ask */
-#screen-ask { align-items: center; }
+/* safe center: on short viewports (SE-class phones, landscape) the content
+ * is taller than the screen — centered overflow would clip the headline off
+ * the top with no way to scroll to it */
+#screen-ask { align-items: safe center; overflow-y: auto; }
 .ask-inner {
   width: min(600px, 100%); margin: 0 auto; padding: 12px 24px 90px;
 }
@@ -509,10 +554,15 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .seg { display: inline-flex; background: rgba(13, 21, 36, .8); border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px; gap: 2px; }
 .seg button {
   border: 0; background: transparent; color: var(--muted);
-  padding: 7px 14px; border-radius: 999px; font-size: 13px;
+  padding: 9px 14px; border-radius: 999px; font-size: 13px;
   transition: all .18s;
 }
-.seg button.on { background: var(--panel-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+/* the chosen side must read as chosen at a glance — the old panel-on-panel
+ * fill was a 1.15:1 difference nobody could see */
+.seg button.on {
+  background: var(--panel-2); color: var(--text); font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255, 180, 92, .55);
+}
 .seg.party { margin-bottom: 18px; }
 
 .cta {
@@ -557,17 +607,18 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 /* footer chicago mark + build stamp (the honest answer to "what am I running?") */
 .ft-chi { white-space: nowrap; }
 .ft-chi .ft-stars { color: var(--coral); font-weight: 400; letter-spacing: .18em; }
-.ft-chi .build { color: var(--muted); font-style: normal; opacity: .65; margin-left: 4px; }
+.ft-chi .build { color: var(--muted); font-style: normal; margin-left: 4px; }
 
-.linkish { background: none; border: 0; color: var(--skyblue); font-size: 13px; padding: 0; }
+/* generous vertical hit area (44px-ish) without moving the visual text */
+.linkish { background: none; border: 0; color: var(--skyblue); font-size: 13px; padding: 12px 2px; margin: -12px 0; }
 .linkish:hover { text-decoration: underline; }
 .stayin-link { display: block; margin: 16px 2px 0; color: var(--muted); }
 
 .ask-foot { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 .chip-btn {
   border: 1px dashed var(--line); background: rgba(13,21,36,.6); color: var(--muted);
-  font-size: 13px; border-radius: 999px; padding: 8px 14px; transition: all .18s;
-  white-space: nowrap;
+  font-size: 13px; border-radius: 999px; padding: 10px 14px; transition: all .18s;
+  white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
 }
 .chip-btn:hover { color: var(--text); border-color: #2b3f66; }
 .chip-btn.on { border-style: solid; border-color: var(--amber); color: var(--text); }
@@ -581,7 +632,8 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 
 /* ---- panels (vibes / two / pass / locked) */
 .panel {
-  width: min(560px, 100%); margin: 0 auto; padding: 10px 24px 30px;
+  width: min(560px, 100%); margin: 0 auto;
+  padding: 10px 24px calc(30px + env(safe-area-inset-bottom));
   overflow-y: auto; max-height: 100%;
 }
 .panel.center { display: flex; flex-direction: column; justify-content: center; text-align: center; }
@@ -643,7 +695,9 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 /* the gate: members only — the one screen an unsigned visitor gets */
 #gate {
   position: fixed; inset: 0; z-index: 200;
-  display: grid; place-items: center;
+  display: grid; place-items: safe center;
+  overflow-y: auto; /* signup card can outgrow an SE-class phone */
+  padding: max(16px, env(safe-area-inset-top)) 0 max(16px, env(safe-area-inset-bottom));
   background: radial-gradient(120% 100% at 50% 20%, #0a1020 0%, #04070e 70%);
 }
 #gate[hidden] { display: none; } /* the ID selector would out-rank [hidden] */
@@ -666,7 +720,8 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 #gate input {
   display: block; width: 100%; margin: 9px 0; padding: 12px 13px;
   background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14);
-  border-radius: 10px; color: var(--text); font-size: 14px;
+  border-radius: 10px; color: var(--text);
+  font-size: 16px; /* under 16px iOS Safari zooms the page on focus and never zooms back */
 }
 #gate input:focus { outline: none; border-color: var(--skyblue); }
 #gate input[hidden] { display: none; } /* display:block above would resurrect hidden fields */
@@ -679,8 +734,8 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 }
 .gate-aux:hover { color: var(--text); }
 .gate-aux[hidden] { display: none; }
-.gate-fine { font-size: 10.5px; margin-top: 14px; opacity: .8; }
-.gate-fine a { color: inherit; }
+.gate-fine { font-size: 11px; margin-top: 14px; }
+.gate-fine a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 
 /* the digest opt-in: one honest unchecked checkbox — the mailing list */
 .digest-row {
@@ -699,9 +754,9 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 /* account avatar + dropdown */
 .acct { position: relative; }
 .avatar {
-  width: 32px; height: 32px; border-radius: 50%; padding: 0;
+  width: 38px; height: 38px; border-radius: 50%; padding: 0;
   background: var(--panel-2); border: 1px solid var(--line);
-  font-size: 14px; line-height: 1; display: grid; place-items: center;
+  font-size: 15px; line-height: 1; display: grid; place-items: center;
   transition: border-color .15s, box-shadow .15s;
 }
 .avatar:hover { border-color: var(--skyblue); }
@@ -711,16 +766,20 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
   font-family: var(--serif); font-weight: 700; font-size: 15px;
 }
 .acct-menu {
-  position: absolute; right: 0; top: 40px; z-index: 60; min-width: 210px;
+  position: absolute; right: 0; top: 44px; z-index: 60; min-width: 210px;
+  max-width: min(300px, calc(100vw - 24px));
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
   padding: 6px; box-shadow: 0 14px 34px rgba(0,0,0,.5);
 }
 .acct-menu .am-head { padding: 9px 11px 10px; border-bottom: 1px solid var(--line-soft); margin-bottom: 5px; }
 .acct-menu .am-head b { display: block; font-family: var(--serif); font-size: 15px; }
-.acct-menu .am-head span { font-size: 11.5px; color: var(--muted); }
+.acct-menu .am-head span {
+  font-size: 11.5px; color: var(--muted);
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .acct-menu .am-item {
   display: block; width: 100%; text-align: left; background: none; border: 0;
-  padding: 9px 11px; border-radius: 8px; font-size: 13.5px; color: var(--text);
+  padding: 11px; border-radius: 8px; font-size: 13.5px; color: var(--text);
 }
 .acct-menu .am-item:hover { background: var(--panel-2); }
 .acct-menu .am-item.join { color: var(--amber); }
@@ -731,14 +790,17 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 #auth input {
   display: block; width: 100%; margin: 9px 0; padding: 11px 13px;
   background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14);
-  border-radius: 10px; color: var(--text); font-size: 14px;
+  border-radius: 10px; color: var(--text);
+  font-size: 16px; /* iOS focus-zoom threshold */
 }
 #auth input:focus { outline: none; border-color: var(--skyblue); }
 #auth input[hidden] { display: none; } /* keep the name field truly gone on Sign in */
-#auth .auth-err { color: var(--coral); font-size: 12.5px; margin: 4px 0 0; }
 #auth .cta.slim { width: 100%; margin-top: 12px; }
-#auth .auth-fine { font-size: 11px; margin-top: 14px; opacity: .75; }
-#auth .auth-fine a { color: inherit; }
+#auth .auth-fine { font-size: 12px; margin-top: 14px; }
+#auth .auth-fine a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+/* every error line, on every surface (the bare class also covers #gate-err,
+ * which previously rendered in plain body text) */
+.auth-err { color: var(--coral); font-size: 12.5px; margin: 4px 0 0; min-height: 16px; }
 
 /* settings dialog */
 #settings .set-row {
@@ -755,7 +817,7 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 #settings #set-reset { width: 100%; margin-top: 14px; }
 #settings .set-acct { border-top: 1px solid var(--line-soft); margin-top: 18px; padding-top: 6px; }
 #settings .set-acct[hidden] { display: none; }
-#settings .set-acct h3 { margin-bottom: 4px; }
+#settings .set-acct-h { font-family: var(--serif); font-size: 22px; margin: 0 0 4px; }
 #settings .set-danger { margin-top: 14px; }
 #settings .set-danger summary {
   font-size: 12.5px; color: var(--muted); cursor: pointer; user-select: none;
@@ -769,8 +831,8 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 #settings .set-danger .auth-err { color: var(--coral); font-size: 12.5px; margin: 4px 0; }
 #settings .btn.danger { border-color: rgba(255,75,92,.5); color: var(--coral); }
 #settings .btn.danger:hover { background: rgba(255,75,92,.12); }
-#settings .set-privacy { font-size: 11px; margin-top: 14px; opacity: .75; }
-#settings .set-privacy a { color: inherit; }
+#settings .set-privacy { font-size: 11.5px; margin-top: 14px; }
+#settings .set-privacy a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 
 /* two-phone room dialog */
 #tworoom .tr-code { font-family: var(--serif); letter-spacing: .3em; color: var(--amber); }
@@ -779,7 +841,7 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
   width: 100%; margin: 12px 0 4px; padding: 12px 14px; font-size: 26px;
   letter-spacing: .5em; text-align: center; text-transform: uppercase;
   background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14);
-  border-radius: 10px; color: var(--ink);
+  border-radius: 10px; color: var(--text); caret-color: var(--amber);
 }
 #tworoom .tr-hero { font-family: var(--serif); font-style: italic; font-size: 26px; margin: 6px 0 2px; }
 #tworoom .tr-why { font-family: var(--serif); font-style: italic; color: var(--muted); margin: 10px 0; }
@@ -799,7 +861,7 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 /* ---- reveal sheet */
 #screen-reveal { align-items: flex-end; }
 .sheet {
-  width: 100%; max-height: 58%;
+  width: 100%; max-height: 58%; overflow-x: hidden;
   background: linear-gradient(to bottom, rgba(10, 16, 29, .94), rgba(7, 11, 21, .98));
   border-top: 1px solid var(--line);
   border-radius: 22px 22px 0 0;
@@ -869,19 +931,22 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
 .itin-name { font-family: var(--serif); font-weight: 700; font-size: 17px; }
 .itin-sub { color: var(--muted); font-size: 12px; margin-left: 7px; }
 .itin-take { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 2px; }
-.crawl-link { margin-left: 33px; }
-.crawl-link { display: block; margin-top: 10px; color: var(--amber); font-size: 13px; }
+.crawl-link { display: block; margin: 10px 0 0 33px; color: var(--amber); font-size: 13px; }
 
-.actions { display: flex; gap: 9px; margin: 4px 0 14px; }
-.actions .btn { flex: 1; white-space: nowrap; }
+/* four actions never fit one row on a phone — wrap: the primary takes a
+ * full row, the rest share the next (no more sideways-scrolling sheet) */
+.actions { display: flex; flex-wrap: wrap; gap: 9px; margin: 4px 0 14px; }
+.actions .btn { flex: 1; white-space: nowrap; min-width: fit-content; }
+.actions .btn.primary { flex: 1 1 100%; }
 .actions.column { flex-direction: column; }
+.actions.column .btn { flex: none; }
 .btn.heart.on { color: var(--coral); border-color: rgba(255,75,92,.5); }
 .btn.star.on { color: var(--amber); border-color: rgba(255,180,92,.5); }
 
 .vetoes { display: flex; gap: 9px; margin: -4px 0 14px; }
 .vetoes button {
   flex: 1; background: none; border: 1px dashed rgba(255,75,92,.45); color: #ff8d98;
-  border-radius: 12px; padding: 9px; font-size: 12.5px;
+  border-radius: 12px; padding: 11px 9px; font-size: 12.5px;
 }
 .vetoes button:disabled { opacity: .35; border-style: solid; }
 
@@ -893,16 +958,27 @@ h2 { font-family: var(--serif); font-size: clamp(24px, 4vw, 34px); margin: 6px 0
   padding: 11px 14px; margin-bottom: 7px; text-align: left; transition: all .16s;
 }
 .alt:hover { border-color: #2b3f66; }
-.alt-name { font-family: var(--serif); font-weight: 700; font-size: 15.5px; }
-.alt-meta { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alt-name { font-family: var(--serif); font-weight: 700; font-size: 15.5px; flex: none; }
+/* min-width:0 — flex items refuse to shrink below content without it, so
+ * the ellipsis never engaged and long metas pushed the row off the sheet */
+.alt-meta { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; text-align: right; }
 .smallback { margin-top: 10px; color: var(--muted); }
 
 /* ---- locked */
-.locked { position: relative; }
+/* a soft scrim behind the ceremony: the camera parks the lit map (and the
+ * pin's glow) directly under this text — without it the title fights the
+ * streets and the pin sits inside the venue name */
+.locked {
+  position: relative;
+  background: radial-gradient(85% 72% at 50% 44%, rgba(4,7,14,.82), rgba(4,7,14,.45) 62%, transparent 100%);
+  text-shadow: 0 2px 16px rgba(2,4,9,.9);
+}
 .lk-title { font-size: clamp(40px, 9vw, 74px); margin: 4px 0 8px; }
 .lk-hero { font-size: clamp(24px, 5vw, 34px); color: var(--amber); margin: 0 0 6px; }
 .lk-second { font-family: var(--serif); font-style: italic; color: var(--muted); margin: 2px 0 22px; }
 .locked .actions { max-width: 340px; margin: 0 auto; }
+.locked .actions .btn { text-shadow: none; background: rgba(13,21,36,.88); backdrop-filter: blur(5px); }
+.locked .actions .btn.primary { background: linear-gradient(100deg, #ff4b5c, #ff7a4b); }
 #burst { position: absolute; left: 50%; top: 38%; pointer-events: none; }
 #burst .bit {
   position: absolute; width: 7px; height: 7px; border-radius: 2px;
@@ -926,10 +1002,15 @@ dialog {
 }
 dialog::backdrop { background: rgba(3, 6, 12, .7); backdrop-filter: blur(4px); }
 dialog h3 { font-family: var(--serif); font-size: 22px; margin: 0 0 8px; }
+/* sticky, 44px square: reachable even after scrolling a tall dialog
+ * (mobile has no Esc key — this is the only exit) */
 dialog .x {
-  position: absolute; top: 10px; right: 14px; background: none; border: 0;
+  position: sticky; top: -12px; float: right; margin: -14px -10px 0 0; z-index: 2;
+  width: 44px; height: 44px; display: grid; place-items: center;
+  background: none; border: 0;
   color: var(--muted); font-size: 22px; line-height: 1;
 }
+dialog .x:hover { color: var(--text); }
 dialog input {
   width: 100%; background: var(--night); color: var(--text);
   border: 1px solid var(--line); border-radius: 10px; padding: 10px 13px;
@@ -939,11 +1020,13 @@ dialog input:focus { outline: none; border-color: var(--skyblue); }
 .where-list { display: flex; flex-wrap: wrap; gap: 7px; overflow-y: auto; max-height: 300px; }
 .where-list button {
   background: var(--night); border: 1px solid var(--line-soft); color: var(--muted);
-  border-radius: 999px; padding: 7px 12px; font-size: 12.5px; transition: all .15s;
+  border-radius: 999px; padding: 10px 14px; font-size: 12.5px; transition: all .15s;
 }
 .where-list button:hover { color: var(--text); border-color: var(--amber); }
-.night-row { display: grid; grid-template-columns: 38px 84px 1fr auto; gap: 8px; font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); }
-.night-row.gen { grid-template-columns: 1fr auto auto; align-items: baseline; }
+/* minmax(0,1fr): a bare 1fr's minimum is min-content, so a long venue name
+ * pushed the row past the dialog edge instead of wrapping */
+.night-row { display: grid; grid-template-columns: 38px 84px minmax(0, 1fr) auto; gap: 8px; font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); }
+.night-row .nv { overflow-wrap: anywhere; }
 .night-row .gen-share { font-size: 12px; }
 .night-row.rowbtn { background: none; border: 0; border-bottom: 1px solid var(--line-soft); width: 100%; text-align: left; cursor: pointer; }
 .night-row.rowbtn:hover .nv { color: var(--amber); }
@@ -976,10 +1059,10 @@ dialog h3 + .night-row { margin-top: 4px; }
 
 /* the night book: tabbed — log · up next · places · passport */
 .nb-tabs { width: 100%; margin-bottom: 14px; }
-.nb-tabs button { flex: 1; }
+.nb-tabs button { flex: 1; white-space: nowrap; padding: 9px 6px; }
 .nb-hint { font-size: 11px; font-weight: 400; color: var(--muted); letter-spacing: 0; margin-left: 8px; }
-.night-row.gen { grid-template-columns: auto 1fr auto auto; align-items: baseline; gap: 8px; }
-.star-btn { background: none; border: 0; color: var(--amber); font-size: 15px; cursor: pointer; padding: 0 2px; }
+.night-row.gen { grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: baseline; gap: 8px; }
+.star-btn { background: none; border: 0; color: var(--amber); font-size: 15px; cursor: pointer; padding: 10px; margin: -10px -8px; }
 .star-btn:hover { text-shadow: 0 0 8px rgba(255, 180, 92, .8); }
 .upnext-row { padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
 .upnext-row .un-main b { font-family: var(--serif); font-size: 15px; }
@@ -994,7 +1077,10 @@ dialog h3 + .night-row { margin-top: 4px; }
 #mapwrap.passport.tiles-on .nm-hoodg:not(.stamped) .nm-hood { fill-opacity: .03; }
 #mapwrap.passport .nm-hoodg.stamped .nm-hood { fill-opacity: 1; }
 #mapwrap.passport.tiles-on .nm-hoodg.stamped .nm-hood { fill-opacity: .22; }
-#mapwrap.passport .nm-hoodlabel:not(.stamped) { opacity: .4; }
+/* labels still go through the collision cull (.vis) — without this the
+ * passport map showed all 98 names at once as unreadable soup */
+#mapwrap.passport .nm-hoodlabel.vis:not(.stamped) { opacity: .3; }
+#mapwrap.passport .nm-hoodlabel.stamped.vis { opacity: 1; }
 .nm-hoodlabel.stamped::before { content: "★ "; color: var(--amber); }
 .ex-passport .linkish.on { color: var(--amber); }
 
@@ -1005,18 +1091,21 @@ dialog h3 + .night-row { margin-top: 4px; }
 .ex-row.base { opacity: .85; }
 .rec-dot { color: var(--amber); font-size: 9px; vertical-align: 2px; }
 .nm-spot-dot.base { opacity: .55; }
-.nm-spotlabel.base { opacity: 0; font-size: 10px; }
 #mapwrap.zoomed2 .nm-spotlabel.base.vis { opacity: .7; }
 
 /* settings: section heads + per-row explanations */
 #settings .set-h { font-size: 11px; letter-spacing: .18em; color: var(--amber); margin: 18px 0 2px; }
-#settings .set-hint { display: block; font-size: 11px; color: var(--muted); opacity: .75; margin-top: 1px; }
+#settings .set-hint { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
 
 /* calm motion: kill the cinematic transitions app-wide (map camera glides
- * are cut separately via the engine's reduced flag) */
+ * are cut separately via the engine's reduced flag). iteration-count 1 is
+ * load-bearing: shortening an INFINITE animation turns it into a ~16Hz
+ * strobe — the opposite of calm, and a photosensitivity hazard */
 body.calm-motion *, body.calm-motion *::before, body.calm-motion *::after {
   transition-duration: .06s !important;
+  transition-delay: 0s !important;
   animation-duration: .06s !important;
+  animation-iteration-count: 1 !important;
 }
 #nights-body h3 { font-size: 16px; margin: 14px 0 4px; color: var(--amber); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -1025,7 +1114,7 @@ body.calm-motion *, body.calm-motion *::before, body.calm-motion *::after {
 
 /* -------------------------------- explore UI ------------------------------- */
 .seg.mode { padding: 2px; }
-.seg.mode button { padding: 6px 14px; font-size: 12.5px; letter-spacing: .04em; }
+.seg.mode button { padding: 9px 15px; font-size: 12.5px; letter-spacing: .04em; }
 
 #screen-explore { align-items: flex-end; }
 .ex-sheet {
@@ -1050,14 +1139,13 @@ body.calm-motion *, body.calm-motion *::before, body.calm-motion *::after {
 .ex-search {
   width: 100%; background: rgba(7,12,22,.85); color: var(--text);
   border: 1px solid var(--line); border-radius: 11px; padding: 10px 13px;
-  font-size: 14px; margin: 2px 0 10px;
+  font-size: 16px; /* iOS focus-zoom threshold */ margin: 2px 0 10px;
 }
-.ex-search { font-size: 16px; }
 .ex-search:focus { outline: none; border-color: var(--skyblue); }
 .fchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
 .fchips button {
   background: rgba(13,21,36,.8); border: 1px solid var(--line-soft); color: var(--muted);
-  border-radius: 999px; padding: 6px 12px; font-size: 12px; transition: all .15s;
+  border-radius: 999px; padding: 8px 13px; font-size: 12px; transition: all .15s;
 }
 .fchips button.on { color: #16060a; background: var(--amber); border-color: var(--amber); font-weight: 600; }
 .ex-row {
@@ -1087,13 +1175,13 @@ body.calm-motion *, body.calm-motion *::before, body.calm-motion *::after {
 .energy-row .dots span.on { background: var(--amber); box-shadow: 0 0 5px rgba(255,180,92,.6); }
 .been-toggle {
   background: rgba(13,21,36,.8); border: 1px dashed var(--line); color: var(--muted);
-  border-radius: 999px; padding: 6px 13px; font-size: 12px; transition: all .18s;
+  border-radius: 999px; padding: 8px 14px; font-size: 12px; transition: all .18s;
 }
 .been-toggle.on { border-style: solid; border-color: var(--ok); color: var(--ok); }
 .ex-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
 .ex-tabs button {
   flex: 1; background: rgba(13,21,36,.8); border: 1px solid var(--line-soft); color: var(--muted);
-  border-radius: 10px; padding: 8px; font-size: 12.5px; letter-spacing: .06em;
+  border-radius: 10px; padding: 10px 8px; font-size: 12.5px; letter-spacing: .06em;
 }
 .ex-tabs button.on { color: var(--text); border-color: var(--line); background: var(--panel-2); }
 .ex-empty { font-family: var(--serif); font-style: italic; color: var(--muted); font-size: 15px; line-height: 1.5; padding: 8px 0 4px; }
@@ -1108,21 +1196,26 @@ body.calm-motion *, body.calm-motion *::before, body.calm-motion *::after {
 }
 
 /* ------------------------------- toast/footer ------------------------------ */
+/* rendered as a manual popover when supported: dialogs live in the top
+ * layer, and a z-index alone can never paint a confirmation above them */
 #toast {
-  position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(20px);
+  position: fixed; inset: auto; left: 50%; bottom: calc(30px + env(safe-area-inset-bottom));
+  margin: 0; transform: translateX(-50%) translateY(20px);
   background: var(--panel-2); border: 1px solid var(--line);
   padding: 11px 18px; border-radius: 12px; font-size: 13.5px;
   opacity: 0; pointer-events: none; transition: all .3s; z-index: 100;
   box-shadow: 0 12px 40px rgba(0,0,0,.6); max-width: 86vw;
 }
-#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.show, #toast:popover-open { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast:popover-open { display: block; }
 
 footer {
   position: relative; z-index: 20;
   display: flex; justify-content: space-between; gap: 12px;
-  padding: 8px 20px 12px; font-size: 10.5px; color: #5d6880;
+  padding: 8px 20px calc(12px + env(safe-area-inset-bottom));
+  font-size: 10.5px; color: var(--muted);
 }
-footer a { color: #6e7c99; }
+footer a { color: #94a3c0; }
 body:not([data-screen="ask"]) footer { display: none; }
 
 /* ------------------------------- desktop ---------------------------------- */
@@ -1145,11 +1238,20 @@ body:not([data-screen="ask"]) footer { display: none; }
 }
 @media (max-width: 480px) {
   header { flex-wrap: wrap; row-gap: 6px; padding-bottom: 6px; }
-  .wm-sub { display: none; }
-  .ctx { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
   .secondary-row { flex-direction: column; }
+  footer { flex-direction: column; gap: 3px; font-size: 10px; }
+}
+/* short viewports (landscape phones, browser chrome eating height): give
+ * the reveal sheet enough room to show the action row */
+@media (max-height: 520px) {
+  .sheet { max-height: 74%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  * {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important; /* stop infinite loops from strobing */
+    transition-duration: .01ms !important;
+    transition-delay: 0s !important;
+  }
 }

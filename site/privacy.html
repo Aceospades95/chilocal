@@ -34,7 +34,7 @@ a { color:var(--sky); }
 <div class="page">
   <span class="wm">Chi<span class="dot">·</span>Local</span>
   <h1>Privacy, in plain words</h1>
-  <p class="updated">Last updated July 2026</p>
+  <p class="updated">Last updated August 2026</p>
 
   <p>ChiLocal is a members-only night-out picker for Chicago, run by one person —
   not a company harvesting data. This page says exactly what the site stores,
@@ -46,25 +46,37 @@ a { color:var(--sky); }
       password reset or (only if you opted in) the weekly digest.</li>
     <li><b>The name you gave us</b> — so the app can say hi. Any nickname is fine.</li>
     <li><b>A scrypt hash of your password</b> — the password itself is never
-      stored, never readable, never transmitted anywhere after signup.</li>
+      stored and never readable. It travels only when you type it (signing in,
+      resetting it, confirming a deletion), and only its hash touches disk.</li>
     <li><b>Your weekly-digest choice</b> — the checkbox at signup (or in
       Settings). Unchecked means no email, ever, beyond account essentials.</li>
-    <li><b>Session tokens</b> — random, stored only as hashes, expiring after
-      30 days, so you stay signed in.</li>
+    <li><b>Session tokens</b> — random, stored only as hashes, so you stay
+      signed in. Sessions renew while you keep visiting and expire 30 days
+      after your last visit.</li>
+    <li><b>The date you joined</b>, and — while a password reset or email
+      verification is pending — a short-lived token, also stored hashed.</li>
   </ul>
   <p>That's the whole list. All of it lives in one SQLite database on our own
-  server — not in anyone's cloud.</p>
+  server — not in anyone's cloud. (Like any web server, the proxy in front of
+  the site keeps routine access logs for a short while for security; they
+  aren't mined for anything.)</p>
 
   <h2>What we don't do</h2>
   <ul>
     <li>No analytics, trackers, ad pixels, or fingerprinting scripts.</li>
     <li>No selling, renting, or sharing your data with anyone — full stop.</li>
     <li>No third-party sign-in, so no login provider watching you.</li>
-    <li>No location storage — the "find me" feature runs entirely in your
+    <li>No location storage — the “Find me” feature runs entirely in your
       browser and nothing about where you are is sent to us.</li>
-    <li>No marketing email unless you ticked the digest box yourself, and every
-      digest carries an off switch (also in Settings → Your account).</li>
+    <li>No marketing email unless you ticked the digest box yourself — and you
+      can untick it any time in Settings → Your account.</li>
   </ul>
+
+  <h2>Email delivery</h2>
+  <p>When email features are switched on (password reset, verification, the
+  digest), the sending itself goes through an email provider — the only thing
+  it ever sees is your address and the message being sent. Nothing else about
+  your account leaves our server.</p>
 
   <h2>Cookies</h2>
   <p>Exactly one: <b>chilocal_sess</b>, the HttpOnly cookie that keeps you
@@ -79,8 +91,8 @@ a { color:var(--sky); }
   <h2>Deleting your account</h2>
   <p>Settings → Your account → <b>Delete my account</b>. It asks for your
   password, then erases your account, sessions, and email from the database
-  immediately — no grace period, no soft delete, no "we'll keep it for
-  analytics." Gone is gone.</p>
+  immediately — no grace period, no soft delete, no “we'll keep it for
+  analytics.” Gone is gone.</p>
 
   <div class="card">
     <p><b>Questions or requests?</b> Reply to any email ChiLocal has sent you,

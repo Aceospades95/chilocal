@@ -1,3 +1,6 @@
+# The whole stack: the members-only site AND the companion API it locks
+# against. `docker compose up -d --build` from the repo root is a complete,
+# working deployment — sign-in included. Accounts persist in ./data.
 services:
   chilocal:
     build: .
@@ -7,4 +10,24 @@ services:
     # Change the left number to use a different host port.
     ports:
       - "8080:80"
+    environment:
+      # the site container reaches the API over the compose network —
+      # no LAN IPs, no external proxy required
+      - API_UPSTREAM=chilocal-api:8787
+    depends_on:
+      - chilocal-api
+    init: true
+    restart: unless-stopped
+
+  chilocal-api:
+    build: ./server
+    image: chilocal-api:latest
+    container_name: chilocal-api
+    # exposed on the host too so an external proxy (e.g. Nginx Proxy
+    # Manager routing /api) can reach it directly; remove if unused
+    ports:
+      - "8787:8787"
+    volumes:
+      - ./data:/data
+    init: true
     restart: unless-stopped

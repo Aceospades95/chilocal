@@ -1,6 +1,6 @@
 # ChiLocal — the night decides itself
 
-**Tell us the vibe, we'll decide your night.** One concrete plan for tonight
+**Tell us the vibe — we decide your night.** One concrete plan for tonight
 in Chicago — where to go, why it fits, how to get there — in under a minute.
 Built for two: pass-the-phone date-night roulette with vetoes. Never a list.
 

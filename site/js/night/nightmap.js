@@ -32,9 +32,22 @@ export class NightMap {
     this.selected = null;
     this._hovName = null;
     this._tiles = new Map(); // "z/x/y" -> <image> (real-map detail tier)
-    this._reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this._failed = new Map(); // tile key -> retry-after ts (backoff, not hammering)
+    this._zUse = new Map();   // tile z -> when a pass last wanted it (lru cap)
+    this._spotPts = null;     // last markSpots field, for near-miss tap routing
+    // reduced-motion is LIVE (see the _reduced accessor): the media query is
+    // re-read at every use, so an os-level flip mid-session just lands
+    this._mq = matchMedia("(prefers-reduced-motion: reduce)");
+    this._calmForced = false;
     this._build();
   }
+
+  /* the app writes _reduced directly ((calm pref) || media). a write of true
+   * while the query is OFF can only be the app's calm override — remember it;
+   * everything else tracks the live query. (corner: calm chosen while the os
+   * flag was also on reads as media-driven until the app re-applies prefs.) */
+  get _reduced() { return this._calmForced || this._mq.matches; }
+  set _reduced(v) { this._calmForced = !!v && !this._mq.matches; }
 
   _build() {
     const feats = this.geo.features;
@@ -60,6 +73,8 @@ export class NightMap {
     });
 
     this.svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
+    this.svg.setAttribute("role", "img");
+    this.svg.setAttribute("aria-label", "Map of Chicago neighborhoods");
     this.svg.innerHTML = `
       <defs>
         <radialGradient id="nm-water" cx="85%" cy="30%" r="120%">
@@ -92,6 +107,8 @@ export class NightMap {
       <g id="nm-route"></g>
       <g id="nm-hit"></g>
       <g id="nm-pins"></g>
+      <!-- z-order anchor only (showUser inserts before it) — hood and spot
+           names actually live in the html billboard layer (.nm-lbl-layer) -->
       <g id="nm-labels"></g>`;
 
     const hoodsG = this.svg.querySelector("#nm-hoods");
@@ -195,6 +212,11 @@ export class NightMap {
       hit.addEventListener("click", (ev) => {
         ev.stopPropagation();
         if (this._dragMoved || this._justPicked) return; // pan or place-pick, not a pick
+        // fat-finger grace: a tap that lands on the hood but grazes a venue
+        // dot meant the venue — thumbs get ~20 screen px, mice stay precise
+        const near = this.onSpotClick &&
+          this._nearestSpot(ev.clientX, ev.clientY, ev.pointerType === "mouse" ? 10 : 20);
+        if (near) { this.setLabel(null); this.onSpotClick(near.id); return; }
         if (this.onHoodClick) this.onHoodClick(name);
       });
       hit.addEventListener("pointerenter", (ev) => {
@@ -209,6 +231,22 @@ export class NightMap {
     this.cityBox = { x: -W * 0.06, y: -H * 0.02, w: W * 1.24, h: H * 1.04 };
     this._setBox(this.cityBox);
     this._wireInteractions();
+
+    // the projection bakes in the host's size — any resize must re-derive
+    // --uz/--upp, re-lay labels, re-cull, and re-queue tiles
+    this._onResize = () => {
+      clearTimeout(this._rszT);
+      this._rszT = setTimeout(() => {
+        this._gref = null; // cached gesture plane/rect are size-dependent
+        if (this.box) this._setBox(this.box);
+      }, 100);
+    };
+    if (typeof ResizeObserver !== "undefined") {
+      this._ro = new ResizeObserver(this._onResize);
+      this._ro.observe(this.svg.parentElement);
+    }
+    // some mobile engines rotate without a resize callback landing in time
+    window.addEventListener("orientationchange", this._onResize);
   }
 
   /* -------- screen ↔ layout ↔ map-unit projection (tilt-aware) ------------ */
@@ -254,10 +292,18 @@ export class NightMap {
     return { elW, elH, scale,
              offX: (elW - box.w * scale) / 2, offY: (elH - box.h * scale) / 2 };
   }
+  /* per-gesture cache of the expensive reads: getComputedStyle (plane) and
+   * getBoundingClientRect (host) force layout — once per gesture is fine,
+   * once per pointermove is jank. invalidated whenever either can change:
+   * tilt/bearing/explore flips, resize, and camera rest (_endMoveSoon). */
+  _gestureRef() {
+    return this._gref ||= { plane: this._plane(),
+                            host: this.svg.parentElement.getBoundingClientRect() };
+  }
   /* client (viewport) px -> map units. Exact under any tilt. */
   screenToUnits(pxX, pxY) {
-    const host = this.svg.parentElement.getBoundingClientRect();
-    const l = this._unprojLayout(pxX - host.left, pxY - host.top, this._plane());
+    const { plane, host } = this._gestureRef();
+    const l = this._unprojLayout(pxX - host.left, pxY - host.top, plane);
     const f = this._frame();
     return { x: this.box.x + (l.x - f.offX) / f.scale,
              y: this.box.y + (l.y - f.offY) / f.scale };
@@ -341,7 +387,12 @@ export class NightMap {
     const step = () => {
       this._layoutLabels();
       if (performance.now() - t0 < ms) this._projRaf = requestAnimationFrame(step);
-      else { this._projRaf = null; this._queueCull(); this._forceReraster(); }
+      else {
+        this._projRaf = null;
+        this._gref = null; // the plane settled somewhere new
+        this._queueCull();
+        this._forceReraster();
+      }
     };
     this._projRaf = requestAnimationFrame(step);
   }
@@ -359,6 +410,9 @@ export class NightMap {
       st.setProperty("--wd", (DEPTH * z).toFixed(2) + "px");
       st.setProperty("--lift", (12 * z).toFixed(2) + "px");
       st.setProperty("--uz", z.toFixed(4) + "px"); // 1 screen-ish px in map units
+      // map units per TRUE screen pixel — css pairs it with --uz to give
+      // dots/hits a screen-pixel floor: max(calc(var(--uz)*K), calc(var(--upp)*Kpx))
+      st.setProperty("--upp", (b.w / (this.svg.clientWidth || 1)).toFixed(4) + "px");
       const host = this.svg.parentElement;
       host.classList.toggle("zoomed", z < 0.74);
       host.classList.toggle("zoomed2", z < 0.32);
@@ -391,6 +445,7 @@ export class NightMap {
     clearTimeout(this._moveT);
     this._moveT = setTimeout(() => {
       this.svg.parentElement.classList.remove("moving");
+      this._gref = null; // gesture over — next one measures the plane fresh
       if (this._labelPt) this.setLabel(this._labelPt, this._labelText);
       this._syncHover();
       this._snapZoom();
@@ -453,7 +508,7 @@ export class NightMap {
    * is sub-pixel. Keyless, © OpenStreetMap contributors © CARTO. */
   /* basemap styles for the detail tier — user-pickable, all keyless */
   static BASEMAPS = {
-    night: { attrib: "detail © OpenStreetMap contributors © CARTO", native: 512, maxZ: 19,
+    night: { attrib: "map detail © OpenStreetMap contributors, © CARTO", native: 512, maxZ: 19,
              url: (z, x, y) => `https://${"abcd"[(x + y) % 4]}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png` },
     sat:   { attrib: "imagery © Esri, Maxar, Earthstar Geographics", native: 256, maxZ: 19,
              url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}` },
@@ -465,6 +520,7 @@ export class NightMap {
     host.classList.toggle("bm-sat", this._basemap === "sat");
     for (const [, el] of this._tiles) el.remove();
     this._tiles.clear();
+    this._failed.clear(); // the other style's cdn may be perfectly healthy
     const at = host.querySelector(".nm-attrib");
     if (at) at.textContent = NightMap.BASEMAPS[this._basemap]?.attrib || "";
     this._setBox(this.box); // re-derive tiles-on + refetch for the new style
@@ -515,6 +571,9 @@ export class NightMap {
       const key = `${zt}/${x}/${y}`;
       want.add(key);
       if (this._tiles.has(key)) continue;
+      // a tile that just failed sits out its backoff — no request storms
+      const ra = this._failed.get(key);
+      if (ra) { if (Date.now() < ra) continue; this._failed.delete(key); }
       const lng0 = (x / n) * 360 - 180, lng1 = ((x + 1) / n) * 360 - 180;
       const la0 = latOf(y), la1 = latOf(y + 1);
       const img = document.createElementNS(NS, "image");
@@ -527,7 +586,15 @@ export class NightMap {
       img.setAttribute("class", "nm-tile");
       img.dataset.z = zt;
       img.setAttribute("href", bm.url(zt, x, y));
-      img.addEventListener("error", () => { img.remove(); this._tiles.delete(key); });
+      img.addEventListener("error", () => {
+        img.remove();
+        this._tiles.delete(key);
+        this._failed.set(key, Date.now() + 30000); // retry after the backoff
+        if (this._failed.size > 300) { // bounded: drop entries already expired
+          const now = Date.now();
+          for (const [k, t] of this._failed) if (t < now) this._failed.delete(k);
+        }
+      });
       // once loaded, a cheap re-pass can retire the stale parent tiles
       img.addEventListener("load", () => { img.dataset.ok = "1"; this._queueTiles(); });
       // keep the group ordered by z so sharper tiles always paint on top
@@ -542,12 +609,28 @@ export class NightMap {
     let allLoaded = true;
     for (const key of want) {
       const el = this._tiles.get(key);
-      if (!el || !el.dataset.ok) { allLoaded = false; break; }
+      if (el && el.dataset.ok) continue;
+      // a failed tile counts as RESOLVED — otherwise one dead tile pins the
+      // stale zoom level's backdrop on screen forever
+      if (!el && this._failed.has(key)) continue;
+      allLoaded = false; break;
     }
     for (const [key, el] of this._tiles) {
       const z = +el.dataset.z;
       if (z === zt) { if (!want.has(key)) { el.remove(); this._tiles.delete(key); } }
       else if (allLoaded) { el.remove(); this._tiles.delete(key); }
+    }
+    // backstop cap: at most ~3 zoom levels of tiles stay alive — evict the
+    // least-recently-wanted offscreen levels wholesale, never the current one
+    this._zUse.set(zt, Date.now());
+    const levels = new Set();
+    for (const [, el] of this._tiles) levels.add(+el.dataset.z);
+    if (levels.size > 3) {
+      const drop = new Set([...levels].filter((z) => z !== zt)
+        .sort((a, b) => (this._zUse.get(a) || 0) - (this._zUse.get(b) || 0))
+        .slice(0, levels.size - 3));
+      for (const [key, el] of this._tiles)
+        if (drop.has(+el.dataset.z)) { el.remove(); this._tiles.delete(key); }
     }
 
     // approaching the next level's switch point: warm those tiles into the
@@ -717,7 +800,9 @@ export class NightMap {
     }
     // labels must live in the VISIBLE window — not under the panel, not clipped
     const desktop = matchMedia("(min-width: 920px)").matches;
-    const panelW = this.panelW ?? (desktop ? 445 : 0); // app sets 12 when folded
+    // fallback only — app.js owns the authoritative width (it sets panelW on
+    // fold/unfold); 430 matches the panel the css actually draws
+    const panelW = this.panelW ?? (desktop ? 430 : 0);
     const winX1 = desktop ? f.elW - panelW : f.elW - 6;
     const winY1 = desktop ? f.elH - 8 : f.elH * 0.52;
     const kept = [];
@@ -882,25 +967,36 @@ export class NightMap {
       }
     }, true);
 
+    // the pinch reference is rebuilt from the CURRENT two pointers any time
+    // the active set changes (finger down OR up) — math against a stale pair
+    // teleports the camera
+    const rePinch = () => {
+      const [a, b] = [...ptrs.values()];
+      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, box: { ...this.box },
+                mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+      const u = this.screenToUnits(pinch.mid.x, pinch.mid.y);
+      pinch.fx = (u.x - this.box.x) / this.box.w;
+      pinch.fy = (u.y - this.box.y) / this.box.h;
+      start = null;
+    };
+
     svg.addEventListener("pointerdown", (e) => {
       if (!active()) return;
+      if (e.button != null && e.button !== 0) return; // right/middle: not a pan
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
       // NO setPointerCapture: capturing retargets the eventual click to the
       // svg, which silently killed every neighborhood tap for real pointers.
       // Window-level move/up listeners keep the pan alive outside the svg.
       this._stopGlide();
       this._cancelAnim();
+      this._gref = null; // fresh gesture measures the plane/rect once, now
       if (ptrs.size === 1) {
         start = { x: e.clientX, y: e.clientY, box: { ...this.box } };
         this._dragMoved = false;
       } else if (ptrs.size === 2) {
-        const [a, b] = [...ptrs.values()];
-        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), box: { ...this.box },
-                  mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
-        const u = this.screenToUnits(pinch.mid.x, pinch.mid.y);
-        pinch.fx = (u.x - this.box.x) / this.box.w;
-        pinch.fy = (u.y - this.box.y) / this.box.h;
-        start = null;
+        rePinch();
+      } else {
+        pinch = null; // 3+ fingers is no gesture — rebuilt as they lift
       }
     });
     // track the mouse for post-move hover re-sync
@@ -911,11 +1007,14 @@ export class NightMap {
       if (e.pointerType === "mouse") this._lastMouse = null;
     });
 
-    window.addEventListener("pointermove", (e) => {
-      if (!active() || !ptrs.has(e.pointerId)) return;
-      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    // pointermoves outrun the display — fold the stream into ONE camera
+    // update per frame, computed from the freshest pointer positions
+    let moveRaf = 0;
+    const applyPointers = () => {
+      moveRaf = 0;
       if (ptrs.size === 1 && start) {
-        const dxPx = e.clientX - start.x, dyPx = e.clientY - start.y;
+        const [p] = [...ptrs.values()];
+        const dxPx = p.x - start.x, dyPx = p.y - start.y;
         if (!this._dragMoved && Math.hypot(dxPx, dyPx) > 9) {
           this._dragMoved = true;
           this._panning = true;
@@ -926,10 +1025,9 @@ export class NightMap {
         this._beginMove();
         // exact grab: the map point under the cursor at pointerdown stays
         // under the cursor, even through the perspective tilt
-        const plane = this._plane();
-        const host = svg.parentElement.getBoundingClientRect();
+        const { plane, host } = this._gestureRef();
         const l0 = this._unprojLayout(start.x - host.left, start.y - host.top, plane);
-        const l1 = this._unprojLayout(e.clientX - host.left, e.clientY - host.top, plane);
+        const l1 = this._unprojLayout(p.x - host.left, p.y - host.top, plane);
         const f = this._frame(start.box);
         const dx = (l1.x - l0.x) / f.scale, dy = (l1.y - l0.y) / f.scale;
         this._setBox(clampBox({ ...start.box, x: start.box.x - dx, y: start.box.y - dy }));
@@ -944,8 +1042,7 @@ export class NightMap {
         this._beginMove();
         let nb = this._scaleBox(pinch.box, f, pinch.fx, pinch.fy);
         // two-finger pan: follow the midpoint too
-        const plane = this._plane();
-        const host = svg.parentElement.getBoundingClientRect();
+        const { plane, host } = this._gestureRef();
         const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
         const l0 = this._unprojLayout(pinch.mid.x - host.left, pinch.mid.y - host.top, plane);
         const l1 = this._unprojLayout(mid.x - host.left, mid.y - host.top, plane);
@@ -955,11 +1052,17 @@ export class NightMap {
         this._setBox(clampBox(nb));
         this._endMoveSoon();
       }
+    };
+    window.addEventListener("pointermove", (e) => {
+      if (!active() || !ptrs.has(e.pointerId)) return;
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (!moveRaf) moveRaf = requestAnimationFrame(applyPointers);
     });
     const up = (e) => {
       if (!ptrs.has(e.pointerId)) return;
       ptrs.delete(e.pointerId);
-      if (ptrs.size < 2) pinch = null;
+      if (ptrs.size >= 2) rePinch(); // which two fingers changed — re-anchor
+      else pinch = null;
       if (ptrs.size === 1) { // pinch → single-finger: re-anchor the pan
         const [p] = [...ptrs.values()];
         start = { x: p.x, y: p.y, box: { ...this.box } };
@@ -972,33 +1075,65 @@ export class NightMap {
     };
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
+    // alt-tab / app-switch mid-gesture: the pointerup never arrives — drop
+    // the whole hand or the next touch pans against ghost fingers
+    window.addEventListener("blur", () => {
+      ptrs.clear();
+      pinch = null; start = null;
+      this._dragMoved = false;
+      if (this._panning) endPan();
+    });
 
     svg.addEventListener("wheel", (e) => {
       if (!active()) return;
       e.preventDefault();
-      this._cancelAnim();
-      this._userZoomed = true; // arm the rest-snap
-      // trackpad pinch arrives as ctrl+wheel — give it a stronger gear
-      const k = e.ctrlKey ? 0.0042 : 0.0013;
-      const f = clampFactor(this.box, Math.exp(e.deltaY * k));
-      const { fx, fy } = this._anchorFractions(e.clientX, e.clientY);
-      const target = clampBox(this._scaleBox(this.box, f, fx, fy));
-      // trackpads emit fine-grained deltas that are already smooth — easing
-      // them adds pure latency ("floaty" zoom). Only chunky mouse notches
-      // get the glide.
-      if (e.ctrlKey || Math.abs(e.deltaY) < 50) {
-        this._stopGlide();
-        this._beginMove();
-        this._setBox(target);
-        this._endMoveSoon();
-      } else {
-        this._glide(target);
-      }
+      // firefox ships line/page deltas (deltaMode 1/2) — normalize to px
+      // first or its notches barely zoom and always read as "trackpad"
+      const dy = e.deltaMode === 1 ? e.deltaY * 33
+               : e.deltaMode === 2 ? e.deltaY * this.svg.clientHeight
+               : e.deltaY;
+      // one applied update per frame; deltas between frames SUM (latest-wins
+      // would eat zoom speed) and classification keys off the biggest single
+      // step so a burst of fine trackpad deltas still reads as a trackpad
+      const a = this._wheelAcc ||= { dy: 0, mx: 0, x: 0, y: 0, ctrl: false };
+      a.dy += dy;
+      a.mx = Math.max(a.mx, Math.abs(dy));
+      a.x = e.clientX; a.y = e.clientY;
+      a.ctrl = a.ctrl || e.ctrlKey;
+      if (this._wheelRaf) return;
+      this._wheelRaf = requestAnimationFrame(() => {
+        this._wheelRaf = null;
+        const w = this._wheelAcc;
+        this._wheelAcc = null;
+        if (!w) return;
+        this._cancelAnim();
+        this._userZoomed = true; // arm the rest-snap
+        // trackpad pinch arrives as ctrl+wheel — give it a stronger gear
+        const k = w.ctrl ? 0.0042 : 0.0013;
+        const f = clampFactor(this.box, Math.exp(w.dy * k));
+        const { fx, fy } = this._anchorFractions(w.x, w.y);
+        const target = clampBox(this._scaleBox(this.box, f, fx, fy));
+        // trackpads emit fine-grained deltas that are already smooth — easing
+        // them adds pure latency ("floaty" zoom). Only chunky mouse notches
+        // get the glide.
+        if (w.ctrl || w.mx < 50) {
+          this._stopGlide();
+          this._beginMove();
+          this._setBox(target);
+          this._endMoveSoon();
+        } else {
+          this._glide(target);
+        }
+      });
     }, { passive: false });
 
     svg.addEventListener("dblclick", (e) => {
       if (!active()) return;
       e.preventDefault();
+      // a double-click on a hood just launched its framing flight (click one
+      // selected it) — let the flight land instead of yanking the camera;
+      // empty map areas keep the legacy dblclick zoom
+      if (e.target?.classList?.contains("nm-hit")) return;
       this._userZoomed = true; // arm the rest-snap
       const { fx, fy } = this._anchorFractions(e.clientX, e.clientY);
       this.animateTo(clampBox(this._scaleBox(this.box, clampFactor(this.box, 1 / 1.7), fx, fy)), 500);
@@ -1064,6 +1199,7 @@ export class NightMap {
     host.classList.remove("tilt-flat", "tilt-mid", "tilt-full");
     host.classList.add("tilt-" + mode);
     this.tilt = mode;
+    this._gref = null; // the plane is about to move
     // billboards ride the .9s transition; a final cull lands with it
     this._trackProjection();
   }
@@ -1072,9 +1208,17 @@ export class NightMap {
    * every name stays readable. The screen↔map math needs no special case —
    * it inverts whatever matrix the CSS lands on. */
   setBearing(deg) {
-    this.bearing = ((deg % 360) + 360) % 360;
+    const prev = this.bearing || 0;
+    this.bearing = ((deg % 360) + 360) % 360; // math + persistence stay [0,360)
+    // the css var is an UNNORMALIZED accumulator: 350°→380° must animate 30°
+    // forward, and "N" must take the shortest way home — normalizing the var
+    // would spin the diorama the long way round
+    let d = this.bearing - prev;
+    d = ((d % 360) + 540) % 360 - 180;
+    this._bearingCss = (this._bearingCss ?? prev) + d;
     const host = this.svg.parentElement;
-    host.style.setProperty("--bearing", this.bearing + "deg");
+    host.style.setProperty("--bearing", this._bearingCss + "deg");
+    this._gref = null; // the plane is about to move
     // street names (still SVG) counter-rotate on the same .9s curve;
     // the HTML billboards just track the projection frame-by-frame
     host.classList.add("rotating");
@@ -1177,6 +1321,7 @@ export class NightMap {
   /* ------------------------------ explore -------------------------------- */
   setExplore(on) {
     this.svg.parentElement.classList.toggle("explore", on);
+    this._gref = null; // explore flips the tilt transform on/off
     if (!on) { this._setHover(null); this.selectHood(null, { camera: false }); this.disarmPlacePick(); }
     this._queueCull();
   }
@@ -1235,7 +1380,26 @@ export class NightMap {
       return;
     }
     const g = this.hoodGroups.get(name);
-    if (!g) return;
+    if (!g) {
+      // no polygon under this name (micro-hood, alias group): selection must
+      // still answer with a camera move — frame the venue dots the app drops
+      // via markSpots. it calls markSpots synchronously right after us, so
+      // look one tick later, once the fresh field is in
+      if (opts.camera === false) return;
+      return new Promise((r) => setTimeout(r, 0)).then(() => {
+        const pts = this._spotPts;
+        if (!pts || !pts.length || this.selected !== name) return;
+        let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+        for (const p of pts) {
+          x0 = Math.min(x0, p.ux); x1 = Math.max(x1, p.ux);
+          y0 = Math.min(y0, p.uy); y1 = Math.max(y1, p.uy);
+        }
+        const pad = 14; // breathing room around the dot field, in map units
+        return this.animateTo(this._frameBBox(
+          { x: x0 - pad, y: y0 - pad, w: (x1 - x0) + pad * 2, h: (y1 - y0) + pad * 2 },
+          opts), 750);
+      });
+    }
     this._promote(g); // before the class flip so the lift transition survives
     g.classList.add("sel");
     // amber rim as layered VECTOR strokes — CSS drop-shadow filters
@@ -1249,11 +1413,15 @@ export class NightMap {
       g.appendChild(rim);
     }
     if (opts.camera === false) return;
-    const bb = this.hoodBBoxes.get(name);
+    // arrive with tiles at 1 device px per bitmap px — no soft landing
+    return this.animateTo(this._frameBBox(this.hoodBBoxes.get(name), opts), 750);
+  }
+
+  /* FULL-SCREEN framing of a map-unit bbox: it fills the visible window
+   * (insets push it out of the panel's shadow); small boxes clamp so the
+   * tile detail stays within its sharpest levels */
+  _frameBBox(bb, opts = {}) {
     const aspect = this._aspect();
-    // FULL-SCREEN framing: the selected neighborhood fills the visible
-    // window (insets below push it out of the panel's shadow); small
-    // hoods clamp so the tile detail stays within its sharpest levels
     let w = Math.max(bb.w * 1.18, 60), h = Math.max(bb.h * 1.22, 60 / aspect);
     if (w / h < aspect) w = h * aspect; else h = w / aspect;
     let box = { x: bb.x + bb.w / 2 - w / 2, y: bb.y + bb.h / 2 - h / 2, w, h };
@@ -1270,8 +1438,30 @@ export class NightMap {
       box.h = box.w / aspect;
       box.y = cy - box.h / 2;
     }
-    // arrive with tiles at 1 device px per bitmap px — no soft landing
-    return this.animateTo(this._snapBoxScale(box), 750);
+    return this._snapBoxScale(box);
+  }
+
+  /* nearest venue dot to a client point, within maxPx on SCREEN — used to
+   * re-route hood taps that only just missed a dot (tap-target grace) */
+  _nearestSpot(clientX, clientY, maxPx = 20) {
+    const pts = this._spotPts;
+    if (!pts || !pts.length) return null;
+    const { plane, host } = this._gestureRef();
+    const f = this._frame();
+    const sx = clientX - host.left, sy = clientY - host.top;
+    // dots ride the raised tile while a hood is selected (css translateY)
+    const liftU = this.svg.parentElement.classList.contains("hood-sel")
+      ? 18 * (this.box.w / this.cityBox.w) : 0;
+    const upp = this.box.w / (this.svg.clientWidth || 1); // fan offsets are screen px
+    let best = null, bd = maxPx;
+    for (const p of pts) {
+      const ux = p.ux + p.fx * upp, uy = p.uy + p.fy * upp - liftU;
+      const s = this._projLayout(f.offX + (ux - this.box.x) * f.scale,
+                                 f.offY + (uy - this.box.y) * f.scale, plane);
+      const d = Math.hypot(s.x - sx, s.y - sy);
+      if (d < bd) { bd = d; best = p; }
+    }
+    return best;
   }
 
   /* markers for browsed venues (explore mode). One highlighted, or a field
@@ -1291,8 +1481,24 @@ export class NightMap {
     this.clearSpot();
     const g = document.createElementNS(NS, "g");
     g.setAttribute("id", "nm-spot");
+    // venues that share an address share a coordinate — count the pile per
+    // rounded key so colliders can fan into a small ring instead of stacking
+    // into one dot only the topmost of which is tappable
+    const keyOf = (p) => Math.round(this.px(p.lng)) + "," + Math.round(this.py(p.lat));
+    const sizes = new Map(), seen = new Map();
+    for (const p of pts) sizes.set(keyOf(p), (sizes.get(keyOf(p)) || 0) + 1);
+    this._spotPts = [];
     for (const p of pts) {
       const x = this.px(p.lng), y = this.py(p.lat);
+      const key = keyOf(p), n = sizes.get(key);
+      const i = seen.get(key) || 0;
+      seen.set(key, i + 1);
+      let fx = 0, fy = 0; // fan offset, in SCREEN px (applied via --upp below)
+      if (n > 1) {
+        const ang = (i / n) * 2 * Math.PI - Math.PI / 2;
+        fx = +(Math.cos(ang) * 10).toFixed(2);
+        fy = +(Math.sin(ang) * 10).toFixed(2);
+      }
       // radii live in CSS (calc on --uz) so dots hold a constant SCREEN size
       const hit = document.createElementNS(NS, "circle");
       hit.setAttribute("cx", x.toFixed(1)); hit.setAttribute("cy", y.toFixed(1));
@@ -1301,6 +1507,14 @@ export class NightMap {
       dot.setAttribute("cx", x.toFixed(1)); dot.setAttribute("cy", y.toFixed(1));
       dot.setAttribute("class", "nm-spot-dot" + (p.base ? " base" : ""));
       dot.style.pointerEvents = "none";
+      if (fx || fy) {
+        // --upp (map units per screen px) keeps the ring screen-constant at
+        // every zoom — a fixed unit offset would collapse on phones
+        const t = `translate(calc(var(--upp, 1px) * ${fx}), calc(var(--upp, 1px) * ${fy}))`;
+        hit.style.transform = t;
+        dot.style.transform = t;
+      }
+      this._spotPts.push({ ux: x, uy: y, fx, fy, id: p.id });
       // the name tag is an HTML billboard anchored AT the dot: it renders
       // at true screen size (no scale chain to blur it) and the layout
       // pass lifts it a constant few px above the dot at any zoom
@@ -1351,7 +1565,8 @@ export class NightMap {
   async loadTransit(url) {
     if (this._transitLoaded) return;
     this._transitLoaded = true;
-    const gj = await fetch(url).then((r) => r.json());
+    const gj = await fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (!gj || !gj.features) { this._transitLoaded = false; return; } // retry next toggle
     const COLORS = { Red: "#c60c30", Blue: "#00a1de", Brown: "#62361b", Green: "#009b3a",
       Orange: "#f9461c", Purple: "#522398", Pink: "#e27ea6", Yellow: "#f9e300" };
     const host = this.svg.querySelector("#nm-transit");
@@ -1391,16 +1606,20 @@ export class NightMap {
     if (this._stationsLoaded) return;
     this._stationsLoaded = true;
     const data = await fetch(url).then((r) => r.json()).catch(() => null);
-    if (!data) { this._stationsLoaded = false; return; }
+    if (!data || !Array.isArray(data.stations)) { this._stationsLoaded = false; return; }
     const host = this.svg.querySelector("#nm-transit");
     for (const st of data.stations) {
       const c = document.createElementNS(NS, "circle");
       c.setAttribute("cx", this.px(st.lng).toFixed(1));
       c.setAttribute("cy", this.py(st.lat).toFixed(1));
       c.setAttribute("class", "nm-station");
-      const t = document.createElementNS(NS, "title");
-      t.textContent = `${st.n} (${st.l.join(", ")})`;
-      c.appendChild(t);
+      // the css zeroes pointer-events on stations, so an svg <title> could
+      // never fire — turn events back on per-dot and route hover/tap through
+      // the shared tooltip instead
+      c.style.pointerEvents = "auto";
+      const tip = `${st.n} (${(st.l || []).join(", ")})`;
+      c.addEventListener("mouseenter", () => this.setLabel({ lat: st.lat, lng: st.lng }, tip));
+      c.addEventListener("mouseleave", () => this.setLabel(null));
       host.appendChild(c);
     }
   }
@@ -1410,7 +1629,7 @@ export class NightMap {
     if (this._divvyLoaded) return;
     this._divvyLoaded = true;
     const data = await fetch(url).then((r) => r.json()).catch(() => null);
-    if (!data) { this._divvyLoaded = false; return; }
+    if (!data || !Array.isArray(data.stations)) { this._divvyLoaded = false; return; }
     const host = this.svg.querySelector("#nm-divvy");
     const frag = document.createDocumentFragment();
     for (const st of data.stations) {
@@ -1418,9 +1637,12 @@ export class NightMap {
       c.setAttribute("cx", this.px(st.lng).toFixed(1));
       c.setAttribute("cy", this.py(st.lat).toFixed(1));
       c.setAttribute("class", "nm-dock");
-      const t = document.createElementNS(NS, "title");
-      t.textContent = `🚲 ${st.n}${st.cap ? ` · ${st.cap} docks` : ""}`;
-      c.appendChild(t);
+      // same story as stations: css kills pointer-events, so the old <title>
+      // was dead weight — live tooltip via the shared label instead
+      c.style.pointerEvents = "auto";
+      const tip = `🚲 ${st.n}${st.cap ? ` · ${st.cap} docks` : ""}`;
+      c.addEventListener("mouseenter", () => this.setLabel({ lat: st.lat, lng: st.lng }, tip));
+      c.addEventListener("mouseleave", () => this.setLabel(null));
       frag.appendChild(c);
     }
     host.appendChild(frag);
@@ -1429,7 +1651,8 @@ export class NightMap {
   async loadStreets(url) {
     if (this._streetsLoaded) return;
     this._streetsLoaded = true;
-    const gj = await fetch(url).then((r) => r.json());
+    const gj = await fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (!gj || !gj.features?.[0]) { this._streetsLoaded = false; return; } // retry next zoom pass
     const host = this.svg.querySelector("#nm-streets");
     let d = "";
     for (const seg of gj.features[0].geometry.coordinates)
@@ -1455,6 +1678,7 @@ export class NightMap {
     this._queueCull();
   }
   clearSpot() {
+    this._spotPts = null; // no dots, no near-miss routing
     this.svg.querySelector("#nm-spot")?.remove();
     this.lblLayer?.querySelectorAll(".nm-spotlabel").forEach((t) => t.remove());
   }

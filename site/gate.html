@@ -12,8 +12,10 @@
         --amber:#ffb45c; --coral:#ff4b5c; --sky:#64d8ff; }
 * { box-sizing: border-box; }
 html, body { margin:0; height:100%; }
-body { background:#04070e; color:var(--text); display:grid; place-items:center;
+body { background:#04070e; color:var(--text); display:grid; place-items:safe center;
+       overflow-y:auto; padding:max(16px, env(safe-area-inset-top)) 0 max(16px, env(safe-area-inset-bottom));
        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+:focus-visible { outline:2px solid var(--sky); outline-offset:2px; }
 .card { width:min(380px, 92vw); background:linear-gradient(to bottom, rgba(13,21,36,.96), rgba(7,11,21,.98));
         border:1px solid var(--line); border-radius:18px; padding:26px 24px 20px;
         box-shadow:0 24px 60px rgba(0,0,0,.55); }
@@ -23,13 +25,17 @@ body { background:#04070e; color:var(--text); display:grid; place-items:center;
 .wm .dot { color:var(--coral); }
 h1 { font-family:Georgia,serif; font-style:italic; font-weight:400; font-size:17px;
      color:var(--muted); margin:0 0 18px; }
-.tabs { display:flex; gap:4px; background:rgba(255,255,255,.05); border-radius:10px; padding:3px; margin-bottom:14px; }
-.tabs button { flex:1; background:none; border:0; color:var(--muted); padding:8px; border-radius:8px;
-               font-size:13px; cursor:pointer; }
-.tabs button.on { background:var(--panel); color:var(--text); box-shadow:0 1px 6px rgba(0,0,0,.4); }
+/* same pill segments as the app — this door should look like the house */
+.tabs { display:flex; gap:2px; background:rgba(13,21,36,.8); border:1px solid #16223a;
+        border-radius:999px; padding:3px; margin-bottom:14px; }
+.tabs button { flex:1; background:none; border:0; color:var(--muted); padding:9px; border-radius:999px;
+               font-size:13px; cursor:pointer; transition:all .18s; }
+.tabs button.on { background:#111b2e; color:var(--text); font-weight:600;
+                  box-shadow:inset 0 0 0 1px rgba(255,180,92,.55); }
 h2 { font-size:14px; font-weight:600; margin:0 0 2px; }
 .sub { font-size:12px; color:var(--muted); margin:0 0 8px; }
-input { display:block; width:100%; margin:9px 0; padding:12px 13px; font-size:14px; color:var(--text);
+input { display:block; width:100%; margin:9px 0; padding:12px 13px; color:var(--text);
+        font-size:16px; /* under 16px iOS zooms on focus and stays zoomed */
         background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.14); border-radius:10px; }
 input:focus { outline:none; border-color:var(--sky); }
 .chk { display:flex; gap:9px; align-items:flex-start; margin:11px 1px 2px; font-size:12px;
@@ -37,9 +43,12 @@ input:focus { outline:none; border-color:var(--sky); }
 .chk input { display:inline-block; width:auto; margin:2px 0 0; accent-color:var(--amber); }
 .err { color:var(--coral); font-size:12.5px; min-height:16px; margin:4px 0 0; }
 .note { color:var(--sky); font-size:12.5px; margin:0 0 8px; }
-button.go { width:100%; margin-top:12px; padding:13px; font-size:15px; font-weight:600; cursor:pointer;
-            color:#1c0f08; background:linear-gradient(135deg, var(--amber), #ff8f4f);
-            border:0; border-radius:12px; }
+/* the same coral-to-amber serif CTA the app uses — not a knockoff of it */
+button.go { width:100%; margin-top:12px; padding:15px 22px; cursor:pointer;
+            font-family:Georgia,'Times New Roman',serif; font-weight:700; font-size:19px;
+            color:#16060a; background:linear-gradient(100deg, #ff4b5c 0%, #ff7a4b 55%, #ffb45c 130%);
+            border:0; border-radius:18px;
+            box-shadow:0 10px 40px rgba(255,84,74,.35), inset 0 1px 0 rgba(255,255,255,.35); }
 button.go:disabled { opacity:.6; }
 .aux { display:block; margin-top:11px; font-size:12px; color:var(--muted); text-align:center;
        background:none; border:0; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
@@ -73,25 +82,34 @@ button.go:disabled { opacity:.6; }
   <form id="f" novalidate>
     <h2 id="mh">Welcome back</h2>
     <p class="sub" id="ms">Sign in with your email and password.</p>
-    <input id="name" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
-    <input id="email" type="email" placeholder="Email" autocomplete="email" required/>
-    <input id="pass" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" required/>
+    <input id="name" name="nickname" aria-label="What should we call you?" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
+    <input id="email" name="email" type="email" aria-label="Email" placeholder="Email" autocomplete="email" autofocus required/>
+    <input id="pass" name="password" type="password" aria-label="Password, 8 or more characters" placeholder="Password (8+ characters)" autocomplete="current-password" minlength="8" required/>
     <label class="chk" id="digest-row" hidden>
       <input type="checkbox" id="digest"/>
       <span>Email me a short weekly digest of what's good in the city. Optional — unsubscribe anytime.</span>
     </label>
-    <p class="err" id="err"></p>
+    <p class="err" id="err" role="alert"></p>
     <button class="go" id="go" type="submit">Sign in →</button>
     <button class="aux" id="forgot" type="button" hidden>Forgot password?</button>
+    <button class="aux" id="renew" type="button" hidden>Request a new reset link</button>
   </form>
-  <p class="fine">Signup is open — join yourself. Passwords are scrypt-hashed on our own server, sessions live in a secure HttpOnly cookie, and nothing about you leaves the building. <a href="/privacy.html">Privacy policy</a></p>
+  <p class="fine">Signup is open — no invite needed. Your password is scrypt-hashed on our own server — never stored readable, never shared. Sessions live in a secure cookie. <a href="/privacy.html">Privacy policy</a></p>
 </div>
+<noscript><p style="position:fixed;inset:auto 0 20px;text-align:center;color:#8e99ad;font:13px sans-serif">ChiLocal needs JavaScript to sign you in.</p></noscript>
 <script>
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.search);
 const resetToken = params.get("reset") || "";
-let mode = resetToken ? "reset" : "login";
+// the app links here with #forgot so people land straight on the reset form
+let mode = resetToken ? "reset" : location.hash === "#forgot" ? "forgot" : "login";
 let emailOn = false; // /api/health says whether reset links can actually be sent
+
+// raw internal errors would otherwise print verbatim in the card
+const FRIENDLY = { "upstream failed": "Something broke on our end — try again in a minute.",
+                   "bad json": "Something broke on our end — try again in a minute.",
+                   "too large": "That's too much text — trim it and try again." };
+const nice = (msg) => FRIENDLY[msg] || msg;
 
 const COPY = {
   login:  { h: "Welcome back", s: "Sign in with your email and password.", go: "Sign in →" },
@@ -114,11 +132,31 @@ function setMode(m) {
   $("#pass").placeholder = m === "reset" ? "New password (8+ characters)" : "Password (8+ characters)";
   $("#pass").autocomplete = m === "login" ? "current-password" : "new-password";
   $("#forgot").hidden = !(m === "login" && emailOn);
+  $("#renew").hidden = true;
   $("#err").textContent = "";
 }
 $("#t-login").onclick = () => setMode("login");
 $("#t-signup").onclick = () => setMode("signup");
 $("#forgot").onclick = () => setMode("forgot");
+// the escape hatch when a reset link has expired — without it the reset
+// form is a dead end (tabs and forgot are both hidden in reset mode)
+$("#renew").onclick = () => { $("#tabs").hidden = false; setMode("forgot"); };
+
+/* client-side validation: the form is novalidate so WE own the messages —
+ * without this, garbage rides to the server and comes back generic */
+function checkForm() {
+  const err = $("#err");
+  if (mode !== "reset" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#email").value.trim())) {
+    err.textContent = "That email doesn't look right."; return false;
+  }
+  if (mode !== "forgot" && $("#pass").value.length < 8) {
+    err.textContent = "Passwords need 8+ characters."; return false;
+  }
+  if (mode === "signup" && !$("#name").value.trim()) {
+    err.textContent = "Tell us what to call you."; return false;
+  }
+  return true;
+}
 
 function say(msg) { const n = $("#note"); n.textContent = msg; n.hidden = !msg; }
 if (params.get("verified") === "1") say("Email verified — welcome in. Sign in below.");
@@ -127,8 +165,9 @@ if (params.get("verified") === "0") say("That verification link is invalid or ex
 $("#f").onsubmit = async (e) => {
   e.preventDefault();
   const go = $("#go"), err = $("#err");
-  go.disabled = true;
   err.textContent = "";
+  if (!checkForm()) return;
+  go.disabled = true;
   const post = (path, body) => fetch("/api/auth/" + path, {
     method: "POST", credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -138,14 +177,14 @@ $("#f").onsubmit = async (e) => {
   try {
     if (mode === "forgot") {
       const r = await post("forgot", { email: $("#email").value });
-      if (r.error) { err.textContent = r.error; return; }
+      if (r.error) { err.textContent = nice(r.error); return; }
       say("If that email has an account, a reset link is on its way. Check your inbox.");
       setMode("login");
       return;
     }
     if (mode === "reset") {
       const r = await post("reset", { token: resetToken, password: $("#pass").value });
-      if (r.error) { err.textContent = r.error; return; }
+      if (r.error) { err.textContent = nice(r.error); $("#renew").hidden = false; return; }
       say("Password changed — sign in with it below.");
       history.replaceState(null, "", "/gate.html");
       $("#pass").value = "";
@@ -157,10 +196,10 @@ $("#f").onsubmit = async (e) => {
       : { email: $("#email").value, password: $("#pass").value,
           name: $("#name").value, wantsDigest: $("#digest").checked };
     const r = await post(mode, body);
-    if (r.error) { err.textContent = r.error; return; }
+    if (r.error) { err.textContent = nice(r.error); return; }
     location.replace("/"); // session cookie set — the door opens
   } catch {
-    err.textContent = "Can't reach the sign-in server — it may be down. Try again shortly.";
+    err.textContent = "Can't reach the sign-in server — try again shortly.";
   } finally { go.disabled = false; }
 };
 

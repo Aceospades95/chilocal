@@ -109,10 +109,14 @@ function useToken(kind, raw) {
 }
 const SESS_TTL = 30 * 24 * 3600_000;
 const sha256 = (s) => createHash("sha256").update(s).digest("hex");
+/* cost parameters ride inside the salt string ("s2$..."), so they can be
+ * raised later without breaking existing hashes: legacy salts (no prefix)
+ * verify with Node's defaults and get transparently re-hashed on next login */
+const SCRYPT_V2 = { N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024 };
 const scryptHash = (pw, salt) => new Promise((res, rej) =>
-  scrypt(pw, salt, 64, (e, k) => (e ? rej(e) : res(k))));
+  scrypt(pw, salt, 64, salt.startsWith("s2$") ? SCRYPT_V2 : {}, (e, k) => (e ? rej(e) : res(k))));
 async function hashPassword(pw) {
-  const salt = randomBytes(16).toString("hex");
+  const salt = "s2$" + randomBytes(16).toString("hex");
   return { salt, hash: (await scryptHash(pw, salt)).toString("hex") };
 }
 async function verifyPassword(pw, salt, hash) {
@@ -120,18 +124,35 @@ async function verifyPassword(pw, salt, hash) {
   const h = Buffer.from(hash, "hex");
   return k.length === h.length && timingSafeEqual(k, h);
 }
+// burned once against unknown emails so "no such account" costs the same
+// wall-clock as "wrong password" — no timing oracle for who has an account
+const DUMMY_SALT = "s2$" + "0".repeat(32);
+const DUMMY_HASH = "f".repeat(128);
 const pubUser = (u) => ({ id: u.id, email: u.email, name: u.name, created: u.created,
                           wantsDigest: !!u.wants_digest, verified: !!u.verified });
+/* the proxy in front of us is the only party allowed to vouch for the
+ * client (X-Forwarded-For / -Proto) — anyone who reaches the port directly
+ * speaks only for themselves, or they could forge both */
+const PRIVATE_IP = /^(::1|::ffff:)?(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
+const fromTrustedProxy = (req) => PRIVATE_IP.test(req.socket.remoteAddress || "");
+function cookieFlags(req) {
+  const https = fromTrustedProxy(req) && (req.headers["x-forwarded-proto"] || "").includes("https");
+  return https ? "; Secure" : "";
+}
+function setSessionCookie(res, req, token, ttlMs) {
+  res.setHeader("Set-Cookie",
+    `chilocal_sess=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(ttlMs / 1000)}${cookieFlags(req)}`);
+}
 function createSession(res, req, userId) {
   const token = randomBytes(32).toString("hex");
   const now = Date.now();
   db.prepare("INSERT INTO sessions (token_hash, user_id, created, expires) VALUES (?,?,?,?)")
     .run(sha256(token), userId, now, now + SESS_TTL);
-  const secure = (req.headers["x-forwarded-proto"] || "").includes("https") ? "; Secure" : "";
-  res.setHeader("Set-Cookie",
-    `chilocal_sess=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESS_TTL / 1000}${secure}`);
+  setSessionCookie(res, req, token, SESS_TTL);
 }
-function readSession(req) {
+/* pass res to allow rolling renewal: extending the DB row alone is useless —
+ * the browser drops the cookie at its original Max-Age unless we re-set it */
+function readSession(req, res = null) {
   const m = /(?:^|;\s*)chilocal_sess=([a-f0-9]{64})/.exec(req.headers.cookie || "");
   if (!m) return null;
   const row = db.prepare(
@@ -139,10 +160,20 @@ function readSession(req) {
             u.pass_salt, u.pass_hash, s.token_hash, s.expires FROM sessions s
      JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?`).get(sha256(m[1]));
   if (!row || row.expires < Date.now()) return null;
-  if (row.expires - Date.now() < SESS_TTL / 2) // rolling renewal
+  if (res && row.expires - Date.now() < SESS_TTL / 2) { // rolling renewal
     db.prepare("UPDATE sessions SET expires = ? WHERE token_hash = ?")
       .run(Date.now() + SESS_TTL, row.token_hash);
+    setSessionCookie(res, req, m[1], SESS_TTL);
+  }
   return row;
+}
+/* the auth_request endpoint runs on EVERY gated asset — one indexed SELECT,
+ * no user join, no renewal write */
+function hasSession(req) {
+  const m = /(?:^|;\s*)chilocal_sess=([a-f0-9]{64})/.exec(req.headers.cookie || "");
+  if (!m) return false;
+  const row = db.prepare("SELECT expires FROM sessions WHERE token_hash = ?").get(sha256(m[1]));
+  return !!(row && row.expires >= Date.now());
 }
 function clearSession(req, res) {
   const m = /(?:^|;\s*)chilocal_sess=([a-f0-9]{64})/.exec(req.headers.cookie || "");
@@ -154,19 +185,27 @@ setInterval(() => {
   db.prepare("DELETE FROM tokens WHERE expires < ?").run(Date.now());
 }, 6 * 3600_000).unref();
 
-/* auth endpoints get a per-IP budget so passwords can't be guessed in bulk */
+/* auth endpoints get a per-IP budget so passwords can't be guessed in bulk.
+ * XFF is honored only behind the trusted proxy (else it's attacker-chosen),
+ * and overflow evicts the oldest buckets instead of wiping everyone's. */
 const authHits = new Map();
-function rateLimited(req) {
-  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() ||
-             req.socket.remoteAddress || "?";
+function clientIp(req) {
+  const xff = (req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  return (fromTrustedProxy(req) && xff) || req.socket.remoteAddress || "?";
+}
+function bucketLimited(key, max) {
   const now = Date.now();
-  const e = authHits.get(ip) || { n: 0, reset: now + 10 * 60_000 };
+  const e = authHits.get(key) || { n: 0, reset: now + 10 * 60_000 };
   if (now > e.reset) { e.n = 0; e.reset = now + 10 * 60_000; }
   e.n++;
-  authHits.set(ip, e);
-  if (authHits.size > 5000) authHits.clear();
-  return e.n > 25;
+  authHits.delete(key); authHits.set(key, e); // re-insert: Map order ≈ LRU
+  if (authHits.size > 5000)
+    for (const k of [...authHits.keys()].slice(0, 1000)) authHits.delete(k);
+  return e.n > max;
 }
+const rateLimited = (req) => bucketLimited("ip:" + clientIp(req), 25);
+// per-account guessing budget — IP rotation doesn't reset this one
+const emailLimited = (email) => bucketLimited("em:" + email, 15);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /* ------------------------------ tiny helpers ------------------------------ */
@@ -302,15 +341,23 @@ const cleanPlan = (p) => {
 };
 
 /* --------------------------------- router --------------------------------- */
+/* credentialed CORS is a loaded gun — only origins we actually own get it.
+ * (Reflecting arbitrary origins with Allow-Credentials hands any website a
+ * key to drive this API through a visitor's browser.) */
+const EXTRA_ORIGINS = (process.env.CORS_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
+function originAllowed(o) {
+  if (o === PUBLIC_URL || EXTRA_ORIGINS.includes(o)) return true;
+  try { return ["localhost", "127.0.0.1"].includes(new URL(o).hostname); } catch { return false; }
+}
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, "http://x");
   const path = url.pathname.replace(/\/+$/, "") || "/";
-  // credentialed CORS: reflect the origin (cookies never ride on "*")
-  if (req.headers.origin) {
+  if (req.headers.origin && originAllowed(req.headers.origin)) {
     res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Vary", "Origin");
   }
+  res.setHeader("Vary", "Origin");
+  res.setHeader("X-Content-Type-Options", "nosniff");
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
@@ -325,7 +372,8 @@ const server = createServer(async (req, res) => {
 
     /* ------------------------------ accounts ------------------------------ */
     if (path.startsWith("/api/auth/")) {
-      if (req.method !== "GET" && rateLimited(req))
+      // logout is exempt: a rate-limited user must still be able to leave
+      if (req.method !== "GET" && path !== "/api/auth/logout" && rateLimited(req))
         return json(res, 429, { error: "Too many tries — take a breather and try again in a few minutes." });
 
       if (path === "/api/auth/signup" && req.method === "POST") {
@@ -366,10 +414,19 @@ const server = createServer(async (req, res) => {
       if (path === "/api/auth/login" && req.method === "POST") {
         const b = await readBody(req);
         const email = String(b.email || "").trim().toLowerCase();
+        const password = String(b.password || "");
+        if (emailLimited(email))
+          return json(res, 429, { error: "Too many tries for that account — wait a few minutes." });
         const u = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
-        // same message either way — no fishing for which emails exist
-        if (!u || !(await verifyPassword(String(b.password || ""), u.pass_salt, u.pass_hash)))
-          return json(res, 401, { error: "Email or password is wrong." });
+        // same message AND same scrypt cost either way — no fishing for
+        // which emails exist, by response text or by stopwatch
+        const ok = u ? await verifyPassword(password, u.pass_salt, u.pass_hash)
+                     : (await verifyPassword(password, DUMMY_SALT, DUMMY_HASH), false);
+        if (!ok) return json(res, 401, { error: "Email or password is wrong." });
+        if (!u.pass_salt.startsWith("s2$")) { // transparent upgrade to current cost
+          const { salt, hash } = await hashPassword(password);
+          db.prepare("UPDATE users SET pass_salt = ?, pass_hash = ? WHERE id = ?").run(salt, hash, u.id);
+        }
         createSession(res, req, u.id);
         return json(res, 200, { user: pubUser(u) });
       }
@@ -380,14 +437,14 @@ const server = createServer(async (req, res) => {
       }
 
       if (path === "/api/auth/me" && req.method === "GET") {
-        const s = readSession(req);
+        const s = readSession(req, res); // renewal happens here, cookie included
         return json(res, 200, { user: s ? pubUser(s) : null });
       }
 
       // nginx auth_request hits this for EVERY gated asset: status only,
       // 204 = session valid, 401 = show the gate. Cheap by design.
       if (path === "/api/auth/check" && req.method === "GET") {
-        res.writeHead(readSession(req) ? 204 : 401, { "Cache-Control": "no-store" });
+        res.writeHead(hasSession(req) ? 204 : 401, { "Cache-Control": "no-store" });
         return res.end();
       }
 
@@ -419,11 +476,20 @@ const server = createServer(async (req, res) => {
         const u = EMAIL_RE.test(email) ? db.prepare("SELECT * FROM users WHERE email = ?").get(email) : null;
         if (u) {
           const t = makeToken("reset", u.id, 3600_000); // 1 hour
-          sendEmail(email, "Reset your ChiLocal password",
-            `<p>Someone (hopefully you) asked to reset your ChiLocal password.</p>` +
-            `<p><a href="${PUBLIC_URL}/gate.html?reset=${t}">Set a new password</a> — the link is good for one hour.</p>` +
-            `<p>If this wasn't you, ignore this email; your password is unchanged.</p>`)
-            .catch((e) => console.error("reset email failed:", e.message));
+          try {
+            // awaited: telling someone "check your inbox" for an email that
+            // silently failed to send is worse than admitting the hiccup
+            await sendEmail(email, "Reset your ChiLocal password",
+              `<p>Someone (hopefully you) asked to reset your ChiLocal password.</p>` +
+              `<p><a href="${PUBLIC_URL}/gate.html?reset=${t}">Set a new password</a> — the link is good for one hour.</p>` +
+              `<p>If this wasn't you, ignore this email; your password is unchanged.</p>`);
+          } catch (e) {
+            console.error("reset email failed:", e.message);
+            return json(res, 502, { error: "Couldn't send the reset email just now — try again shortly." });
+          }
+        } else {
+          // blur the timing difference vs. the send above
+          await new Promise((r) => setTimeout(r, 150 + Math.random() * 350));
         }
         // same answer whether or not the email exists — no fishing for accounts
         return json(res, 200, { ok: true });
@@ -444,7 +510,14 @@ const server = createServer(async (req, res) => {
       }
 
       if (path === "/api/auth/verify" && req.method === "GET") {
-        const t = useToken("verify", url.searchParams.get("token") || "");
+        // idempotent on purpose: mail scanners prefetch links, and burning
+        // the token on first sight would break it for the actual human.
+        // The token simply lives out its week; the sweeper reaps it.
+        const raw = url.searchParams.get("token") || "";
+        const t = /^[a-f0-9]{64}$/.test(raw)
+          ? db.prepare("SELECT * FROM tokens WHERE token_hash = ? AND kind = 'verify' AND expires >= ?")
+              .get(sha256(raw), Date.now())
+          : null;
         if (t) db.prepare("UPDATE users SET verified = 1 WHERE id = ?").run(t.user_id);
         res.writeHead(302, { Location: `/gate.html?verified=${t ? 1 : 0}`, "Cache-Control": "no-store" });
         return res.end();
@@ -509,11 +582,29 @@ const server = createServer(async (req, res) => {
 
     return json(res, 404, { error: "not found" });
   } catch (e) {
-    const msg = /too large|bad json/.test(String(e?.message)) ? e.message : "upstream failed";
-    return json(res, msg === "upstream failed" ? 502 : 400, { error: msg });
+    // humans read these strings verbatim in red text — keep the raw cause
+    // in the log, hand the user something they can act on
+    if (/too large/.test(String(e?.message)))
+      return json(res, 400, { error: "That's too much text — trim it and try again." });
+    if (/bad json/.test(String(e?.message)))
+      return json(res, 400, { error: "Something broke on our end — try again in a minute." });
+    console.error(`${req.method} ${path} failed:`, e?.message || e);
+    return json(res, 502, { error: "Something broke on our end — try again in a minute." });
   }
 });
 
 server.listen(PORT, () => {
   console.log(`chilocal-api on :${PORT} — cta:${CTA_KEY ? "on" : "off"} events:${TM_KEY ? "on" : "off"} rooms:on auth:on (db: ${DATA_DIR}/chilocal.db)`);
 });
+
+/* docker stop sends SIGTERM to PID 1 — without a handler node just ignores
+ * it and every deploy is a 10s hang + SIGKILL over the accounts database */
+for (const sig of ["SIGTERM", "SIGINT"]) {
+  process.on(sig, () => {
+    server.close(() => {
+      try { db.close(); } catch {}
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(0), 3000).unref(); // stragglers don't hold the door
+  });
+}

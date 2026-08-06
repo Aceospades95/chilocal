@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>ChiLocal — tell us the vibe, we'll decide your night</title>
+<title>ChiLocal — tell us the vibe, we decide your night</title>
 <meta name="description" content="One plan for tonight in Chicago: where to go, why it fits, how to get there. Built for two."/>
 <meta name="theme-color" content="#070c16"/>
 <link rel="manifest" href="manifest.webmanifest"/>
@@ -48,25 +48,25 @@
     <h2 class="gate-mh" id="gate-mh">Welcome back</h2>
     <p class="mutep gate-ms" id="gate-ms">Sign in with your email and password.</p>
     <form id="gate-form" novalidate>
-      <input id="ga-name" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
-      <input id="ga-email" type="email" placeholder="Email" autocomplete="email" required/>
-      <input id="ga-pass" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" required/>
+      <input id="ga-name" name="nickname" aria-label="What should we call you?" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
+      <input id="ga-email" name="email" type="email" aria-label="Email" placeholder="Email" autocomplete="email" required/>
+      <input id="ga-pass" name="password" type="password" aria-label="Password, 8 or more characters" placeholder="Password (8+ characters)" autocomplete="current-password" minlength="8" required/>
       <label class="digest-row" id="ga-digest-row" hidden>
         <input type="checkbox" id="ga-digest"/>
         <span>Email me a short weekly digest of what's good in the city. Optional — unsubscribe anytime.</span>
       </label>
-      <p class="auth-err" id="gate-err" hidden></p>
+      <p class="auth-err" id="gate-err" role="alert" hidden></p>
       <button class="cta slim" id="gate-go" type="submit"><span class="cta-big">Sign in →</span></button>
-      <a class="gate-aux" id="ga-forgot" href="/gate.html" hidden>Forgot password?</a>
+      <a class="gate-aux" id="ga-forgot" href="/gate.html#forgot" hidden>Forgot password?</a>
     </form>
-    <p class="mutep gate-fine">Signup is open — join yourself. Passwords are scrypt-hashed on our own server; sessions live in a secure cookie. <a href="/privacy.html">Privacy policy</a></p>
+    <p class="mutep gate-fine">Signup is open — no invite needed. Your password is scrypt-hashed on our own server — never stored readable, never shared. Sessions live in a secure cookie. <a href="/privacy.html">Privacy policy</a></p>
   </div>
 </section>
 
 <div id="app">
 
   <header>
-    <div id="wordmark" class="wordmark" role="button" tabindex="0">
+    <div id="wordmark" class="wordmark" role="button" tabindex="0" aria-label="ChiLocal — start over">
       <svg class="wm-flag" viewBox="0 0 44 26" aria-hidden="true">
         <rect x="0" y="4"  width="44" height="4.4" rx="1" class="fl-stripe"/>
         <rect x="0" y="17.6" width="44" height="4.4" rx="1" class="fl-stripe"/>
@@ -78,7 +78,7 @@
         </g>
       </svg>
       Chi<span class="dot">·</span>Local</div>
-    <nav id="mode-seg" class="seg mode" aria-label="mode">
+    <nav id="mode-seg" class="seg mode" aria-label="View: Tonight or Explore">
       <button data-m="tonight" class="on">Tonight</button>
       <button data-m="explore">Explore</button>
     </nav>
@@ -97,7 +97,7 @@
     <svg id="nm"></svg>
     <div class="nm-sweep"></div>
     <div class="nm-vignette"></div>
-    <div class="nm-attrib">detail © OpenStreetMap contributors © CARTO</div>
+    <div class="nm-attrib">map detail © OpenStreetMap contributors, © CARTO</div>
   </div>
 
   <!-- explore map controls -->
@@ -116,10 +116,10 @@
       <button id="ov-transit">🚇 L lines</button>
       <button id="ov-metra">🚆 Metra</button>
       <button id="ov-divvy">🚲 Divvy</button>
-      <button id="ov-streets">🛣 Streets</button>
+      <button id="ov-streets">🛣️ Streets</button>
       <button id="ov-locate">📍 Find me</button>
     </div>
-    <span class="hint">drag to pan · scroll to zoom</span>
+    <span class="hint">drag to pan · pinch or scroll to zoom</span>
   </div>
 
   <!-- camera cluster: bottom-right, like every map you've ever used -->
@@ -248,9 +248,9 @@
         <p class="kicker" id="lk-date"></p>
         <h1 id="lk-title" class="lk-title"></h1>
         <div class="lk-stars" aria-hidden="true">★ ★ ★ ★</div>
-        <h2 id="lk-hero" class="lk-hero"></h2>
+        <h2 id="lk-hero" class="lk-hero" role="button" tabindex="0"></h2>
         <p class="rv-meta" id="lk-meta"></p>
-        <p class="lk-second" id="lk-second"></p>
+        <p class="lk-second" id="lk-second" role="button" tabindex="0"></p>
         <p class="mutep" id="lk-profile-hint" hidden>tap a name to see its full profile</p>
         <div class="actions column">
           <a id="lk-directions" class="btn primary" target="_blank" rel="noopener">Get directions</a>
@@ -262,38 +262,38 @@
   </main>
 
   <!-- dialogs -->
-  <dialog id="where">
+  <dialog id="where" aria-labelledby="where-h">
     <button class="x" aria-label="close">×</button>
-    <h3>Where do nights start?</h3>
+    <h3 id="where-h">Where do nights start?</h3>
     <p class="mutep">Your home base — we measure “how far” from here. Saved on this device.</p>
     <button id="where-geo" class="btn ghost">Use my location</button>
-    <input id="where-q" placeholder="Search neighborhoods…" autocomplete="off"/>
+    <input id="where-q" type="search" aria-label="Search neighborhoods" placeholder="Search neighborhoods…" autocomplete="off"/>
     <div id="where-list" class="where-list"></div>
   </dialog>
 
-  <dialog id="nights">
+  <dialog id="nights" aria-labelledby="nights-h">
     <button class="x" aria-label="close">×</button>
-    <h3>The night book</h3>
+    <h3 id="nights-h">The night book</h3>
     <div id="nights-body"></div>
   </dialog>
 
-  <dialog id="addplace">
+  <dialog id="addplace" aria-labelledby="addplace-h">
     <button class="x" aria-label="close">×</button>
-    <h3>Add your own spot</h3>
-    <p class="mutep">Lives on this device, joins your wishlist pool, and the engine can pick it. Suggest it to ChiLocal afterward if it deserves the big list.</p>
-    <input id="ap-name" placeholder="Name of the place *" autocomplete="off"/>
-    <select id="ap-cat" class="ap-select"></select>
+    <h3 id="addplace-h">Add your own spot</h3>
+    <p class="mutep">Lives on this device, joins your saved spots, and becomes fair game for the engine. Suggest it to ChiLocal afterward if it deserves a page in the book.</p>
+    <input id="ap-name" aria-label="Name of the spot, required" placeholder="Name of the spot *" autocomplete="off"/>
+    <select id="ap-cat" class="ap-select" aria-label="Category"></select>
     <div class="dial"><label>Price</label><div class="seg" id="ap-price"></div></div>
     <div class="dial" style="margin-top:10px"><label>What it's for *</label><div class="fchips" id="ap-vibes"></div></div>
-    <textarea id="ap-take" rows="2" maxlength="160" placeholder="Your one-line take (optional)"></textarea>
+    <textarea id="ap-take" rows="2" maxlength="160" aria-label="Your one-line take, optional" placeholder="Your one-line take (optional)"></textarea>
     <div class="ap-locrow">
       <button class="btn ghost" id="ap-pick">📍 Pin it on the map *</button>
       <span id="ap-loc" class="mutep"></span>
     </div>
-    <button class="cta slim" id="ap-save" disabled><span class="cta-big">Save to your places</span></button>
+    <button class="cta slim" id="ap-save" disabled><span class="cta-big">Save to your spots</span></button>
   </dialog>
 
-  <dialog id="auth">
+  <dialog id="auth" aria-label="Sign in or create account">
     <button class="x" aria-label="close">×</button>
     <div class="seg" id="auth-tabs">
       <button data-t="login" class="on">Sign in</button>
@@ -302,22 +302,23 @@
     <h3 id="auth-title">Welcome back</h3>
     <p class="mutep" id="auth-sub">Your nights, on any device.</p>
     <form id="auth-form" novalidate>
-      <input id="au-name" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
-      <input id="au-email" type="email" placeholder="Email" autocomplete="email" required/>
-      <input id="au-pass" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" minlength="8" required/>
+      <input id="au-name" name="nickname" aria-label="What should we call you?" placeholder="What should we call you?" autocomplete="nickname" maxlength="40" hidden/>
+      <input id="au-email" name="email" type="email" aria-label="Email" placeholder="Email" autocomplete="email" required/>
+      <input id="au-pass" name="password" type="password" aria-label="Password, 8 or more characters" placeholder="Password (8+ characters)" autocomplete="current-password" minlength="8" required/>
       <label class="digest-row" id="au-digest-row" hidden>
         <input type="checkbox" id="au-digest"/>
         <span>Email me a short weekly digest of what's good in the city. Optional — unsubscribe anytime.</span>
       </label>
-      <p class="auth-err" id="auth-err" hidden></p>
+      <p class="auth-err" id="auth-err" role="alert" hidden></p>
       <button class="cta slim" id="auth-go" type="submit"><span class="cta-big">Sign in →</span></button>
+      <a class="gate-aux" id="au-forgot" href="/gate.html#forgot" hidden>Forgot password?</a>
     </form>
     <p class="mutep auth-fine">Your password is scrypt-hashed on our own server — never stored readable, never shared. Sessions live in a secure cookie. <a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>
   </dialog>
 
-  <dialog id="settings">
+  <dialog id="settings" aria-labelledby="settings-h">
     <button class="x" aria-label="close">×</button>
-    <h3>Make it yours</h3>
+    <h3 id="settings-h">Make it yours</h3>
     <p class="mutep">Saved on this device. The map repaints live — play with it.</p>
 
     <h4 class="set-h">How it behaves</h4>
@@ -341,9 +342,9 @@
     </div>
 
     <h4 class="set-h">Colors &amp; type</h4>
-    <div class="set-row"><label>Route light <span class="set-hint">route trails, highlights, buttons</span></label><input type="color" id="set-amber" data-var="--amber"/></div>
-    <div class="set-row"><label>The star <span class="set-hint">tonight's pick, your marker, the ★</span></label><input type="color" id="set-coral" data-var="--coral"/></div>
-    <div class="set-row"><label>Sky blue <span class="set-hint">water, links, live transit</span></label><input type="color" id="set-sky" data-var="--skyblue"/></div>
+    <div class="set-row"><label for="set-amber">Route light <span class="set-hint">route trails, highlights, buttons</span></label><input type="color" id="set-amber" data-var="--amber"/></div>
+    <div class="set-row"><label for="set-coral">The star <span class="set-hint">tonight's pick, your marker, the ★</span></label><input type="color" id="set-coral" data-var="--coral"/></div>
+    <div class="set-row"><label for="set-sky">Sky blue <span class="set-hint">water, links, live transit</span></label><input type="color" id="set-sky" data-var="--skyblue"/></div>
     <div class="set-row col"><label>Map palette <span class="set-hint">how the neighborhoods are painted</span></label>
       <div class="seg" id="set-pal">
         <button data-p="classic">Classic</button>
@@ -361,7 +362,7 @@
     </div>
     <button class="btn ghost" id="set-reset">Reset to ChiLocal night</button>
     <div class="set-acct" id="set-acct" hidden>
-      <h3>Your account</h3>
+      <h4 class="set-acct-h">Your account</h4>
       <label class="digest-row">
         <input type="checkbox" id="set-digest"/>
         <span>Weekly digest email — a short note on what's good in the city.</span>
@@ -369,33 +370,33 @@
       <details class="set-danger">
         <summary>Delete my account</summary>
         <p class="mutep">This erases your account, sessions, and email from our server — immediately and for good. Type your password to confirm.</p>
-        <input id="del-pass" type="password" placeholder="Your password" autocomplete="current-password"/>
-        <p class="auth-err" id="del-err" hidden></p>
+        <input id="del-pass" type="password" aria-label="Your password" placeholder="Your password" autocomplete="current-password"/>
+        <p class="auth-err" id="del-err" role="alert" hidden></p>
         <button class="btn ghost danger" id="del-go">Delete everything</button>
       </details>
       <p class="mutep set-privacy"><a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>
     </div>
   </dialog>
 
-  <dialog id="tworoom">
+  <dialog id="tworoom" aria-label="Decide together">
     <button class="x" aria-label="close">×</button>
     <div id="tr-body"></div>
   </dialog>
 
-  <dialog id="stayin">
+  <dialog id="stayin" aria-labelledby="stayin-h">
     <button class="x" aria-label="close">×</button>
-    <h3>Staying in?</h3>
-    <p class="mutep">Full stay-in nights (cook-something with what's fresh, movie roulette, board-game picks) are <b>v2 — we're perfecting going out first.</b> Tonight we can offer one coin flip:</p>
+    <h3 id="stayin-h">Staying in?</h3>
+    <p class="mutep">Full stay-in nights (cooking something with what's fresh, movie roulette, board-game picks) are <b>coming next</b> — we're perfecting going out first. Tonight we can offer one coin flip:</p>
     <button id="coin" class="btn ghost">Flip: cook vs. order in</button>
     <p id="coin-result" class="coin-result"></p>
     <button id="stayin-out" class="cta slim"><span class="cta-big">No — take us out 🎲</span></button>
   </dialog>
 
-  <div id="toast"></div>
+  <div id="toast" popover="manual" role="status" aria-live="polite"></div>
 
   <footer>
-    <span>Facts from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) &amp; <a href="https://data.cityofchicago.org" target="_blank" rel="noopener">Chicago open data</a> · weather by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> · opinions ours</span>
-    <span class="ft-chi">made in Chicago <b class="ft-stars">★★★★</b> <i class="build">build n23</i></span>
+    <span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) · <a href="https://data.cityofchicago.org" target="_blank" rel="noopener">Chicago open data</a> · <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> · opinions ours</span>
+    <span class="ft-chi">made in Chicago <b class="ft-stars" aria-hidden="true">★★★★</b> <i class="build">build n24</i></span>
   </footer>
 </div>
 

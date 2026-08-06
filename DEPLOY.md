@@ -28,8 +28,10 @@ pre-built images**, so we let GitHub build the image and Unraid pull it.
 ## Path B — Compose Manager plugin (builds on the server from git)
 
 If you install **Docker Compose Manager** (Community Apps): add a new stack,
-point it at the GitHub repo URL, Compose Up. It builds locally — no GHCR step,
-and the build-time `fetch-data.sh` pulls full-resolution boundaries.
+point it at the GitHub repo URL, Compose Up. It builds locally — no GHCR
+step. The included `docker-compose.yml` now runs **both containers** (site +
+API) wired together over the compose network, with accounts persisting in
+`./data` — a complete working deployment, sign-in included.
 
 ## Path C — One-off via Unraid terminal
 
@@ -83,9 +85,9 @@ request for the app, its code, and its data must carry a valid session
 cookie, or it 302s to `/gate.html` — a self-contained sign-in / signup
 page. Signup stays open, so people can join themselves.
 
-- The site container asks the API container on every request. Set
-  `API_UPSTREAM` on the **site** container if your API isn't at the
-  default `192.168.1.19:8787`.
+- The site container asks the API container on every request (and also
+  forwards `/api/...` calls to it). Set `API_UPSTREAM` on the **site**
+  container if your API isn't at the default `192.168.1.19:8787`.
 - **The API container must be running** — if it's down, everyone
   (including you) sees only the gate. Locked means locked.
 - Gated assets are served `Cache-Control: private` so Cloudflare can
@@ -155,10 +157,14 @@ the app stores ever changes, update that page in the same PR.
 
 ## Wire it to the site
 
-The frontend calls **same-origin `/api/...`** by default. In Nginx Proxy
-Manager, on the `chilocal.omnia-house.com` proxy host, add a **Custom
-Location**: location `/api` → forward to `http://192.168.1.19:8787`. Done —
-no new public hostname, the existing basic auth keeps covering everything.
+The frontend calls **same-origin `/api/...`** by default, and the site
+container's nginx now **proxies `/api` to the API itself** (wherever
+`API_UPSTREAM` points — default `192.168.1.19:8787`). So with both
+containers running, sign-in works with no extra proxy configuration.
+
+Optional: you can still add a **Custom Location** in Nginx Proxy Manager
+(location `/api` → forward to `http://192.168.1.19:8787`) to shave one hop;
+both routes behave identically.
 
 For LAN testing before the proxy route exists, open the site as
 `https://chilocal.omnia-house.com/?api=http://192.168.1.19:8787`

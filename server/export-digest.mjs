@@ -12,7 +12,13 @@ import { DatabaseSync } from "node:sqlite";
 const DATA_DIR = process.env.DATA_DIR || ".";
 const db = new DatabaseSync(`${DATA_DIR}/chilocal.db`, { readOnly: true });
 
-const csv = (s) => /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+// the leading apostrophe defuses formula injection: a member named
+// "=HYPERLINK(...)" must not execute when this CSV lands in a spreadsheet
+const csv = (s) => {
+  let v = String(s);
+  if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;
+  return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+};
 
 const rows = db.prepare(
   "SELECT email, name, created FROM users WHERE wants_digest = 1 ORDER BY created").all();
