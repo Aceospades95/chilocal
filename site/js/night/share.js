@@ -57,17 +57,38 @@ export function renderShareCard(plan, ctxNight, dateN) {
 
   g.fillStyle = "#8a93a8";
   g.font = "400 40px Georgia, serif";
-  const when = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  // the card names the NIGHT, not the calendar date — at 1am Saturday
+  // you're still out on Friday night; and it uses the app's Chicago clock,
+  // never the phone's timezone
+  let when;
+  try {
+    const [Y, M, D] = String(ctxNight?.nightKey || "").split("-").map(Number);
+    const d = new Date(Y, M - 1, D);
+    if (ctxNight.hour < 4) d.setDate(d.getDate() - 1);
+    when = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  } catch { /* older callers without context fall back to the device date */ }
+  if (!when || /NaN|Invalid/.test(when))
+    when = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   g.fillText(`${when}${dateN ? `  ·  Date #${dateN}` : ""}`, L, 226);
 
+  // long hero names shrink instead of flooding the card — everything must
+  // stay clear of the footer rule
+  let heroSize = 96;
+  g.font = `italic 700 ${heroSize}px Georgia, serif`;
+  while (heroSize > 56 && g.measureText(plan.hero.v.name).width > (W - 2 * L) * 2.2) {
+    heroSize -= 8;
+    g.font = `italic 700 ${heroSize}px Georgia, serif`;
+  }
   g.fillStyle = "#f4eede";
-  g.font = "italic 700 96px Georgia, serif";
-  let y = wrap(g, plan.hero.v.name, L, 400, W - 2 * L, 108);
+  let y = wrap(g, plan.hero.v.name, L, 400, W - 2 * L, Math.round(heroSize * 1.12));
 
-  g.fillStyle = "#64d8ff";
-  g.font = "400 44px -apple-system, 'Segoe UI', sans-serif";
-  g.fillText(`${plan.hero.v.cat}  ·  ${plan.hero.v.hood}`, L, y + 86);
-  y += 86;
+  const sub = [plan.hero.v.cat, plan.hero.v.hood].filter(Boolean).join("  ·  ");
+  if (sub) {
+    g.fillStyle = "#64d8ff";
+    g.font = "400 44px -apple-system, 'Segoe UI', sans-serif";
+    g.fillText(sub, L, y + 86);
+    y += 86;
+  }
 
   if (plan.second) {
     g.fillStyle = "#ffb45c";
@@ -86,8 +107,9 @@ export function renderShareCard(plan, ctxNight, dateN) {
     y = wrap(g, plan.third.venue.name, L + 190, y + 98, W - 2 * L - 190, 70) + 6;
   }
 
-  // the why, quoted (older history entries may not have one)
-  if (plan.why) {
+  // the why, quoted (older history entries may not have one) — skipped
+  // entirely when a three-stop crawl leaves no room above the footer rule
+  if (plan.why && y + 266 <= H - 190) {
     g.fillStyle = "#aab4c8";
     g.font = "italic 42px Georgia, serif";
     y = wrap(g, `“${plan.why}”`, L, y + 150, W - 2 * L, 58);
@@ -110,8 +132,9 @@ export function renderShareCard(plan, ctxNight, dateN) {
 export async function sharePlan(plan, ctxNight, dateN) {
   const canvas = renderShareCard(plan, ctxNight, dateN);
   const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+  if (!blob) return "failed"; // canvas tainted or out of memory — say so upstream
   const file = new File([blob], "tonight.png", { type: "image/png" });
-  const text = `Tonight: ${plan.hero.v.name}${plan.second ? " → " + plan.second.venue.name : ""}${plan.third ? " → " + plan.third.venue.name : ""} (${plan.hero.v.hood}). Decided by ChiLocal.`;
+  const text = `Tonight: ${plan.hero.v.name}${plan.second ? " → " + plan.second.venue.name : ""}${plan.third ? " → " + plan.third.venue.name : ""}${plan.hero.v.hood ? ` (${plan.hero.v.hood})` : ""}. Decided by ChiLocal.`;
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], text }); return "shared"; }
     catch (e) { if (e.name === "AbortError") return "aborted"; }

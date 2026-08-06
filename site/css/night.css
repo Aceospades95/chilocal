@@ -45,6 +45,9 @@ a { color: var(--skyblue); text-decoration: none; }
 a:hover { text-decoration: underline; }
 /* keyboard users get one consistent, visible ring — mouse users never see it */
 :focus-visible { outline: 2px solid var(--skyblue); outline-offset: 2px; }
+/* headings focused programmatically (screen changes move focus for AT)
+ * aren't interactive — no ring on them */
+[tabindex="-1"]:focus-visible { outline: none; }
 * { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 
 #app { position: relative; height: 100dvh; display: flex; flex-direction: column; opacity: 0; transition: opacity .5s; }

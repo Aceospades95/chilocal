@@ -23,12 +23,28 @@ const DEFAULTS = () => ({
 export function loadMemory() {
   try {
     const m = JSON.parse(localStorage.getItem(KEY) || "null");
-    if (m && typeof m === "object") return { ...DEFAULTS(), ...m };
+    if (m && typeof m === "object") {
+      const d = { ...DEFAULTS(), ...m };
+      // a half-corrupted save must not crash every .map/.length below it
+      for (const k of ["dates", "saved", "generated", "upNext"])
+        if (!Array.isArray(d[k])) d[k] = [];
+      for (const k of ["been", "hoodVisits"])
+        if (!d[k] || typeof d[k] !== "object" || Array.isArray(d[k])) d[k] = {};
+      return d;
+    }
   } catch { /* corrupted — start fresh */ }
   return DEFAULTS();
 }
+
+/* the app registers one warning here — quietly losing someone's night log
+ * is worse than a single heads-up; the callback fires once, then unhooks */
+let onSaveError = null;
+export function onMemorySaveError(fn) { onSaveError = fn; }
 function save(m) {
-  try { localStorage.setItem(KEY, JSON.stringify(m)); } catch { /* full/blocked */ }
+  try { localStorage.setItem(KEY, JSON.stringify(m)); }
+  catch {
+    if (onSaveError) { const fn = onSaveError; onSaveError = null; fn(); }
+  }
 }
 
 export function setHome(m, home) { m.home = home; save(m); }

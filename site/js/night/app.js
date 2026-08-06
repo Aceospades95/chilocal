@@ -2,21 +2,24 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n23";
-import { buildContext } from "./context.js?v=n23";
+import { prepVenues, decide, scoreVenue, pickSecond, secondPool, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n24";
+import { buildContext } from "./context.js?v=n24";
 import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated,
-         starUpNext, unstarUpNext, isUpNext } from "./memory.js?v=n23";
-import { NightMap } from "./nightmap.js?v=n23";
-import { sharePlan } from "./share.js?v=n23";
+         starUpNext, unstarUpNext, isUpNext, onMemorySaveError } from "./memory.js?v=n24";
+import { NightMap } from "./nightmap.js?v=n24";
+import { sharePlan } from "./share.js?v=n24";
 
 // the build tag also lives in the footer — the first question when a deploy
 // "didn't take" is always "which build am I actually looking at?"
-console.info("ChiLocal · build v=n23");
+console.info("ChiLocal · build v=n24");
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+/* a toggle that reads right to a screen reader too — every .on flip should
+ * carry aria-pressed along with it */
+const press = (el, on) => { el.classList.toggle("on", on); el.setAttribute("aria-pressed", String(!!on)); };
 
 const PREFS_KEY = "chilocal.prefs.v1";
 const MY_KEY = "chilocal.myplaces.v1";
@@ -73,33 +76,47 @@ function probeApi() {
  * Sessions are HttpOnly cookies — the page never sees a token. */
 async function authMe() {
   try {
-    const d = await api("/api/auth/me", { signal: AbortSignal.timeout(4000) }).then((r) => r.json());
-    S.user = d.user || null;
-  } catch { S.user = null; }
+    const r = await api("/api/auth/me", { signal: AbortSignal.timeout(4000) });
+    // only a real answer signs anyone out — a proxy hiccup or a dead wifi
+    // hop must not log out a known-good session
+    if (r.status === 401) S.user = null;
+    else if (r.ok) {
+      const d = await r.json();
+      S.user = d.user || null;
+    }
+  } catch { /* network blip — keep whoever we already know */ }
   renderAcct();
+}
+
+/* the avatar menu open/close, with aria-expanded kept honest */
+function setAcctMenu(open) {
+  $("#acct-menu").hidden = !open;
+  $("#acct-chip").setAttribute("aria-expanded", String(!!open));
 }
 
 function renderAcct() {
   const chip = $("#acct-chip");
   if (S.user) {
-    chip.textContent = (S.user.name || S.user.email)[0].toUpperCase();
+    // a server-side record can be missing a name (or, corrupted, an email)
+    chip.textContent = ((S.user.name || S.user.email || "?")[0] || "?").toUpperCase();
     chip.classList.add("in");
   } else {
     chip.textContent = "👤";
     chip.classList.remove("in");
   }
   const menu = $("#acct-menu");
+  menu.setAttribute("role", "menu");
   menu.innerHTML = S.user ? `
-      <div class="am-head"><b>${esc(S.user.name)}</b><span>${esc(S.user.email)}</span></div>
-      <button class="am-item" data-a="settings">⚙ Settings</button>
-      <button class="am-item" data-a="logout">Log out</button>` :
+      <div class="am-head"><b>${esc(S.user.name || S.user.email || "You")}</b><span>${esc(S.user.email || "")}</span></div>
+      <button class="am-item" role="menuitem" data-a="settings">⚙️ Settings</button>
+      <button class="am-item" role="menuitem" data-a="logout">Sign out</button>` :
     (S.api?.auth ? `
-      <button class="am-item join" data-a="auth">★ Sign in / join ChiLocal</button>
-      <button class="am-item" data-a="settings">⚙ Settings</button>` : `
-      <button class="am-item" data-a="settings">⚙ Settings</button>
-      <div class="am-note">accounts arrive with the companion server</div>`);
+      <button class="am-item join" role="menuitem" data-a="auth">★ Sign in / join ChiLocal</button>
+      <button class="am-item" role="menuitem" data-a="settings">⚙️ Settings</button>` : `
+      <button class="am-item" role="menuitem" data-a="settings">⚙️ Settings</button>
+      <div class="am-note">accounts aren't switched on here yet</div>`);
   $$(".am-item", menu).forEach((b) => b.onclick = () => {
-    menu.hidden = true;
+    setAcctMenu(false);
     if (b.dataset.a === "settings") { renderAcctSettings(); $("#settings").showModal(); }
     if (b.dataset.a === "auth") openAuth("login");
     if (b.dataset.a === "logout") {
@@ -112,16 +129,32 @@ function renderAcct() {
   });
 }
 
+/* client-side sanity checks before any auth fetch — the server would say
+ * no anyway, but a round trip to learn your email has no @ is rude */
+function authClientError(t, email, pass, name) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim())) return "That email doesn't look right.";
+  if (String(pass || "").length < 8) return "Passwords need 8+ characters.";
+  if (t !== "login" && !String(name || "").trim()) return "Tell us what to call you.";
+  return null;
+}
+/* the server's raw failure strings are dev-speak — translate before showing */
+const politeErr = (msg) => /^(upstream failed|bad json|too large)$/i.test(String(msg || "").trim())
+  ? "Something broke on our end — try again in a minute." : msg;
+
 function openAuth(tab) {
   const dlg = $("#auth");
   const setTab = (t) => {
-    $$("#auth-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
+    $$("#auth-tabs button").forEach((b) => press(b, b.dataset.t === t));
     $("#au-name").hidden = t === "login";
     $("#au-digest-row").hidden = t === "login";
     $("#au-pass").autocomplete = t === "login" ? "current-password" : "new-password";
-    $("#auth-title").textContent = t === "login" ? "Welcome back" : "Join ChiLocal";
-    $("#auth-sub").textContent = t === "login" ? "Your nights, on any device." : "A name, an email, a password — that's the whole form.";
+    // same words as the gate — one product, one door
+    $("#auth-title").textContent = t === "login" ? "Welcome back" : "Create your account";
+    $("#auth-sub").textContent = t === "login"
+      ? "Your nights, on any device."
+      : "Pick a name, and you're in — it takes ten seconds.";
     $("#auth-go .cta-big").textContent = t === "login" ? "Sign in →" : "Create account →";
+    $("#au-forgot").hidden = !(t === "login" && S.api?.email);
     $("#auth-err").hidden = true;
     dlg.dataset.tab = t;
   };
@@ -132,6 +165,8 @@ function openAuth(tab) {
     const t = dlg.dataset.tab;
     const err = $("#auth-err");
     err.hidden = true;
+    const bad = authClientError(t, $("#au-email").value, $("#au-pass").value, $("#au-name").value);
+    if (bad) { err.textContent = bad; err.hidden = false; return; }
     const go = $("#auth-go");
     go.disabled = true;
     try {
@@ -144,12 +179,14 @@ function openAuth(tab) {
         signal: AbortSignal.timeout(8000),
         body: JSON.stringify(body),
       }).then((x) => x.json());
-      if (r.error) { err.textContent = r.error; err.hidden = false; return; }
+      if (r.error) { err.textContent = politeErr(r.error); err.hidden = false; return; }
       S.user = r.user;
       dlg.close();
       $("#au-pass").value = "";
       renderAcct();
-      toast(t === "login" ? `Welcome back, ${r.user.name}.` : `Welcome to the city, ${r.user.name}.`);
+      toast(t === "login"
+        ? (r.user.name ? `Welcome back, ${r.user.name}.` : "Welcome back.")
+        : `Welcome to the city${r.user.name ? `, ${r.user.name}` : ""}.`);
     } catch {
       err.textContent = "Couldn't reach the server — try again.";
       err.hidden = false;
@@ -241,32 +278,64 @@ function polygonAt(ll) {
 }
 
 /* ------------------------------ boot ------------------------------------- */
+const okJson = (r) => { if (!r.ok) throw new Error("fetch " + r.status); return r.json(); };
+
+/* one failed fetch used to mean a permanent black screen (#app never gets
+ * .ready) — now it means this card and a retry button */
+function bootFail() {
+  document.body.classList.remove("booting");
+  let el = $("#boot-fail");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "boot-fail";
+    el.style.cssText = "position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:24px;background:#04070e;";
+    document.body.appendChild(el);
+  }
+  el.innerHTML = `
+    <div class="gate-card" style="text-align:center">
+      <h2 style="margin:0 0 8px">The city didn't load.</h2>
+      <p class="mutep">Your connection hiccuped before we could fetch tonight's map. Nothing's lost.</p>
+      <button class="cta slim" id="boot-retry"><span class="cta-big">Try again →</span></button>
+    </div>`;
+  $("#boot-retry").onclick = () => {
+    el.remove();
+    document.body.classList.add("booting");
+    boot();
+  };
+}
+
 async function boot() {
+ try {
   const prefs = loadPrefs();
-  S.budget = prefs.budget ?? 2;
-  S.dial = prefs.dial ?? "hop";
-  S.party = prefs.party ?? "couple";
+  // saved prefs can be stale or hand-edited — never let a bad value crash
+  // the dial lookup later
+  S.budget = [1, 2, 3, 4].includes(prefs.budget) ? prefs.budget : 2;
+  S.dial = DIST_DIALS.some((d) => d.id === prefs.dial) ? prefs.dial : "hop";
+  S.party = ["couple", "group", "solo"].includes(prefs.party) ? prefs.party : "couple";
   S.mem = loadMemory();
+  onMemorySaveError(() => toast("Heads up — this browser isn't saving your nights."));
 
   const [venuesRaw, geo, ctx, baseRaw] = await Promise.all([
-    fetch("data/venues.json?v=n23").then((r) => r.json()),
-    fetch("data/neighborhoods.min.geojson?v=n23").then((r) => r.json()),
+    fetch("data/venues.json?v=n24").then(okJson),
+    fetch("data/neighborhoods.min.geojson?v=n24").then(okJson),
     buildContext(),
     // the map book: every neighborhood's baseline spots (OSM-verified,
     // Reddit/press-ranked) — explore-only, never Tonight-engine picks
-    fetch("data/baseline.json?v=n23").then((r) => r.json()).catch(() => ({ venues: [] })),
+    fetch("data/baseline.json?v=n24").then(okJson).catch(() => ({ venues: [] })),
   ]);
   // CTA knowledge: station list is tiny — fetch in the background, degrade silently
-  fetch("data/cta-stations.min.json?v=n23").then((r) => r.json())
+  fetch("data/cta-stations.min.json?v=n24").then((r) => r.json())
     .then((d) => { S.stations = d.stations; }).catch(() => { S.stations = null; });
   // micro-neighborhood names (Bronzeville, Ravenswood, Buena Park…) — the
   // names locals use, resolved to the official boundary that contains them
-  fetch("data/hood-aliases.json?v=n23").then((r) => r.json())
+  fetch("data/hood-aliases.json?v=n24").then((r) => r.json())
     .then((d) => { S.hoodAliases = d.aliases; }).catch(() => { S.hoodAliases = null; });
   probeApi(); // companion server (live arrivals, events, two-phone) — optional
   S.visitor = !!prefs.visitor;
   S.baseVenues = venuesRaw.venues;
-  S.base = (baseRaw.venues || []).map((v) => ({ ...v, base: true, hood: v.hood || v.geom }));
+  // baseline spots go through the same hours parser as curated ones — a
+  // closed map-book bar must say "closed", not "hours unverified"
+  S.base = prepVenues(baseRaw.venues || []).map((v) => ({ ...v, base: true, hood: v.hood || v.geom }));
   S.showBase = prefs.mapbook !== "curated";
   S.geo = geo;
   refreshVenues();
@@ -306,9 +375,9 @@ async function boot() {
 
   // restore map prefs
   S.map.setBasemap(prefs.basemap || "night");
-  $$("#bm-seg button").forEach((b) => b.classList.toggle("on", b.dataset.b === (prefs.basemap || "night")));
+  $$("#bm-seg button").forEach((b) => press(b, b.dataset.b === (prefs.basemap || "night")));
   S.map.setTilt(prefs.tilt || "mid");
-  $$("#tilt-seg button").forEach((b) => b.classList.toggle("on", b.dataset.t === (prefs.tilt || "mid")));
+  $$("#tilt-seg button").forEach((b) => press(b, b.dataset.t === (prefs.tilt || "mid")));
   if (prefs.bearing) {
     S.map.setBearing(prefs.bearing);
     $('#cam-seg button[data-c="north"]').classList.add("on");
@@ -325,8 +394,13 @@ async function boot() {
   wireStatic();
   show("ask");
   $("#app").classList.add("ready");
+  document.body.classList.remove("booting");
   // some people live in Explore — let the app open there
   if (prefs.startView === "explore") setView("explore");
+ } catch (e) {
+  console.error("boot failed", e);
+  bootFail();
+ }
 }
 
 function newSession() {
@@ -337,24 +411,61 @@ function newSession() {
 
 /* ------------------------------ screens ---------------------------------- */
 function show(name) {
+  const prev = S.screen;
   S.screen = name;
   for (const sec of $$(".screen")) sec.classList.toggle("active", sec.id === "screen-" + name);
   const mapMode = name === "deciding" || name === "reveal" || name === "explore";
   $("#mapwrap").classList.toggle("on", mapMode);
   $("#mapwrap").classList.toggle("deciding", name === "deciding");
   document.body.dataset.screen = name;
+  // land keyboard/screen-reader focus on the new headline, not wherever it
+  // was stranded on the old screen
+  const head = $("#screen-" + name)?.querySelector("h1, h2");
+  if (head) { head.setAttribute("tabindex", "-1"); head.focus({ preventScroll: true }); }
+  syncHistory(name, prev);
 }
+
+/* ------------------------- back-button integration -------------------------
+ * One history entry per screen you can stand on, so the phone's back
+ * gesture walks back through the flow instead of leaving the site.
+ * "deciding" is transient — it must never become a back target. */
+let histNav = false; // true while a popstate is being applied
+function syncHistory(name, prev) {
+  if (histNav || name === prev || name === "deciding") return;
+  try {
+    if (name === "ask") history.replaceState({ screen: "ask" }, "");
+    else history.pushState({ screen: name }, "");
+  } catch { /* history can be sandboxed — back just leaves, like before */ }
+}
+window.addEventListener("popstate", (e) => {
+  if (!S.mem) return; // still at the gate — nothing to walk back through
+  const target = e.state?.screen || "ask";
+  histNav = true;
+  try {
+    if (target === S.screen) return;
+    if (target === "explore") { if (S.view !== "explore") setView("explore"); }
+    else if (target === "reveal" && S.plan && S.view === "tonight") show("reveal");
+    else if (target === "locked" && S.plan && S.view === "tonight") show("locked");
+    else if (target === "vibes" && S.view === "tonight") { renderVibes(); show("vibes"); }
+    else if (target === "two" && S.p1 && S.view === "tonight") {
+      if (S.twoStep === "pass") S.twoStep = "p1";
+      renderTwoForm(S.twoStep === "p2" && S.p2 ? "p2" : "p1");
+      show("two");
+    } else if (target === "pass" && S.p1 && S.view === "tonight") show("pass");
+    else resetToAsk();
+  } finally { histNav = false; }
+});
 
 /* ------------------------------ mode switch ------------------------------- */
 function setView(view) {
   if (S.view === view) return;
   if (S.screen === "deciding") return; // don't yank the wheel mid-decision
   S.view = view;
-  $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === view));
+  $$("#mode-seg button").forEach((b) => press(b, b.dataset.m === view));
   if (view === "explore") {
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n23");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n24");
     if (S.ex.hood) S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
     else S.exCam = S.map.cityView(exInset(), tiltZoom());
     applyPassportView(); // the passport tint survives mode round-trips
@@ -373,9 +484,11 @@ function setView(view) {
 function renderContextChip() {
   const c = S.ctx;
   const bits = [c.dateLabel];
-  if (c.temp != null) bits.push(`${Math.round(c.temp)}° ${c.desc}`);
+  // weather that didn't load (or maps to no known code) is simply not
+  // mentioned — a header muttering "offline" all night reads like a bug
+  if (c.ok && c.temp != null)
+    bits.push(`${Math.round(c.temp)}°${c.desc && c.desc !== "—" ? ` ${c.desc}` : ""}`);
   if (c.sunsetLabel) bits.push(c.sunsetLabel);
-  if (!c.ok) bits.push("weather offline");
   $("#ctx-chip").textContent = bits.join(" · ");
 }
 
@@ -383,7 +496,7 @@ function renderContextChip() {
 function renderAsk() {
   const homeBtn = $("#home-chip");
   homeBtn.innerHTML = S.mem.home
-    ? `from <b>${esc(S.mem.home.name)}</b> <span class="edit">change</span>`
+    ? `from <b>${esc(hoodDisplay(S.mem.home.name))}</b> <span class="edit">change</span>`
     : `<b>Set your home base</b> — where do nights start?`;
 
   const n = S.mem.dates.length;
@@ -392,7 +505,7 @@ function renderAsk() {
 
   const nudge = habitNudge(S.mem);
   const el = $("#nudge");
-  if (nudge && !S.session?.avoidHood) {
+  if (nudge && !S.avoidHood) {
     el.innerHTML = `You always end up in <b>${esc(nudge.hood)}</b> (${nudge.count}×). <button class="linkish" id="nudge-btn">Ban it for tonight</button>`;
     el.hidden = false;
     $("#nudge-btn").onclick = () => {
@@ -401,25 +514,25 @@ function renderAsk() {
     };
   } else el.hidden = true;
 
-  $("#visit-chip").classList.toggle("on", !!S.visitor);
+  press($("#visit-chip"), !!S.visitor);
   $("#visit-chip").innerHTML = S.visitor
     ? `🧳 <b>Visitor mode on</b> <span class="edit">tap to turn off</span>`
     : `🧳 Visiting Chicago? <span class="edit">tourist-friendly picks</span>`;
 
   // party toggle
-  $$("#party-seg button").forEach((b) => b.classList.toggle("on", b.dataset.v === S.party));
+  $$("#party-seg button").forEach((b) => press(b, b.dataset.v === S.party));
 }
 
 /* --------------------------- dial-it-in screen ---------------------------- */
 function renderVibes() {
   const grid = $("#vibe-grid");
   grid.innerHTML = VIBES.map((v) => `
-    <button class="vibe-card ${S.vibe === v.id ? "on" : ""}" data-v="${v.id}">
+    <button class="vibe-card ${S.vibe === v.id ? "on" : ""}" aria-pressed="${S.vibe === v.id}" data-v="${v.id}">
       <span class="vi">${v.icon}</span><span class="vn">${esc(v.name)}</span>
     </button>`).join("");
   $$(".vibe-card", grid).forEach((b) => b.onclick = () => {
     S.vibe = b.dataset.v;
-    $$(".vibe-card", grid).forEach((x) => x.classList.toggle("on", x === b));
+    $$(".vibe-card", grid).forEach((x) => press(x, x === b));
     $("#go-dial").disabled = false;
   });
   renderDials("#dials-out");
@@ -430,17 +543,17 @@ function renderDials(sel) {
   const el = $(sel);
   el.innerHTML = `
     <div class="dial"><label>Budget</label><div class="seg" id="seg-budget">
-      ${[1, 2, 3, 4].map((n) => `<button data-v="${n}" class="${S.budget === n ? "on" : ""}">${"$".repeat(n)}</button>`).join("")}
+      ${[1, 2, 3, 4].map((n) => `<button data-v="${n}" class="${S.budget === n ? "on" : ""}" aria-pressed="${S.budget === n}">${"$".repeat(n)}</button>`).join("")}
     </div></div>
     <div class="dial"><label>How far</label><div class="seg" id="seg-dist">
-      ${DIST_DIALS.map((d) => `<button data-v="${d.id}" class="${S.dial === d.id ? "on" : ""}">${d.label}</button>`).join("")}
+      ${DIST_DIALS.map((d) => `<button data-v="${d.id}" class="${S.dial === d.id ? "on" : ""}" aria-pressed="${S.dial === d.id}">${d.label}</button>`).join("")}
     </div></div>`;
   $$("#seg-budget button", el).forEach((b) => b.onclick = () => {
-    S.budget = +b.dataset.v; $$("#seg-budget button", el).forEach((x) => x.classList.toggle("on", x === b));
+    S.budget = +b.dataset.v; $$("#seg-budget button", el).forEach((x) => press(x, x === b));
     savePrefs({ ...loadPrefs(), budget: S.budget, dial: S.dial, party: S.party });
   });
   $$("#seg-dist button", el).forEach((b) => b.onclick = () => {
-    S.dial = b.dataset.v; $$("#seg-dist button", el).forEach((x) => x.classList.toggle("on", x === b));
+    S.dial = b.dataset.v; $$("#seg-dist button", el).forEach((x) => press(x, x === b));
     savePrefs({ ...loadPrefs(), budget: S.budget, dial: S.dial, party: S.party });
   });
 }
@@ -479,7 +592,7 @@ function renderTwoForm(who) {
   }
 
   $("#two-vibes").innerHTML = VIBES.map((v) => `
-    <button class="vibe-card sm ${p.vibes.includes(v.id) ? "on" : ""}" data-v="${v.id}">
+    <button class="vibe-card sm ${p.vibes.includes(v.id) ? "on" : ""}" aria-pressed="${p.vibes.includes(v.id)}" data-v="${v.id}">
       <span class="vi">${v.icon}</span><span class="vn">${esc(v.name)}</span>
     </button>`).join("");
   $$("#two-vibes .vibe-card").forEach((b) => b.onclick = () => {
@@ -487,20 +600,20 @@ function renderTwoForm(who) {
     const i = p.vibes.indexOf(id);
     if (i >= 0) p.vibes.splice(i, 1);
     else { if (p.vibes.length === 2) p.vibes.shift(); p.vibes.push(id); }
-    $$("#two-vibes .vibe-card").forEach((x) => x.classList.toggle("on", p.vibes.includes(x.dataset.v)));
+    $$("#two-vibes .vibe-card").forEach((x) => press(x, p.vibes.includes(x.dataset.v)));
     validateTwo(who);
   });
 
   $("#two-binaries").innerHTML = BINARIES.map((q) => `
     <div class="binary" data-q="${q.id}">
-      <button data-side="a" class="${p.picks[q.id] === "a" ? "on" : ""}">${esc(q.a)}</button>
+      <button data-side="a" class="${p.picks[q.id] === "a" ? "on" : ""}" aria-pressed="${p.picks[q.id] === "a"}">${esc(q.a)}</button>
       <span class="or">or</span>
-      <button data-side="b" class="${p.picks[q.id] === "b" ? "on" : ""}">${esc(q.b)}</button>
+      <button data-side="b" class="${p.picks[q.id] === "b" ? "on" : ""}" aria-pressed="${p.picks[q.id] === "b"}">${esc(q.b)}</button>
     </div>`).join("");
   $$("#two-binaries .binary").forEach((row) => {
     $$("button", row).forEach((b) => b.onclick = () => {
       p.picks[row.dataset.q] = b.dataset.side;
-      $$("button", row).forEach((x) => x.classList.toggle("on", x === b));
+      $$("button", row).forEach((x) => press(x, x === b));
       validateTwo(who);
     });
   });
@@ -508,6 +621,13 @@ function renderTwoForm(who) {
 }
 
 function validateTwo(who) {
+  // once the guest's picks are sent, the button stays sent — re-enabling
+  // it here would quietly offer a second, contradictory submit
+  if (S.remote?.sent) {
+    $("#two-next").disabled = true;
+    $("#two-next").textContent = "Sent ✓ — no peeking";
+    return;
+  }
   const p = S[who];
   const done = p.vibes.length >= 1 && Object.keys(p.picks).length === BINARIES.length;
   $("#two-next").disabled = !done;
@@ -517,7 +637,9 @@ function validateTwo(who) {
     who === "p1" ? "Done — pass the phone →" : "Decide our night →";
 }
 
-/* both players' answers are in — fold them into engine inputs and decide */
+/* both players' answers are in — fold them into engine inputs and decide.
+ * the answers set TONIGHT's dials on the session, never the saved prefs —
+ * one game of roulette must not rewrite what you dialed in for yourself */
 function finishTwo() {
   const asPrefs = (p) => ({
     vibes: p.vibes,
@@ -527,11 +649,17 @@ function finishTwo() {
   S.p1e = asPrefs(S.p1); S.p2e = asPrefs(S.p2);
   const cheap = [S.p1, S.p2].filter((p) => p.picks.cheap === "a").length;
   const close = [S.p1, S.p2].filter((p) => p.picks.close === "a").length;
-  S.budget = cheap >= 1 ? 2 : 3;                    // anyone says cheap → cheap wins
-  S.dial = close === 2 ? "walk" : close === 1 ? "hop" : "any";
+  if (!S.session) newSession();
+  S.session.budget = cheap >= 1 ? 2 : 4; // anyone says cheap → cheap wins; both go big → go big
+  S.session.dial = close === 2 ? "walk" : close === 1 ? "hop" : "any";
   S.mode = "two";
   runDecision();
 }
+
+/* tonight's effective dials: session overrides (two-player answers,
+ * only-my-list) win over the saved prefs, for this run only */
+const effBudget = () => S.session?.budget ?? S.budget;
+const effDial = () => (DIST_DIALS.some((d) => d.id === S.session?.dial) ? S.session.dial : S.dial);
 
 function twoNext() {
   if (S.remote?.role === "guest") return guestSend();
@@ -575,7 +703,9 @@ async function hostRoom() {
   try {
     const r = await api("/api/room", { method: "POST", signal: AbortSignal.timeout(5000) }).then((x) => x.json());
     if (!r.code) throw new Error();
-    S.remote = { role: "host", code: r.code, timer: null, seenVeto: 0 };
+    // rev counts every plan we publish (rerolls, promoted alts, crawls) —
+    // the guest compares rev, so no change ever slips past their screen
+    S.remote = { role: "host", code: r.code, timer: null, seenVeto: 0, rev: 0 };
     $("#tr-body").innerHTML = `
       <h3>Room <b class="tr-code">${esc(r.code)}</b></h3>
       <p class="mutep">Your partner: <b>Decide together → Join with their code</b> on their phone. Codes last 2 hours.</p>
@@ -610,7 +740,7 @@ function joinRoomForm() {
     try {
       const r = await api(`/api/room/${inp.value}`, { signal: AbortSignal.timeout(5000) }).then((x) => x.json());
       if (r.error) throw new Error(r.error);
-      S.remote = { role: "guest", code: inp.value, timer: null, shownRoll: -1 };
+      S.remote = { role: "guest", code: inp.value, timer: null, shownRev: null };
       $("#tworoom").close();
       S.p1 = { vibes: [], picks: {} }; // the guest's own answers live in p1 locally
       S.twoStep = "p1";
@@ -635,6 +765,14 @@ function hostWaitForGuest() {
     if (!S.remote || S.remote.role !== "host") return;
     try {
       const r = await api(`/api/room/${S.remote.code}`, { signal: AbortSignal.timeout(5000) }).then((x) => x.json());
+      if (r.error) {
+        // the room died server-side (codes last 2 hours) — an honest dead
+        // end beats a spinner that polls a ghost forever
+        clearInterval(S.remote.timer); S.remote.timer = null;
+        $("#tr-body").innerHTML = `<h3>That room expired.</h3>
+          <p class="mutep">Codes last two hours. Close this and start a fresh one — same game.</p>`;
+        return;
+      }
       if (r.guest?.vibes?.length) {
         clearInterval(S.remote.timer); S.remote.timer = null;
         S.p2 = { vibes: r.guest.vibes, picks: r.guest.picks || {} };
@@ -646,13 +784,19 @@ function hostWaitForGuest() {
 }
 
 async function guestSend() {
+  const go = $("#two-next");
+  if (go.disabled) return; // a double-tap must not submit twice
+  go.disabled = true;
   try {
     await api(`/api/room/${S.remote.code}/submit`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(5000),
       body: JSON.stringify({ role: "guest", prefs: { vibes: S.p1.vibes, picks: S.p1.picks } }),
     });
-  } catch { toast("Couldn't send — try again."); return; }
+  } catch { toast("Couldn't send — try again."); go.disabled = false; return; }
+  // sent for good — validateTwo keeps the button in this state from here on
+  S.remote.sent = true;
+  go.textContent = "Sent ✓ — no peeking";
   guestWait();
 }
 
@@ -667,7 +811,9 @@ function guestWait() {
         <div class="spinner sm"><span></span><span></span><span></span></div>`;
       return;
     }
-    S.remote.shownRoll = p.roll;
+    // track the host's publish counter (rev), not the roll — promoted
+    // alternates and crawls change the plan without changing the roll
+    S.remote.shownRev = p.rev ?? p.roll ?? 0;
     $("#tr-body").innerHTML = `
       <p class="kicker">TONIGHT'S PLAN${p.roll ? ` · TAKE ${p.roll + 1}` : ""} · CHOSEN FOR BOTH OF YOU</p>
       <h3 class="tr-hero">${esc(p.hero)}</h3>
@@ -675,7 +821,7 @@ function guestWait() {
       ${p.why ? `<p class="tr-why">“${esc(p.why)}”</p>` : ""}
       ${room.vetoUsed
         ? `<p class="mutep">Your veto is spent. It's decided.</p>`
-        : `<button class="btn ghost" id="tr-veto">🙅 Use our one veto</button>`}`;
+        : `<button class="btn ghost" id="tr-veto">🙅 Use your one veto</button>`}`;
     const vb = $("#tr-veto");
     if (vb) vb.onclick = async () => {
       vb.disabled = true;
@@ -696,7 +842,13 @@ function guestWait() {
     if (!S.remote || S.remote.role !== "guest") return;
     try {
       const r = await api(`/api/room/${S.remote.code}`, { signal: AbortSignal.timeout(5000) }).then((x) => x.json());
-      if (r.plan && r.plan.roll !== S.remote.shownRoll) render(r);
+      if (r.error) {
+        clearInterval(S.remote.timer); S.remote.timer = null;
+        $("#tr-body").innerHTML = `<h3>The room's gone.</h3>
+          <p class="mutep">It expired or they started over. Check with them and join a fresh code.</p>`;
+        return;
+      }
+      if (r.plan && (r.plan.rev ?? r.plan.roll ?? 0) !== S.remote.shownRev) render(r);
       else if (r.vetoUsed && $("#tr-veto")) render(r);
     } catch { /* keep polling */ }
   }, 2500);
@@ -706,20 +858,31 @@ function guestWait() {
 function postRoomPlan() {
   if (S.remote?.role !== "host" || !S.plan?.hero) return;
   const p = S.plan;
+  S.remote.rev = (S.remote.rev || 0) + 1;
   api(`/api/room/${S.remote.code}/submit`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ role: "host", plan: {
       hero: p.hero.v.name, hood: p.hero.v.hood, why: p.why,
       second: p.second?.venue.name || null, third: p.third?.venue.name || null,
-      roll: S.session.roll } }),
+      roll: S.session.roll, rev: S.remote.rev } }),
   }).catch(() => { /* summary is a courtesy; the host screen is the source */ });
   if (S.remote.timer) clearInterval(S.remote.timer);
   S.remote.timer = setInterval(async () => {
     if (!S.remote || S.remote.role !== "host") return;
     try {
       const r = await api(`/api/room/${S.remote.code}`, { signal: AbortSignal.timeout(5000) }).then((x) => x.json());
+      if (r.error) {
+        // the room expired under us — stop polling a ghost, and be honest
+        // that the remote veto channel is gone
+        clearInterval(S.remote.timer); S.remote.timer = null;
+        toast("The two-phone room expired — their veto can't reach you anymore.");
+        return;
+      }
       if (r.veto > S.remote.seenVeto) {
         S.remote.seenVeto = r.veto;
+        // a veto that limps in after the night is locked changes nothing —
+        // Date #N is already in the book
+        if (S.remote.locked || S.screen === "locked") return;
         S.vetoes.p2 = 0;
         S.session.vetoed.add(S.plan.hero.v.id);
         S.session.roll++;
@@ -733,9 +896,9 @@ function postRoomPlan() {
 /* ------------------------------ deciding --------------------------------- */
 const THINK_LINES = [
   (c) => c.temp != null ? `Reading the sky — ${Math.round(c.temp)}° and ${c.desc}` : "Reading the sky",
-  () => "Cross-referencing 179 places worth your time",
+  () => `Cross-referencing ${S.venues.length} places worth your time`,
   () => "Skipping everywhere you've already been",
-  (c) => c.hour >= 21 ? "Filtering for open-late only" : "Checking listed hours",
+  (c) => (c.hour >= 21 || c.hour < 4) ? "Filtering for open-late only" : "Checking listed hours",
   () => "Weighing the neighborhoods",
   () => "Arguing with ourselves so you don't have to",
 ];
@@ -747,10 +910,20 @@ function origin() {
 async function runDecision() {
   if (!S.mem.home) { openWhere(() => runDecision()); return; }
   if (!S.session) newSession();
+  // a room veto can land while the host is off in Explore — flip back to
+  // tonight BEFORE the deciding screen locks the view switcher, or the app
+  // strands on a spinner nothing can dismiss
+  if (S.view !== "tonight") setView("tonight");
+  const wasScreen = S.screen === "deciding" ? "ask" : S.screen;
 
   show("deciding");
   S.map.resetView(500);
   S.map.startScan();
+  // rebuild tonight's context every run — a tab left open since happy hour
+  // must not score venues like it's still daylight (weather keeps riding
+  // its own 30-minute cache, so this is usually instant)
+  S.ctx = await buildContext();
+  renderContextChip();
   const lines = S.session.onlyList
     ? [() => "Only your list tonight — as requested", ...THINK_LINES]
     : S.session.onlyGeom
@@ -766,7 +939,8 @@ async function runDecision() {
 
   const input = {
     mode: S.mode, vibe: S.mode === "out" ? S.vibe : null,
-    budget: S.budget, maxMi: DIST_DIALS.find((d) => d.id === S.dial).mi,
+    budget: effBudget(),
+    maxMi: (DIST_DIALS.find((d) => d.id === effDial()) || DIST_DIALS[1]).mi,
     origin: origin(), party: S.party, visitor: !!S.visitor,
     p1: S.p1e || null, p2: S.p2e || null,
   };
@@ -783,8 +957,9 @@ async function runDecision() {
   }
 
   let plan = decide(venues, input, S.ctx, memv, S.session);
-  // graceful widening: never come back empty-handed
-  if (plan.empty && S.dial !== "any") {
+  // graceful widening: never come back empty-handed. hood- and list-locked
+  // sessions already run at maxMi 20 — "widening" to 15 would shrink them
+  if (plan.empty && effDial() !== "any" && !S.session.onlyGeom && !S.session.onlyList) {
     input.maxMi = 15;
     plan = decide(venues, input, S.ctx, memv, S.session);
     if (!plan.empty) plan.widened = "distance";
@@ -800,9 +975,25 @@ async function runDecision() {
   clearInterval(timer);
   S.map.stopScan();
 
-  if (S.view !== "tonight") return; // user walked away mid-decision
+  // user walked away mid-decision — put back the screen we took, never
+  // leave "deciding" stranded on stage
+  if (S.view !== "tonight") { show(wasScreen); return; }
   if (plan.empty) {
     show("ask");
+    if (S.mode === "two" && !S.session.onlyList) {
+      // both players' answers survive — one tap runs the same overlap back
+      const el = $("#nudge");
+      el.innerHTML = `Tonight beat the overlap of you two. <button class="linkish" id="retry-two">Run it back — same answers</button>`;
+      el.hidden = false;
+      $("#retry-two").onclick = () => {
+        el.hidden = true;
+        S.session.excluded.clear();
+        S.session.roll++;
+        runDecision();
+      };
+      toast("Nothing fits you both right now — loosen a call, or run it back.");
+      return;
+    }
     toast(S.session.onlyList
       ? "Your list came up empty for tonight — save a few more spots first."
       : "Even we couldn't make that work tonight. Loosen a dial?");
@@ -815,6 +1006,25 @@ async function runDecision() {
 }
 
 /* ------------------------------- reveal ----------------------------------- */
+/* the first listed opening from (day, minutes) forward — fuel for the
+ * closed line ("opens Tu 5 PM"), never a claim beyond the parsed rules */
+const DAY_ABBR = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+function nextOpening(parsed, day, minutes) {
+  if (!parsed || parsed.always) return null;
+  const spansFor = (d) => {
+    let last = null;
+    for (const r of parsed.rules) if (r.days.has(d)) last = r.spans; // later rules override
+    return last;
+  };
+  for (let d = 0; d < 7; d++) {
+    const dd = (day + d) % 7;
+    const spans = (spansFor(dd) || []).filter((sp) => d > 0 || sp.from > minutes)
+      .sort((a, b) => a.from - b.from);
+    if (spans.length) return `${DAY_ABBR[dd]} ${fmtClock(spans[0].from % 1440)}`;
+  }
+  return null;
+}
+
 function hoursLine(v) {
   const st = openState(v._hours, S.ctx.day, S.ctx.minutes);
   const checkUrl = v.site || ("https://www.google.com/maps/search/?api=1&query=" +
@@ -826,6 +1036,9 @@ function hoursLine(v) {
   if (st && !st.open) {
     const later = openState(v._hours, S.ctx.day, S.ctx.planMinutes);
     if (later?.open) return `<span class="dot warn"></span> Opens later tonight <a href="${esc(checkUrl)}" target="_blank" rel="noopener">check ↗</a>`;
+    // we KNOW it's closed — say so instead of shrugging "unverified"
+    const next = nextOpening(v._hours, S.ctx.day, S.ctx.minutes);
+    return `<span class="dot warn"></span> Closed right now${next ? ` — opens ${esc(next)}` : ""} <a href="${esc(checkUrl)}" target="_blank" rel="noopener">check ↗</a>`;
   }
   return `<span class="dot unk"></span> Hours unverified — <a href="${esc(checkUrl)}" target="_blank" rel="noopener">check before you go ↗</a>`;
 }
@@ -833,7 +1046,9 @@ function hoursLine(v) {
 function metaLine(v) {
   const mi = haversineMi(origin(), v);
   const bits = [v.cat, v.hood, "$".repeat(v.price), travelLabel(mi)];
-  return bits.map(esc).join(" · ");
+  // non-breaking spaces inside each token: the line may wrap BETWEEN facts,
+  // never mid-fact ("🚲 ~21 / min" read like a typo)
+  return bits.map((b) => esc(b).replaceAll(" ", " ")).join(" · ");
 }
 
 /* CTA knowledge: the nearest L station within a real walk */
@@ -882,7 +1097,7 @@ function planRisks(plan) {
   else if (v.outdoor && !v.indoor && S.ctx.precipProb != null && S.ctx.precipProb >= 40)
     risks.push(`${S.ctx.precipProb}% rain risk tonight and this one lives outdoors.`);
   if (haversineMi(origin(), v) > 8)
-    risks.push("It's a real trek from your base — budget the ride.");
+    risks.push("It's a real trek from your home base — budget the ride.");
   if (v.approx) risks.push("Location is approximate — it's a stroll, not one door.");
   return risks;
 }
@@ -911,7 +1126,7 @@ function renderReveal() {
   $("#rv-meta").textContent = "";
   $("#rv-meta").innerHTML = metaLine(v);
   $("#rv-take").textContent = v.take;
-  $("#rv-why").innerHTML = `<span class="why-k">Why tonight:</span> ${esc(why)}${S.plan.widened ? esc(` (We loosened the ${S.plan.widened} dial — the strict version came up empty.)`) : ""}`;
+  $("#rv-why").innerHTML = `<span class="why-k">Why tonight:</span> ${esc(why)}${S.plan.widened ? esc(` (We loosened the ${S.plan.widened === "distance" ? "how-far" : S.plan.widened} dial — the strict version came up empty.)`) : ""}`;
   const rvL = lNote(v);
   $("#rv-hours").innerHTML = hoursLine(v) +
     (v._event ? ` <span class="tips evt">· 🎫 tonight here: ${v._event.url ? `<a href="${esc(v._event.url)}" target="_blank" rel="noopener">${esc(v._event.name)}</a>` : esc(v._event.name)}${v._event.time ? ` (${esc(v._event.time)})` : ""}</span>` : "") +
@@ -950,7 +1165,7 @@ function renderReveal() {
       ${stop(1, v.name, "start here", null)}
       ${stop(2, second.venue.name, `${travelLabel(second.mi)} from stop 1`, second.venue.take)}
       ${third ? stop(3, third.venue.name, `${travelLabel(third.mi)} from stop 2`, third.venue.take)
-              : (crawlOption() ? `<button id="rv-crawl" class="linkish crawl-link">＋ Add stop 3 — make it a crawl</button>` : "")}`;
+              : (crawlOption() ? `<button id="rv-crawl" class="linkish crawl-link">+ Add stop 3 — make it a crawl</button>` : "")}`;
     const cb = $("#rv-crawl");
     if (cb) cb.onclick = makeCrawl;
   } else sec.hidden = true;
@@ -980,15 +1195,20 @@ function renderReveal() {
       </button>`).join("")}` : "") + debugPanel(S.plan);
   $$("#rv-alts .alt").forEach((b) => b.onclick = () => promoteAlt(+b.dataset.i));
 
-  // two-player vetoes
+  // two-player vetoes. two-phone rooms: player two vetoes from their own
+  // screen — showing their button here would let player one spend it
   const vt = $("#rv-vetoes");
   if (S.mode === "two") {
     vt.hidden = false;
+    const twoPhone = S.remote?.role === "host";
     vt.innerHTML = `
       <button id="veto1" ${S.vetoes.p1 ? "" : "disabled"}>Veto — player one${S.vetoes.p1 ? "" : " (used)"}</button>
-      <button id="veto2" ${S.vetoes.p2 ? "" : "disabled"}>Veto — player two${S.vetoes.p2 ? "" : " (used)"}</button>`;
+      ${twoPhone
+        ? `<span class="mutep">${S.vetoes.p2 ? "Player two vetoes from their phone." : "Player two's veto is spent."}</span>`
+        : `<button id="veto2" ${S.vetoes.p2 ? "" : "disabled"}>Veto — player two${S.vetoes.p2 ? "" : " (used)"}</button>`}`;
     $("#veto1").onclick = () => useVeto("p1");
-    $("#veto2").onclick = () => useVeto("p2");
+    const v2 = $("#veto2");
+    if (v2) v2.onclick = () => useVeto("p2");
   } else vt.hidden = true;
 
   show("reveal");
@@ -1013,11 +1233,13 @@ const planEntry = (p) => ({
   why: p.why || null,
 });
 
-/* the crawl: chain a walkable third stop onto tonight's plan */
+/* the crawl: chain a walkable third stop onto tonight's plan — candidates
+ * come from the open/not-vetoed pool, never the raw book */
 function crawlOption() {
   const { hero, second } = S.plan;
   if (!second) return null;
-  return buildCrawl(hero.v, second, S.venues, { budget: S.budget }, S.ctx);
+  const pool = secondPool(S.venues, S.ctx, S.session);
+  return buildCrawl(hero.v, second, pool, { budget: effBudget() }, S.ctx);
 }
 function makeCrawl() {
   const crawl = crawlOption();
@@ -1035,10 +1257,11 @@ function promoteAlt(i) {
   S.plan.hero = alt;
   S.plan.third = null; // the crawl was chained off the old hero's stops
   S.session.excluded.add(alt.v.id);
-  const input = { vibe: S.mode === "out" ? S.vibe : null, budget: S.budget };
-  // recompute pairing + why for the new hero
-  S.plan.second = pickSecond(alt.v, S.venues.filter((x) =>
-    haversineMi(origin(), x) <= DIST_DIALS.find((d) => d.id === S.dial).mi + 1), { vibe: input.vibe, budget: S.budget }, S.ctx);
+  const input = { vibe: S.mode === "out" ? S.vibe : null, budget: effBudget() };
+  // recompute pairing + why for the new hero — from the open/not-vetoed
+  // pool, so a promoted alt can't inherit a closed or vetoed second stop
+  S.plan.second = pickSecond(alt.v, secondPool(S.venues, S.ctx, S.session),
+    { vibe: input.vibe, budget: input.budget }, S.ctx);
   S.plan.why = whyLine(alt.v, alt.reasons, input, S.ctx, alt.extra);
   renderReveal();
 }
@@ -1054,12 +1277,18 @@ function useVeto(who) {
 
 function reroll() {
   S.session.roll++;
-  if (S.session.roll === 3) toast("Third roll. At some point the problem is you two.");
+  if (S.session.roll === 3) toast(S.party === "solo"
+    ? "Third roll. At some point the problem is you."
+    : "Third roll. At some point the problem is you two.");
   runDecision();
 }
 
 /* ------------------------------- locked ----------------------------------- */
 function lockIn() {
+  // locked means locked — stop the room poll so a guest veto that limps in
+  // later can't reroll a night that's already in the book
+  if (S.remote?.timer) { clearInterval(S.remote.timer); S.remote.timer = null; }
+  if (S.remote) S.remote.locked = true;
   const n = lockDate(S.mem, S.plan, S.vibe);
   const v = S.plan.hero.v;
   $("#lk-date").textContent = `Date #${n}`;
@@ -1067,6 +1296,8 @@ function lockIn() {
   const heroBtn = $("#lk-hero");
   heroBtn.textContent = v.name;
   heroBtn.onclick = () => openVenueProfile(v.id);
+  // role="button" divs don't fire click for Enter/Space on their own
+  heroBtn.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); heroBtn.click(); } };
   $("#lk-meta").innerHTML = metaLine(v);
   const sec = S.plan.second, thr = S.plan.third;
   const secEl = $("#lk-second");
@@ -1074,6 +1305,8 @@ function lockIn() {
     (thr ? ` · stop 3 · ${thr.venue.name} — ${travelLabel(thr.mi)}` : "") : "";
   secEl.style.display = sec ? "" : "none";
   secEl.onclick = sec ? () => openVenueProfile(sec.venue.id) : null;
+  secEl.onkeydown = sec ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); secEl.click(); } } : null;
+  secEl.tabIndex = sec ? 0 : -1;
   secEl.classList.toggle("clicky", !!sec);
   $("#lk-profile-hint").hidden = false;
 
@@ -1115,9 +1348,9 @@ function openWhere(cb) {
   const render = (q = "") => {
     const ql = q.toLowerCase();
     const zone = !ql ? `<div class="where-zones"><span class="where-k">STAYING DOWNTOWN?</span>${
-      HOTEL_ZONES.map((n) => `<button data-n="${esc(n)}">🏨 ${esc(n)}</button>`).join("")}</div>` : "";
+      HOTEL_ZONES.map((n) => `<button data-n="${esc(n)}">🏨 ${esc(hoodDisplay(n))}</button>`).join("")}</div>` : "";
     list.innerHTML = zone + feats.filter((n) => n.toLowerCase().includes(ql)).slice(0, 60)
-      .map((n) => `<button data-n="${esc(n)}">${esc(n)}</button>`).join("");
+      .map((n) => `<button data-n="${esc(n)}">${esc(hoodDisplay(n))}</button>`).join("");
     $$("button", list).forEach((b) => b.onclick = () => chooseHome(b.dataset.n));
   };
   render();
@@ -1137,13 +1370,16 @@ function hoodCenter(name) {
   return { lat: sy / n, lng: sx / n };
 }
 
+/* the polygon is named "Loop"; every human says "The Loop" */
+const hoodDisplay = (n) => (n === "Loop" ? "The Loop" : n);
+
 function chooseHome(name) {
   const c = hoodCenter(name);
   if (!c) return;
   setHome(S.mem, { name, ...c });
   $("#where").close();
   renderAsk();
-  toast(`Home base: ${name}.`);
+  toast(`Home base: ${hoodDisplay(name)}.`);
   if (whereCb) { const cb = whereCb; whereCb = null; cb(); }
 }
 
@@ -1151,6 +1387,9 @@ function geoHome() {
   if (!navigator.geolocation) { toast("No location access — pick from the list."); return; }
   $("#where-geo").textContent = "Locating…";
   navigator.geolocation.getCurrentPosition((pos) => {
+    // the fix can arrive after they closed the dialog — don't hijack
+    // whatever they're doing now with a surprise home base
+    if (!$("#where").open) return;
     const { latitude: lat, longitude: lng } = pos.coords;
     let best = null;
     for (const f of S.geo.features) {
@@ -1162,6 +1401,7 @@ function geoHome() {
     if (best && best.d < 30) chooseHome(best.n);
     else toast("You don't seem to be near Chicago — pick from the list.");
   }, () => {
+    if (!$("#where").open) return;
     $("#where-geo").textContent = "Use my location";
     toast("Couldn't get a location — pick from the list.");
   }, { timeout: 6000 });
@@ -1173,13 +1413,13 @@ function myListIds() {
   return [...new Set([...S.mem.saved, ...mine])].filter((id) => S.venues.some((v) => v.id === id));
 }
 
-/* a starred night → an .ics file. Floating local time, next Friday 7pm —
- * a sane default the calendar app lets you drag anywhere. No servers,
- * no email: the reminder lives in YOUR calendar. */
+/* a starred night → an .ics file. Floating local time, the coming Friday
+ * at 7pm — a sane default the calendar app lets you drag anywhere. No
+ * servers, no email: the reminder lives in YOUR calendar. */
 function downloadNightIcs(e) {
   const icsEsc = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
   const d = new Date();
-  d.setDate(d.getDate() + (((5 - d.getDay() + 7) % 7) || 7)); // next Friday
+  d.setDate(d.getDate() + ((5 - d.getDay() + 7) % 7)); // the coming Friday (today counts)
   const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const stops = [e.heroName, e.secondName, e.thirdName].filter(Boolean)
@@ -1204,23 +1444,27 @@ function downloadNightIcs(e) {
   a.download = "chilocal-night.ics";
   a.click();
   URL.revokeObjectURL(a.href);
-  toast("Calendar file saved — set for next Friday 7pm, drag it anywhere.");
+  toast("Calendar file saved — set for Friday at 7 p.m., drag it anywhere.");
 }
 
 /* ---- the night book: log · up next · places · passport, one tab each ---- */
 function openNights(tab) {
   const dlg = $("#nights");
-  if (tab) S.nbTab = tab;
-  S.nbTab = S.nbTab || "log";
+  // only a real tab name counts — this used to be wired straight to a
+  // click handler, so the EVENT OBJECT landed here as `tab`, no tab
+  // matched, and the dialog opened with four tabs over an empty body
+  const TABS = ["log", "next", "places", "passport"];
+  if (TABS.includes(tab)) S.nbTab = tab;
+  if (!TABS.includes(S.nbTab)) S.nbTab = "log";
   const T = S.nbTab;
   const body = $("#nights-body");
 
   const tabs = `
     <div class="seg nb-tabs" id="nb-tabs">
-      <button data-t="log" class="${T === "log" ? "on" : ""}">The log</button>
-      <button data-t="next" class="${T === "next" ? "on" : ""}">Up next</button>
-      <button data-t="places" class="${T === "places" ? "on" : ""}">Your spots</button>
-      <button data-t="passport" class="${T === "passport" ? "on" : ""}">Passport</button>
+      <button data-t="log" class="${T === "log" ? "on" : ""}" aria-pressed="${T === "log"}">The log</button>
+      <button data-t="next" class="${T === "next" ? "on" : ""}" aria-pressed="${T === "next"}">Up next</button>
+      <button data-t="places" class="${T === "places" ? "on" : ""}" aria-pressed="${T === "places"}">Your spots</button>
+      <button data-t="passport" class="${T === "passport" ? "on" : ""}" aria-pressed="${T === "passport"}">Passport</button>
     </div>`;
 
   let html = "";
@@ -1269,7 +1513,7 @@ function openNights(tab) {
   if (T === "places") {
     const mine = S.venues.filter((v) => v.mine)
       .map((v) => `<button class="chip chipbtn" data-vid="${esc(v.id)}">◆ ${esc(v.name)}</button>`).join(" ");
-    html = (mine ? `<h3>Places you added</h3><div class="chips">${mine}</div>`
+    html = (mine ? `<h3>Spots you added</h3><div class="chips">${mine}</div>`
                  : `<p class="mutep">Nothing yet. Your own spots live on your device, show up in Explore with a ◆, and can be suggested to the ChiLocal book.</p>`) +
       `<button class="btn ghost" id="nights-add" style="margin-top:12px">+ Add your own spot</button>`;
   }
@@ -1283,7 +1527,7 @@ function openNights(tab) {
       <p class="mutep">A stamp = a locked night or a spot marked “been” there. The city is the book — fill it.</p>
       ${stamped ? `<div class="chips">${stamped}</div>` : `<p class="mutep">No stamps yet — lock a night somewhere and it inks itself.</p>`}
       <div class="ex-actions">
-        <button class="btn primary" id="nb-passmap">🗺 See it on the map</button>
+        <button class="btn primary" id="nb-passmap">🗺️ See it on the map</button>
         ${pass.unvisited.length ? `<button class="btn ghost" id="nb-stamp">🎲 Stamp somewhere new</button>` : ""}
       </div>`;
   }
@@ -1306,7 +1550,8 @@ function openNights(tab) {
     const e = S.mem.upNext[+b.dataset.i];
     dlg.close();
     const v = e.heroId ? findSpot(e.heroId) : null;
-    if (v && !v.base) { adoptAsPlan(v); return; }
+    // hand the starred entry along so the stops adopt verbatim
+    if (v && !v.base) { adoptAsPlan(v, e); return; }
     toast("That spot isn't in the book anymore — reroll one like it.");
   });
   $$(".un-ics", body).forEach((b) => b.onclick = () => downloadNightIcs(S.mem.upNext[+b.dataset.i]));
@@ -1340,14 +1585,19 @@ function openNights(tab) {
   });
   $$(".gen-share", body).forEach((b) => b.onclick = async (ev) => {
     ev.stopPropagation();
-    const g = S.mem.generated[+b.dataset.i];
-    const plan = {
-      hero: { v: { name: g.heroName, cat: g.heroCat || "", hood: g.heroHood || "" } },
-      second: g.secondName ? { venue: { name: g.secondName } } : null,
-      why: g.why,
-    };
-    const r = await sharePlan(plan, S.ctx, null);
-    if (r === "downloaded") toast("Card saved.");
+    if (b.disabled) return;
+    b.disabled = true;
+    try {
+      const g = S.mem.generated[+b.dataset.i];
+      const plan = {
+        hero: { v: { name: g.heroName, cat: g.heroCat || "", hood: g.heroHood || "" } },
+        second: g.secondName ? { venue: { name: g.secondName } } : null,
+        why: g.why,
+      };
+      const r = await sharePlan(plan, S.ctx, null);
+      if (r === "downloaded") toast("Card saved.");
+      else if (r === "failed") toast("The card wouldn't render — try again.");
+    } finally { b.disabled = false; }
   });
   dlg.showModal();
 }
@@ -1358,11 +1608,13 @@ function openStayIn() {
   const res = $("#coin-result");
   res.textContent = "";
   $("#coin").onclick = () => {
+    if (S._coinSpin) return; // one flip at a time — double-taps stacked spinners
+    S._coinSpin = true;
     const opts = ["Cook something 🍳", "Order in 🥡"];
     let i = 0, spins = 8 + ((Math.random() * 4) | 0);
     const t = setInterval(() => {
       res.textContent = opts[i++ % 2];
-      if (i > spins) { clearInterval(t); }
+      if (i > spins) { clearInterval(t); S._coinSpin = false; }
     }, 110);
   };
 }
@@ -1372,14 +1624,21 @@ let toastTimer;
 function toast(msg) {
   const el = $("#toast");
   el.textContent = msg;
+  // popover puts the toast in the top layer, above any open <dialog>;
+  // browsers without it just keep the class-toggle rendering
+  try { el.showPopover?.(); } catch { /* already open or not a popover */ }
   el.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+  toastTimer = setTimeout(() => {
+    el.classList.remove("show");
+    try { el.hidePopover?.(); } catch { /* already closed */ }
+  }, 2600);
 }
 
 function resetToAsk() {
+  clearRemote(); // a live two-phone room dies with the flow that made it
   S.view = "tonight";
-  $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === "tonight"));
+  $$("#mode-seg button").forEach((b) => press(b, b.dataset.m === "tonight"));
   S.map.setExplore(false);
   S.map.clearSpot?.();
   $("#mapwrap").classList.remove("on");
@@ -1400,12 +1659,35 @@ function wireStatic() {
   $("#two-next").onclick = twoNext;
   $("#pass-go").onclick = () => { S.twoStep = "p2"; renderTwoForm("p2"); show("two"); };
   $("#home-chip").onclick = () => openWhere();
-  $("#nights-chip").onclick = openNights;
+  // NOT `= openNights` — the click event would arrive as the tab name and
+  // the dialog would open on no tab at all, body empty
+  $("#nights-chip").onclick = () => openNights();
   $("#wordmark").onclick = resetToAsk;
+  // the wordmark is a div playing button — give the keyboard its due
+  $("#wordmark").onkeydown = (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); resetToAsk(); }
+  };
+  // the toast announces itself to screen readers, politely
+  $("#toast").setAttribute("role", "status");
+  $("#toast").setAttribute("aria-live", "polite");
+  // closing the room dialog must stop its polling — a dismissed dialog
+  // that keeps hitting the server is how rooms haunt whole sessions
+  $("#tworoom").addEventListener("close", () => {
+    if (S.remote?.timer) { clearInterval(S.remote.timer); S.remote.timer = null; }
+  });
+  // pass screen: player one can step back and fix their picks
+  if (!$("#pass-back")) {
+    const pb = document.createElement("button");
+    pb.id = "pass-back";
+    pb.className = "linkish";
+    pb.textContent = "← back to player one";
+    $("#pass-go").after(pb);
+    pb.onclick = () => { S.twoStep = "p1"; renderTwoForm("p1"); show("two"); };
+  }
   $$("#mode-seg button").forEach((b) => b.onclick = () => setView(b.dataset.m));
   $$("#tilt-seg button").forEach((b) => b.onclick = () => {
     S.map.setTilt(b.dataset.t);
-    $$("#tilt-seg button").forEach((x) => x.classList.toggle("on", x === b));
+    $$("#tilt-seg button").forEach((x) => press(x, x === b));
     savePrefs({ ...loadPrefs(), tilt: b.dataset.t });
     if (S.view === "explore" && !S.ex.hood) S.exCam = S.map.cityView(exInset(), tiltZoom());
   });
@@ -1424,7 +1706,7 @@ function wireStatic() {
       const next = c === "north" ? 0 : (S.map.bearing || 0) + (c === "rr" ? 30 : -30);
       S.map.setBearing(next);
       savePrefs({ ...loadPrefs(), bearing: S.map.bearing });
-      $('#cam-seg button[data-c="north"]').classList.toggle("on", S.map.bearing !== 0);
+      press($('#cam-seg button[data-c="north"]'), S.map.bearing !== 0);
     }
   });
   $("#ex-fold").onclick = () => setPanelFold(!S.ex.folded);
@@ -1435,7 +1717,7 @@ function wireStatic() {
   $("#ov-streets").onclick = () => toggleOverlay("streets");
   $$("#bm-seg button").forEach((b) => b.onclick = () => {
     S.map.setBasemap(b.dataset.b);
-    $$("#bm-seg button").forEach((x) => x.classList.toggle("on", x === b));
+    $$("#bm-seg button").forEach((x) => press(x, x === b));
     savePrefs({ ...loadPrefs(), basemap: b.dataset.b });
   });
   $("#visit-chip").onclick = () => {
@@ -1461,18 +1743,23 @@ function wireStatic() {
       btn.classList.add("on");
       const onMap = S.map.showUser({ lat, lng }, accuracy);
       toast(onMap
-        ? `That's you — accurate to about ±${Math.round(accuracy)} m (the dashed circle).`
+        ? `That's you — good to about ${Math.round(accuracy * 3.28)} ft (the dashed circle).`
         : "Your device puts you outside the Chicago map.");
     }, () => {
       btn.textContent = "📍 Find me";
       toast("Couldn't get a location — check the browser's permission.");
     }, { enableHighAccuracy: true, timeout: 8000 });
   };
-  $$(".back-ask").forEach((b) => b.onclick = resetToAsk);
+  $$(".back-ask").forEach((b) => b.onclick = () => {
+    // player two bailing out throws away BOTH players' answers — check first
+    if (S.screen === "two" && S.twoStep === "p2" &&
+        !confirm("Leaving now tosses both players' picks. Start over?")) return;
+    resetToAsk();
+  });
 
   $$("#party-seg button").forEach((b) => b.onclick = () => {
     S.party = b.dataset.v;
-    $$("#party-seg button").forEach((x) => x.classList.toggle("on", x === b));
+    $$("#party-seg button").forEach((x) => press(x, x === b));
     savePrefs({ ...loadPrefs(), budget: S.budget, dial: S.dial, party: S.party });
   });
 
@@ -1482,11 +1769,17 @@ function wireStatic() {
     const on = toggleSaved(S.mem, S.plan.hero.v.id);
     $("#rv-save").classList.toggle("on", on);
     $("#rv-save").textContent = on ? "♥ Saved" : "♡ Save";
-    toast(on ? "Saved to the wishlist." : "Removed.");
+    toast(on ? "Saved to your spots." : "Removed.");
   };
   $("#lk-share").onclick = async () => {
-    const r = await sharePlan(S.plan, S.ctx, S.mem.dates.length);
-    if (r === "downloaded") toast("Card saved — post it wherever you gloat.");
+    const btn = $("#lk-share");
+    if (btn.disabled) return; // one card at a time
+    btn.disabled = true;
+    try {
+      const r = await sharePlan(S.plan, S.ctx, S.mem.dates.length);
+      if (r === "downloaded") toast("Card saved — post it wherever you gloat.");
+      else if (r === "failed") toast("The card wouldn't render — try again.");
+    } finally { btn.disabled = false; }
   };
   $("#lk-again").onclick = resetToAsk;
   $$("dialog .x").forEach((b) => b.onclick = () => b.closest("dialog").close());
@@ -1520,7 +1813,7 @@ const HOOD_TAKES = {
   "Lincoln Park": "Blues bars and fondue dens between the zoo and the lake — date-night classics live here.",
   "Lakeview": "Rock clubs, a movie palace, and showtunes at full volume — the North Side at play.",
   "Northalsted": "The rainbow-pyloned main drag where every night can end in a singalong.",
-  "Wrigleyville": "You know what this is. Go for the marquee venues, stay clear on game days — or don't.",
+  "Wrigleyville": "You know what this is. Go for the marquee venues, steer clear on game days — or don't.",
   "Lincoln Square": "Giddings Plaza charm, steins of pilsner, and a bookstore that pours wine.",
   "North Center": "Hand-set pins, slow-brewed lagers — old hobbies done properly.",
   "Roscoe Village": "A village-sized strip with jazz couches and adventurous little rooms.",
@@ -1541,7 +1834,7 @@ const HOOD_TAKES = {
   "South Shore": "Home of the Arts Bank — an archive of Black culture unlike anywhere else in America.",
   "Chatham": "Aquarium-smoker barbecue that defines the South Side canon.",
   "Little Italy": "Taylor Street's old guard: beef stands, lemonade ice, century-old bakeries.",
-  "Near West Side": "Maxwell Street's last echoes — polish sausage at 3 a.m. is a birthright.",
+  "Near West Side": "Maxwell Street's last echoes — Polish sausage at 3 a.m. is a birthright.",
   "Little Village": "La Villita: the Mexican Midwest's kitchen, with a speakeasy behind a candy shop.",
   "Archer Heights": "Worth the drive for one perfect thing: goat birria done one way, forever.",
   "Humboldt Park": "Lagoon sunsets, jibaritos, and lounges that look like movie sets.",
@@ -1617,8 +1910,8 @@ const basePasses = (v) => S.ex.vibe === "all" && !S.ex.price && !S.ex.open;
 function exFilterChips2() {
   return `
     <div class="fchips" id="ex-fchips2">
-      ${[1, 2, 3, 4].map((n) => `<button data-p="${n}" class="${S.ex.price === n ? "on" : ""}">≤ ${"$".repeat(n)}</button>`).join("")}
-      <button data-open="1" class="${S.ex.open ? "on" : ""}">● Open now</button>
+      ${[1, 2, 3, 4].map((n) => `<button data-p="${n}" class="${S.ex.price === n ? "on" : ""}" aria-pressed="${S.ex.price === n}">≤ ${"$".repeat(n)}</button>`).join("")}
+      <button data-open="1" class="${S.ex.open ? "on" : ""}" aria-pressed="${!!S.ex.open}">● Open now</button>
     </div>
     ${S.ex.open ? `<p class="ex-hint">“Open now” trusts listed hours only — spots without verified hours are hidden.</p>` : ""}`;
 }
@@ -1700,31 +1993,33 @@ function applySettings(prefs) {
     document.documentElement.style.setProperty(k, acc[k] || def);
   S.map.setPalette(PALETTES[prefs.palette] || PALETTES.classic);
   S.map.setLabelScale(prefs.labelScale || 1);
-  $$("#set-pal button").forEach((b) => b.classList.toggle("on", b.dataset.p === (prefs.palette || "classic")));
-  $$("#set-lbl button").forEach((b) => b.classList.toggle("on", +b.dataset.l === (prefs.labelScale || 1)));
+  $$("#set-pal button").forEach((b) => press(b, b.dataset.p === (prefs.palette || "classic")));
+  $$("#set-lbl button").forEach((b) => press(b, +b.dataset.l === (prefs.labelScale || 1)));
   for (const inp of $$("#settings input[type=color]"))
     inp.value = acc[inp.dataset.var] || ACCENT_DEFAULTS[inp.dataset.var];
   // behavior: start screen, camera motion, curated-vs-everything
-  $$("#set-start button").forEach((b) => b.classList.toggle("on", b.dataset.s === (prefs.startView || "tonight")));
+  $$("#set-start button").forEach((b) => press(b, b.dataset.s === (prefs.startView || "tonight")));
   const calm = prefs.motion === "calm";
   S.map._reduced = calm || matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.body.classList.toggle("calm-motion", calm);
-  $$("#set-motion button").forEach((b) => b.classList.toggle("on", b.dataset.m === (prefs.motion || "full")));
+  $$("#set-motion button").forEach((b) => press(b, b.dataset.m === (prefs.motion || "full")));
   const showBase = prefs.mapbook !== "curated";
   if (showBase !== S.showBase) {
     S.showBase = showBase;
     if (S.map && S.exIndex) S.map.setLabelWeights(exLabelWeights());
     if (S.view === "explore") renderExplore();
   }
-  $$("#set-book button").forEach((b) => b.classList.toggle("on", b.dataset.b === (prefs.mapbook || "all")));
+  $$("#set-book button").forEach((b) => press(b, b.dataset.b === (prefs.mapbook || "all")));
 }
 function wireSettings() {
   const chip = $("#acct-chip"), menu = $("#acct-menu");
-  chip.onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; };
+  chip.setAttribute("aria-haspopup", "menu");
+  chip.setAttribute("aria-expanded", "false");
+  chip.onclick = (e) => { e.stopPropagation(); setAcctMenu(menu.hidden); };
   document.addEventListener("click", (e) => {
-    if (!menu.hidden && !menu.contains(e.target)) menu.hidden = true;
+    if (!menu.hidden && !menu.contains(e.target)) setAcctMenu(false);
   });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menu.hidden = true; });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) setAcctMenu(false); });
   renderAcct();
   for (const inp of $$("#settings input[type=color]")) {
     inp.oninput = () => {
@@ -1744,7 +2039,7 @@ function wireSettings() {
   $$("#set-start button").forEach((b) => b.onclick = () => {
     savePrefs({ ...loadPrefs(), startView: b.dataset.s });
     applySettings(loadPrefs());
-    toast(b.dataset.s === "explore" ? "The app now opens on the map." : "The app now opens on Tonight.");
+    toast(b.dataset.s === "explore" ? "The app now opens on Explore." : "The app now opens on Tonight.");
   });
   $$("#set-motion button").forEach((b) => b.onclick = () => {
     savePrefs({ ...loadPrefs(), motion: b.dataset.m });
@@ -1815,15 +2110,15 @@ function renderAcctSettings() {
 function toggleOverlay(kind, force) {
   const btn = $("#ov-" + kind);
   const on = force ?? !btn.classList.contains("on");
-  btn.classList.toggle("on", on);
+  press(btn, on);
   S.map.setOverlay(kind, on);
   if (on) {
     if (kind === "transit") {
-      S.map.loadTransit("data/cta-lines.min.geojson?v=n23");
-      S.map.loadStations("data/cta-stations.min.json?v=n23");
-    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n23");
-    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n23");
-    else S.map.loadStreets("data/streets.min.geojson?v=n23");
+      S.map.loadTransit("data/cta-lines.min.geojson?v=n24");
+      S.map.loadStations("data/cta-stations.min.json?v=n24");
+    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n24");
+    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n24");
+    else S.map.loadStreets("data/streets.min.geojson?v=n24");
   }
   const prefs = loadPrefs();
   savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
@@ -1949,7 +2244,7 @@ function renderExplore() {
         <button class="btn primary" id="ex-adopt">⚡ Make it tonight's plan</button>
         ${v.mine ? `<div style="display:flex;gap:9px">
           <a class="btn ghost" style="flex:1" target="_blank" rel="noopener" href="${suggestUrl(v)}">Suggest to ChiLocal ↗</a>
-          <button class="btn ghost" style="flex:1" id="ex-remove">🗑 Remove</button>
+          <button class="btn ghost" style="flex:1" id="ex-remove">🗑️ Remove</button>
         </div>` : ""}
         <div style="display:flex;gap:9px">
           <button class="btn ghost heart ${saved ? "on" : ""}" id="ex-save" style="flex:1">${saved ? "♥ Saved" : "♡ Save"}</button>
@@ -2001,9 +2296,9 @@ function renderExplore() {
       ${take ? `<p class="ex-take">${esc(take)}</p>` : ""}
       ${(S.hoodAliases?.[S.ex.hood] || []).length ? `<p class="ex-aka">In here: ${(S.hoodAliases[S.ex.hood]).map(esc).join(" · ")}</p>` : ""}
       <div class="fchips" id="ex-vchips">
-        <button data-v="all" class="${S.ex.vibe === "all" ? "on" : ""}">All (${(g?.venues.length || 0) + (S.showBase ? (g?.base.length || 0) : 0)})</button>
+        <button data-v="all" class="${S.ex.vibe === "all" ? "on" : ""}" aria-pressed="${S.ex.vibe === "all"}">All (${(g?.venues.length || 0) + (S.showBase ? (g?.base.length || 0) : 0)})</button>
         ${VIBES.filter((vb) => (g?.venues || []).some((v) => v.vibes.includes(vb.id)))
-          .map((vb) => `<button data-v="${vb.id}" class="${S.ex.vibe === vb.id ? "on" : ""}">${vb.icon} ${esc(vb.name)}</button>`).join("")}
+          .map((vb) => `<button data-v="${vb.id}" class="${S.ex.vibe === vb.id ? "on" : ""}" aria-pressed="${S.ex.vibe === vb.id}">${vb.icon} ${esc(vb.name)}</button>`).join("")}
       </div>
       ${exFilterChips2()}
       ${list.map((v) => `
@@ -2013,7 +2308,7 @@ function renderExplore() {
           <span class="ven-badges">${exBadges(v)}</span>
         </button>`).join("")}
       ${baseList.length ? `
-        <p class="ex-basehead">${list.length ? "More that's here" : "What's here"} <span class="nb-hint">from the city map — real places, not yet vetted by us</span></p>
+        <p class="ex-basehead">${list.length ? "Also here" : "What's here"} <span class="nb-hint">from the city map — real places, not yet vetted by us</span></p>
         ${baseList.map((v) => `
           <button class="ex-row base" data-id="${esc(v.id)}">
             <span class="n">${S.mem.saved.includes(v.id) ? `<span class="rowheart">♥</span> ` : ""}${esc(v.name)}${v.rec ? ` <span class="rec-dot" title="locals recommend it">●</span>` : ""}</span>
@@ -2023,7 +2318,7 @@ function renderExplore() {
       ${!any && !exFiltersOn() ? `<p class="ex-empty">No picks here yet — the engine is still eating its way across the city.</p>` : ""}
       <div class="ex-actions">
         ${list.length ? `<button class="btn ghost" id="ex-surprise">🎲 Surprise us — but here</button>` : ""}
-        <button class="btn ghost" id="ex-addhere">+ Put a place here yourself</button>
+        <button class="btn ghost" id="ex-addhere">+ Put a spot here yourself</button>
       </div>`;
     $("#ex-back").onclick = exBackToCity;
     $$("#ex-vchips button", el).forEach((b) => b.onclick = () => { S.ex.vibe = b.dataset.v; renderExplore(); });
@@ -2052,13 +2347,13 @@ function renderExplore() {
     <p class="ex-kicker">THE BOOK OF THE CITY</p>
     <h2 class="ex-title">Browse <em>Chicago</em></h2>
     <p class="ex-sub">${S.venues.length} places we'd stand behind${baseTotal ? ` · ${baseTotal} more on the city map` : ""} · all ${S.geo.features.length} neighborhoods</p>
-    <p class="ex-passport">🗺 Passport: <b>${pass.count} of ${pass.total}</b> stamped
+    <p class="ex-passport">🗺️ Passport: <b>${pass.count} of ${pass.total}</b> stamped
       · <button class="linkish ${S.ex.passport ? "on" : ""}" id="ex-passview">${S.ex.passport ? "back to colors" : "see where you've been"}</button>${
       pass.unvisited.length ? ` · <button class="linkish" id="ex-stamp">stamp somewhere new →</button>` : ""}</p>
     <input class="ex-search" id="ex-q" placeholder="Search spots, neighborhoods, vibes…" value="${esc(S.ex.q)}" autocomplete="off"/>
     <div class="fchips" id="ex-vchips">
-      <button data-v="all" class="${S.ex.vibe === "all" ? "on" : ""}">All</button>
-      ${VIBES.map((vb) => `<button data-v="${vb.id}" class="${S.ex.vibe === vb.id ? "on" : ""}">${vb.icon} ${esc(vb.name)}</button>`).join("")}
+      <button data-v="all" class="${S.ex.vibe === "all" ? "on" : ""}" aria-pressed="${S.ex.vibe === "all"}">All</button>
+      ${VIBES.map((vb) => `<button data-v="${vb.id}" class="${S.ex.vibe === vb.id ? "on" : ""}" aria-pressed="${S.ex.vibe === vb.id}">${vb.icon} ${esc(vb.name)}</button>`).join("")}
     </div>
     ${exFilterChips2()}
     <div id="ex-results"></div>
@@ -2154,8 +2449,15 @@ function renderExplore() {
   // typing only re-renders the results — the input (and its caret) survive
   $("#ex-q").oninput = (e) => { S.ex.q = e.target.value; renderResults(); };
   $$("#ex-vchips button", el).forEach((b) => b.onclick = () => { S.ex.vibe = b.dataset.v; renderResults();
-    $$("#ex-vchips button", el).forEach((x) => x.classList.toggle("on", x === b)); });
-  wireFilterChips2(el, renderExplore);
+    $$("#ex-vchips button", el).forEach((x) => press(x, x === b)); });
+  // price/open chips repaint themselves + results only — a full re-render
+  // would rebuild the search input and eat its focus mid-word
+  wireFilterChips2(el, () => {
+    $$("#ex-fchips2 [data-p]", el).forEach((b) => press(b, S.ex.price === +b.dataset.p));
+    const ob = $("#ex-fchips2 [data-open]", el);
+    if (ob) press(ob, !!S.ex.open);
+    renderResults();
+  });
   renderResults();
 }
 
@@ -2168,17 +2470,17 @@ function openAddPlace(presetHood) {
   $("#ap-cat").innerHTML = ADD_CATS.map((c) => `<option ${d.cat === c ? "selected" : ""}>${c}</option>`).join("");
   $("#ap-take").value = d.take || "";
   $("#ap-price").innerHTML = [1, 2, 3, 4].map((n) =>
-    `<button data-v="${n}" class="${d.price === n ? "on" : ""}">${"$".repeat(n)}</button>`).join("");
+    `<button data-v="${n}" class="${d.price === n ? "on" : ""}" aria-pressed="${d.price === n}">${"$".repeat(n)}</button>`).join("");
   $$("#ap-price button").forEach((b) => b.onclick = () => {
     d.price = +b.dataset.v;
-    $$("#ap-price button").forEach((x) => x.classList.toggle("on", x === b));
+    $$("#ap-price button").forEach((x) => press(x, x === b));
   });
   $("#ap-vibes").innerHTML = VIBES.map((v) =>
-    `<button data-v="${v.id}" class="${d.vibes.includes(v.id) ? "on" : ""}">${v.icon} ${esc(v.name)}</button>`).join("");
+    `<button data-v="${v.id}" class="${d.vibes.includes(v.id) ? "on" : ""}" aria-pressed="${d.vibes.includes(v.id)}">${v.icon} ${esc(v.name)}</button>`).join("");
   $$("#ap-vibes button").forEach((b) => b.onclick = () => {
     const i = d.vibes.indexOf(b.dataset.v);
     if (i >= 0) d.vibes.splice(i, 1); else d.vibes.push(b.dataset.v);
-    b.classList.toggle("on", i < 0);
+    press(b, i < 0);
     apValidate();
   });
   $("#ap-loc").textContent = d.ll
@@ -2207,7 +2509,10 @@ function openAddPlace(presetHood) {
   $("#ap-save").onclick = () => {
     const mine = loadMyPlaces();
     mine.push({
-      id: "my-" + $("#ap-name").value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + (mine.length + 1),
+      // timestamp+random suffix: remove-then-re-add must never mint the
+      // same id twice (saved/been history would bleed between spots)
+      id: "my-" + $("#ap-name").value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") +
+        "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       name: $("#ap-name").value.trim(),
       cat: $("#ap-cat").value,
       hood: d.hood || "Chicago", geom: d.geom || null,
@@ -2219,7 +2524,7 @@ function openAddPlace(presetHood) {
     S.draftPlace = null;
     refreshVenues();
     dlg.close();
-    toast("Added to your places — the engine can pick it now.");
+    toast("Added to your spots — the engine can pick it now.");
     if (S.view === "explore") renderExplore();
   };
   dlg.showModal();
@@ -2240,7 +2545,7 @@ function suggestUrl(v) {
 **Why it belongs:** ${v.take}
 
 ---
-Suggested from the app. Review: verify it's open (OSM / city license), then add to scripts/seed-venues.json and run the pipeline (see PRODUCT.md).`);
+Suggested from the app.`);
   return `https://github.com/Aceospades95/chilocal/issues/new?title=${encodeURIComponent("Suggest a spot: " + v.name)}&body=${body}&labels=spot-suggestion`;
 }
 
@@ -2253,28 +2558,41 @@ function openVenueProfile(id) {
   S.ex.venue = v.id;
   if (S.view !== "explore") {
     S.view = "explore";
-    $$("#mode-seg button").forEach((b) => b.classList.toggle("on", b.dataset.m === "explore"));
+    $$("#mode-seg button").forEach((b) => press(b, b.dataset.m === "explore"));
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n23");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n24");
     show("explore");
   }
   S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
   renderExplore();
 }
 
-/* Browse → tonight: adopt a venue as the plan, honestly justified. */
-function adoptAsPlan(v) {
+/* Browse → tonight: adopt a venue as the plan, honestly justified.
+ * A starred night (from Up next) adopts VERBATIM — the stops you starred
+ * are the stops you get; we only recompute what no longer resolves. */
+function adoptAsPlan(v, starred) {
   newSession();
   const memv = memoryView(S.mem);
   const rand = mulberry32(hashStr(S.ctx.nightKey + "|adopt|" + v.id));
   const budget = Math.max(S.budget, v.price);
   const { reasons } = scoreVenue(v, { vibe: null, budget, party: S.party, visitor: !!S.visitor }, S.ctx, memv, rand);
-  const second = pickSecond(v, S.venues, { vibe: null, budget }, S.ctx);
+  const pool = secondPool(S.venues, S.ctx, S.session);
+  const byName = (name) => name ? S.venues.find((x) => x.name === name) : null;
+  let second = null, third = null;
+  if (starred) {
+    const sv = byName(starred.secondName);
+    if (sv) second = { venue: sv, mi: haversineMi(v, sv) };
+    else if (starred.secondName) second = pickSecond(v, pool, { vibe: null, budget }, S.ctx);
+    const tv = byName(starred.thirdName);
+    if (tv && second) third = { venue: tv, mi: haversineMi(second.venue, tv) };
+  } else {
+    second = pickSecond(v, pool, { vibe: null, budget }, S.ctx);
+  }
   const why = "Your pick — we just did the homework. " +
     whyLine(v, reasons, { vibe: null, budget }, S.ctx, {});
   S.mode = "out"; S.vibe = null;
-  S.plan = { hero: { v, score: 0, reasons, extra: {} }, second, alts: [], why };
+  S.plan = { hero: { v, score: 0, reasons, extra: {} }, second, third, alts: [], why: starred?.why || why };
   S.session.excluded.add(v.id);
   setView("tonight");
   renderReveal();
@@ -2287,11 +2605,26 @@ function adoptAsPlan(v) {
  * door for local dev and defense in depth. `?dev=1` skips it — but only
  * on localhost, so it cannot open anything in production. */
 async function start() {
+  // the veil goes up immediately — the CSS keys a spinner on body.booting,
+  // so nobody stares at a black page while data loads
+  document.body.classList.add("booting");
+  // stale-context guard: a phone that slept in a pocket for an hour wakes
+  // to a different night (weather still rides its 30-minute cache)
+  document.addEventListener("visibilitychange", async () => {
+    if (document.hidden) { S._hiddenAt = Date.now(); return; }
+    if (S._hiddenAt && Date.now() - S._hiddenAt > 10 * 60 * 1000 && S.mem) {
+      S.ctx = await buildContext();
+      renderContextChip();
+    }
+  });
   const params = new URLSearchParams(location.search);
   const devBypass = ["localhost", "127.0.0.1"].includes(location.hostname) && params.has("dev");
   let user = null, reachable = true;
+  const me = () => api("/api/auth/me", { signal: AbortSignal.timeout(3500) }).then((r) => r.json());
   try {
-    const d = await api("/api/auth/me", { signal: AbortSignal.timeout(3500) }).then((r) => r.json());
+    // one retry before deciding the server's unreachable — slow hotel wifi
+    // is not the same thing as signed out
+    const d = await me().catch(me);
     user = d.user || null;
   } catch { reachable = false; }
   if (user || devBypass) {
@@ -2304,9 +2637,10 @@ async function start() {
 
 function showGate(reachable) {
   const gate = $("#gate");
+  document.body.classList.remove("booting"); // the gate is the show now
   gate.hidden = false;
   const setTab = (t) => {
-    $$("#gate-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
+    $$("#gate-tabs button").forEach((b) => press(b, b.dataset.t === t));
     // the two modes must LOOK different: sign in is email+password, signup
     // adds a name and the (unchecked) weekly-digest opt-in
     $("#gate-mh").textContent = t === "login" ? "Welcome back" : "Create your account";
@@ -2324,10 +2658,11 @@ function showGate(reachable) {
   $$("#gate-tabs button").forEach((b) => b.onclick = () => setTab(b.dataset.t));
   setTab("login");
   // "Forgot password?" is real only once an email provider is configured —
-  // health says so; until then the link stays hidden
+  // health says so; until then the link stays hidden. Touch ONLY the link:
+  // re-running setTab here would wipe a visible "can't reach" error.
   api("/api/health", { signal: AbortSignal.timeout(2500) })
     .then((r) => (r.ok ? r.json() : null))
-    .then((h) => { S.api = h; if (gate.dataset.tab === "login") setTab("login"); })
+    .then((h) => { S.api = h; $("#ga-forgot").hidden = !(gate.dataset.tab === "login" && h?.email); })
     .catch(() => {});
   const err = $("#gate-err");
   if (!reachable) {
@@ -2337,10 +2672,12 @@ function showGate(reachable) {
   $("#gate-form").onsubmit = async (e) => {
     e.preventDefault();
     err.hidden = true;
+    const t = gate.dataset.tab;
+    const bad = authClientError(t, $("#ga-email").value, $("#ga-pass").value, $("#ga-name").value);
+    if (bad) { err.textContent = bad; err.hidden = false; return; }
     const go = $("#gate-go");
     go.disabled = true;
     try {
-      const t = gate.dataset.tab;
       const body = t === "login"
         ? { email: $("#ga-email").value, password: $("#ga-pass").value }
         : { email: $("#ga-email").value, password: $("#ga-pass").value,
@@ -2350,12 +2687,16 @@ function showGate(reachable) {
         signal: AbortSignal.timeout(8000),
         body: JSON.stringify(body),
       }).then((x) => x.json());
-      if (r.error) { err.textContent = r.error; err.hidden = false; return; }
+      if (r.error) { err.textContent = politeErr(r.error); err.hidden = false; return; }
       S.user = r.user;
       $("#ga-pass").value = "";
+      // veil BEFORE the gate drops — no black gap while boot fetches data
+      document.body.classList.add("booting");
       gate.hidden = true;
       boot(); // through the door — the normal homepage
-      toast(gate.dataset.tab === "login" ? `Welcome back, ${r.user.name}.` : `Welcome to the city, ${r.user.name}.`);
+      toast(t === "login"
+        ? (r.user.name ? `Welcome back, ${r.user.name}.` : "Welcome back.")
+        : `Welcome to the city${r.user.name ? `, ${r.user.name}` : ""}.`);
     } catch {
       err.textContent = "Can't reach the sign-in server — try again shortly.";
       err.hidden = false;

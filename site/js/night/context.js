@@ -46,7 +46,12 @@ export async function getWeather() {
     try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), wx })); } catch { /* ignore */ }
     return wx;
   } catch {
-    return { ok: false, temp: null, desc: null, precipProb: null, sunset: null };
+    const wx = { ok: false, temp: null, desc: null, precipProb: null, sunset: null };
+    // cache the failure too (short TTL): without this, every decision on a
+    // dead connection re-waits the full fetch timeout before the engine
+    // even starts thinking — the reveal must never hang on weather
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now() - TTL + 5 * 60_000, wx })); } catch { /* ignore */ }
+    return wx;
   }
 }
 
@@ -70,8 +75,10 @@ export function chicagoNow() {
 export async function buildContext() {
   const clock = chicagoNow();
   const wx = await getWeather();
-  // If it's before 5pm, we're planning ahead: evaluate "open" at 7:30pm.
-  const planMinutes = clock.hour < 17 ? 19.5 * 60 : clock.minutes;
+  // Planning ahead is a daytime idea: between 5am and 5pm we evaluate
+  // "open" at 7:30pm. After midnight, tonight is NOW — treating 12:30am as
+  // "planning for 7:30pm" let venues that closed at midnight sail through.
+  const planMinutes = clock.hour >= 5 && clock.hour < 17 ? 19.5 * 60 : clock.minutes;
   let sunsetLabel = null;
   if (wx.sunset) {
     const m = wx.sunset.match(/T(\d{2}):(\d{2})/);

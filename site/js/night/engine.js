@@ -105,6 +105,7 @@ export function openState(parsed, day, minutes) {
 export const fmtClock = (mins) => {
   if (mins == null) return null;
   let h = Math.floor(mins / 60) % 24, m = mins % 60;
+  if (h === 0 && !m) return "midnight"; // "open till midnight", never "till 12 AM"
   const ap = h >= 12 ? "PM" : "AM";
   h = h % 12 || 12;
   return m ? `${h}:${String(m).padStart(2, "0")} ${ap}` : `${h} ${ap}`;
@@ -172,16 +173,16 @@ export function scoreVenue(v, input, ctx, mem, rand) {
   }
   if ((cold || wet) && !v.indoor && v.outdoor && !(v.seasons || []).includes("winter")) s -= 25;
 
-  // --- time fit
-  if (ctx.hour >= 22) {
+  // --- time fit (the night runs past midnight — 1am is late, not early)
+  if (ctx.hour >= 22 || ctx.hour < 4) {
     if (v.late) { s += 12; reasons.push("late"); }
     else s -= 14;
-  } else if (ctx.hour < 18 && (v.vibes.includes("new") || v.vibes.includes("active"))) {
+  } else if (ctx.hour >= 5 && ctx.hour < 18 && (v.vibes.includes("new") || v.vibes.includes("active"))) {
     s += 6; reasons.push("daylight");
   }
   // unknown hours get increasingly risky as the night deepens — don't send
-  // people to a probably-dark museum at 10pm
-  if (!v._hours && ctx.hour >= 21 && !v.late) s -= 16;
+  // people to a probably-dark museum at 10pm (or 1am)
+  if (!v._hours && (ctx.hour >= 21 || ctx.hour < 4) && !v.late) s -= 16;
 
   // --- novelty & memory
   const beenCount = mem.been[v.id] || 0;
@@ -217,6 +218,18 @@ export function scoreVenue(v, input, ctx, mem, rand) {
   return { score: s, reasons };
 }
 
+/* Open now, or open at plan time when we're planning ahead. Unknown hours
+ * pass (they get scored down late instead of silently dropped). openState
+ * already checks yesterday's overnight spill, so a bar on Friday hours is
+ * still "open" at Saturday 1am. */
+export function openishTonight(v, ctx) {
+  const st = openState(v._hours, ctx.day, ctx.minutes);
+  if (!st || st.open) return true;
+  // planning for later tonight: open-at-8pm counts even if closed now
+  const at = ctx.planMinutes != null ? openState(v._hours, ctx.day, ctx.planMinutes) : null;
+  return !!(at && at.open);
+}
+
 /* Hard filters. Returns a reason string when excluded (for debugging). */
 export function filterVenue(v, input, ctx, mem, session) {
   if (input.vibe && !v.vibes.includes(input.vibe)) return "vibe";
@@ -227,12 +240,7 @@ export function filterVenue(v, input, ctx, mem, session) {
   if (session.excluded.has(v.id)) return "shown";
   if (session.vetoed.has(v.id)) return "vetoed";
   if ((mem.been[v.id] || 0) > 0 && mem.recentIds.includes(v.id)) return "recent";
-  const st = openState(v._hours, ctx.day, ctx.minutes);
-  if (st && !st.open) {
-    // planning for later tonight: open-at-8pm counts even if closed now
-    const at = ctx.planMinutes != null ? openState(v._hours, ctx.day, ctx.planMinutes) : null;
-    if (!at || !at.open) return "closed";
-  }
+  if (!openishTonight(v, ctx)) return "closed";
   return null;
 }
 
@@ -263,11 +271,21 @@ export function jointScore(v, p1, p2, base) {
 /* ------------------------------ second stops ------------------------------- */
 const drinkish = (v) => v.vibes.includes("chill") || v.vibes.includes("dance");
 const foodish = (v) => v.vibes.includes("dinner");
+
+/* The candidate pool for follow-on stops: open tonight, in season, not
+ * vetoed or already burned this session — and never locked to the asked
+ * vibe, because the second stop complements the first (drinks after
+ * dinner, not more dinner after dinner). */
+export function secondPool(venues, ctx, session) {
+  return venues.filter((v) => !session?.vetoed?.has(v.id) && !session?.excluded?.has(v.id) &&
+    seasonOk(v, ctx) && openishTonight(v, ctx));
+}
+
 export function pickSecond(hero, pool, input, ctx) {
   const eff = input.vibe || hero.vibes[0]; // surprise/two-player: pair off the hero itself
   let want;
   if (eff === "dinner") want = drinkish;
-  else if (eff === "show") want = ctx.hour < 19 ? foodish : drinkish;
+  else if (eff === "show") want = ctx.hour >= 5 && ctx.hour < 19 ? foodish : drinkish;
   else if (eff === "active" || eff === "new") want = (v) => foodish(v) || drinkish(v);
   else return null;
 
@@ -277,7 +295,7 @@ export function pickSecond(hero, pool, input, ctx) {
     const mi = haversineMi(hero, v);
     if (mi > 0.72) continue;
     if (Math.abs(v.energy - hero.energy) > 2) continue;
-    const late = ctx.hour >= 20 && v.late ? 6 : 0;
+    const late = (ctx.hour >= 20 || ctx.hour < 4) && v.late ? 6 : 0;
     const sc = (0.72 - mi) * 40 + late + (v.inst ? 3 : 0) + (drinkish(v) && v.energy <= 3 ? 2 : 0);
     if (!best || sc > best.sc) best = { v, mi, sc };
   }
@@ -365,7 +383,7 @@ export function whyLine(v, reasons, input, ctx, extra = {}) {
 }
 export const VIBES = [
   { id: "dinner", name: "Dinner & drinks", icon: "🍸" },
-  { id: "dance", name: "Dancing & late", icon: "🪩" },
+  { id: "dance", name: "Dancing & late", icon: "💃" },
   { id: "new", name: "Something new", icon: "✨" },
   { id: "show", name: "A show", icon: "🎷" },
   { id: "chill", name: "Keep it chill", icon: "🕯️" },
@@ -413,7 +431,10 @@ export function decide(venues, input, ctx, mem, session) {
     else break;
   }
 
-  const pool = scored.map((s) => s.v);
+  // the second stop's pool is NOT the scored list — that one is vibe-locked
+  // (a "dinner" ask filters out every plain bar), and a night's second stop
+  // is usually a different kind of room than its first
+  const pool = secondPool(venues, ctx, session);
   const second = pickSecond(hero.v, pool, input, ctx);
   const why = whyLine(hero.v, hero.reasons, input, ctx, hero.extra);
   // debug: the top of the leaderboard, with reason codes — surfaced only
