@@ -2,16 +2,16 @@
  * Screens: ask → (vibes | two-player) → deciding → reveal → locked.
  * One plan at a time. Never a list. */
 
-import { prepVenues, decide, scoreVenue, pickSecond, secondPool, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n24";
-import { buildContext } from "./context.js?v=n24";
+import { prepVenues, decide, scoreVenue, pickSecond, secondPool, buildCrawl, whyLine, mulberry32, hashStr, VIBES, vibeName, haversineMi, travelLabel, openState, fmtClock, DIST_DIALS } from "./engine.js?v=n25";
+import { buildContext } from "./context.js?v=n25";
 import { loadMemory, memoryView, setHome, toggleSaved, toggleBeen, lockDate, habitNudge, logGenerated,
-         starUpNext, unstarUpNext, isUpNext, onMemorySaveError } from "./memory.js?v=n24";
-import { NightMap } from "./nightmap.js?v=n24";
-import { sharePlan } from "./share.js?v=n24";
+         starUpNext, unstarUpNext, isUpNext, onMemorySaveError } from "./memory.js?v=n25";
+import { NightMap } from "./nightmap.js?v=n25";
+import { sharePlan } from "./share.js?v=n25";
 
 // the build tag also lives in the footer — the first question when a deploy
 // "didn't take" is always "which build am I actually looking at?"
-console.info("ChiLocal · build v=n24");
+console.info("ChiLocal · build v=n25");
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -124,7 +124,10 @@ function renderAcct() {
       // lands the signed-out visitor back at the door
       api("/api/auth/logout", { method: "POST" })
         .catch(() => {})
-        .finally(() => location.reload());
+        .finally(() => {
+          try { localStorage.removeItem("chilocal.member"); } catch { /* fine */ }
+          location.reload();
+        });
     }
   });
 }
@@ -181,6 +184,7 @@ function openAuth(tab) {
       }).then((x) => x.json());
       if (r.error) { err.textContent = politeErr(r.error); err.hidden = false; return; }
       S.user = r.user;
+      try { localStorage.setItem("chilocal.member", "1"); } catch { /* fine */ }
       dlg.close();
       $("#au-pass").value = "";
       renderAcct();
@@ -316,19 +320,19 @@ async function boot() {
   onMemorySaveError(() => toast("Heads up — this browser isn't saving your nights."));
 
   const [venuesRaw, geo, ctx, baseRaw] = await Promise.all([
-    fetch("data/venues.json?v=n24").then(okJson),
-    fetch("data/neighborhoods.min.geojson?v=n24").then(okJson),
+    fetch("data/venues.json?v=n25").then(okJson),
+    fetch("data/neighborhoods.min.geojson?v=n25").then(okJson),
     buildContext(),
     // the map book: every neighborhood's baseline spots (OSM-verified,
     // Reddit/press-ranked) — explore-only, never Tonight-engine picks
-    fetch("data/baseline.json?v=n24").then(okJson).catch(() => ({ venues: [] })),
+    fetch("data/baseline.json?v=n25").then(okJson).catch(() => ({ venues: [] })),
   ]);
   // CTA knowledge: station list is tiny — fetch in the background, degrade silently
-  fetch("data/cta-stations.min.json?v=n24").then((r) => r.json())
+  fetch("data/cta-stations.min.json?v=n25").then((r) => r.json())
     .then((d) => { S.stations = d.stations; }).catch(() => { S.stations = null; });
   // micro-neighborhood names (Bronzeville, Ravenswood, Buena Park…) — the
   // names locals use, resolved to the official boundary that contains them
-  fetch("data/hood-aliases.json?v=n24").then((r) => r.json())
+  fetch("data/hood-aliases.json?v=n25").then((r) => r.json())
     .then((d) => { S.hoodAliases = d.aliases; }).catch(() => { S.hoodAliases = null; });
   probeApi(); // companion server (live arrivals, events, two-phone) — optional
   S.visitor = !!prefs.visitor;
@@ -392,9 +396,11 @@ async function boot() {
   renderContextChip();
   renderAsk();
   wireStatic();
+  initShell();
   show("ask");
   $("#app").classList.add("ready");
   document.body.classList.remove("booting");
+  registerSW();
   // some people live in Explore — let the app open there
   if (prefs.startView === "explore") setView("explore");
  } catch (e) {
@@ -423,6 +429,7 @@ function show(name) {
   const head = $("#screen-" + name)?.querySelector("h1, h2");
   if (head) { head.setAttribute("tabindex", "-1"); head.focus({ preventScroll: true }); }
   syncHistory(name, prev);
+  shellOnScreen(name);
 }
 
 /* ------------------------- back-button integration -------------------------
@@ -465,7 +472,7 @@ function setView(view) {
   if (view === "explore") {
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n24");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n25");
     if (S.ex.hood) S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
     else S.exCam = S.map.cityView(exInset(), tiltZoom());
     applyPassportView(); // the passport tint survives mode round-trips
@@ -479,6 +486,7 @@ function setView(view) {
     renderAsk();
     show("ask");
   }
+  syncTabbar();
 }
 
 function renderContextChip() {
@@ -1599,7 +1607,10 @@ function openNights(tab) {
       else if (r === "failed") toast("The card wouldn't render — try again.");
     } finally { b.disabled = false; }
   });
-  dlg.showModal();
+  // phone shell: NON-modal, so the tab bar underneath stays live — the
+  // book is a sibling destination, not an interruption
+  if (!dlg.open) { if (isShell()) dlg.show(); else dlg.showModal(); }
+  syncTabbar();
 }
 
 /* -------------------------------- stay in --------------------------------- */
@@ -2062,6 +2073,7 @@ function wireSettings() {
 /* the account block inside Settings: digest opt-in + delete-my-account.
  * Refreshed each time the dialog opens, since S.user can change. */
 function renderAcctSettings() {
+  renderInstallRow(); // shown to everyone, member section below is gated
   const box = $("#set-acct");
   box.hidden = !S.user;
   if (!S.user) return;
@@ -2098,6 +2110,7 @@ function renderAcctSettings() {
       }).then((x) => x.json());
       if (r.error) { err.textContent = r.error; err.hidden = false; return; }
       // account gone, cookie cleared — the reload lands at the gate
+      try { localStorage.removeItem("chilocal.member"); } catch { /* fine */ }
       location.reload();
     } catch {
       err.textContent = "Couldn't reach the server — try again.";
@@ -2114,11 +2127,11 @@ function toggleOverlay(kind, force) {
   S.map.setOverlay(kind, on);
   if (on) {
     if (kind === "transit") {
-      S.map.loadTransit("data/cta-lines.min.geojson?v=n24");
-      S.map.loadStations("data/cta-stations.min.json?v=n24");
-    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n24");
-    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n24");
-    else S.map.loadStreets("data/streets.min.geojson?v=n24");
+      S.map.loadTransit("data/cta-lines.min.geojson?v=n25");
+      S.map.loadStations("data/cta-stations.min.json?v=n25");
+    } else if (kind === "metra") S.map.loadMetra("data/metra-lines.min.geojson?v=n25");
+    else if (kind === "divvy") S.map.loadDivvy("data/divvy-stations.min.json?v=n25");
+    else S.map.loadStreets("data/streets.min.geojson?v=n25");
   }
   const prefs = loadPrefs();
   savePrefs({ ...prefs, ovTransit: $("#ov-transit").classList.contains("on"),
@@ -2561,7 +2574,7 @@ function openVenueProfile(id) {
     $$("#mode-seg button").forEach((b) => press(b, b.dataset.m === "explore"));
     S.map.clearReveal();
     S.map.setExplore(true);
-    S.map.loadDetail?.("data/detail.min.geojson?v=n24");
+    S.map.loadDetail?.("data/detail.min.geojson?v=n25");
     show("explore");
   }
   S.exCam = S.map.selectHood(S.ex.hood, { inset: exInset() });
@@ -2627,9 +2640,20 @@ async function start() {
     const d = await me().catch(me);
     user = d.user || null;
   } catch { reachable = false; }
+  if (user) { try { localStorage.setItem("chilocal.member", "1"); } catch { /* fine */ } }
   if (user || devBypass) {
     S.user = user;
     boot();
+    return;
+  }
+  // offline, but this device has signed in before: the installed app still
+  // opens — everything the service worker cached was fetched while signed
+  // in, and nginx still guards every byte on the wire
+  let wasMember = false;
+  try { wasMember = localStorage.getItem("chilocal.member") === "1"; } catch { /* fine */ }
+  if (!reachable && wasMember) {
+    boot();
+    setTimeout(() => toast("Offline — running from this phone's copy."), 1400);
     return;
   }
   showGate(reachable);
@@ -2689,6 +2713,7 @@ function showGate(reachable) {
       }).then((x) => x.json());
       if (r.error) { err.textContent = politeErr(r.error); err.hidden = false; return; }
       S.user = r.user;
+      try { localStorage.setItem("chilocal.member", "1"); } catch { /* fine */ }
       $("#ga-pass").value = "";
       // veil BEFORE the gate drops — no black gap while boot fetches data
       document.body.classList.add("booting");
@@ -2702,6 +2727,171 @@ function showGate(reachable) {
       err.hidden = false;
     } finally { go.disabled = false; }
   };
+}
+
+/* ------------------------------ phone shell --------------------------------
+ * ≤700px portrait: bottom tab bar (Tonight · Explore · Book), draggable
+ * sheets with peek/half/full snap points, and the browser-install path.
+ * Desktop and landscape never enter here — the CSS gates the chrome and
+ * every handler checks isShell() before touching layout. */
+const isShell = () => matchMedia("(max-width: 700px) and (orientation: portrait)").matches;
+
+function syncTabbar() {
+  const bar = $("#tabbar");
+  if (!bar) return;
+  const bookOpen = $("#nights").open;
+  $$(".tb", bar).forEach((b) => {
+    const t = b.dataset.tab;
+    const on = t === "book" ? bookOpen : !bookOpen && S.view === t;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+}
+
+/* one drag behavior for both sheets: an invisible strip over the top edge
+ * owns the gesture (touch-action:none there, so the sheet's own scroll
+ * never fights it), and release snaps to the nearest point — or flicks
+ * one step in the flick's direction */
+function makeSheetDraggable(sheet, snapsFn) {
+  let drag = null;
+  const setH = (px) => sheet.style.setProperty("--sheet-h", Math.round(px) + "px");
+  const strip = document.createElement("button");
+  strip.className = "drag-strip";
+  strip.setAttribute("aria-label", "drag to resize");
+  const ensureStrip = () => { if (!strip.isConnected) sheet.prepend(strip); };
+  ensureStrip();
+  // renderers rebuild the sheet with innerHTML — quietly re-adopt the strip
+  new MutationObserver(ensureStrip).observe(sheet, { childList: true });
+
+  const snapTo = (px, snaps) => {
+    sheet.classList.add("snapping");
+    setH(px);
+    sheet.classList.toggle("peek", px === snaps[0]);
+    setTimeout(() => sheet.classList.remove("snapping"), 320);
+  };
+  strip.addEventListener("pointerdown", (e) => {
+    if (!isShell()) return;
+    drag = { y0: e.clientY, h0: sheet.getBoundingClientRect().height,
+             yPrev: e.clientY, tPrev: performance.now(), v: 0, moved: 0 };
+    sheet.classList.add("dragging");
+    sheet.classList.remove("snapping");
+    strip.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  strip.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const now = performance.now();
+    drag.v = (e.clientY - drag.yPrev) / Math.max(1, now - drag.tPrev);
+    drag.yPrev = e.clientY; drag.tPrev = now;
+    drag.moved = Math.max(drag.moved, Math.abs(e.clientY - drag.y0));
+    const snaps = snapsFn();
+    setH(Math.max(snaps[0], Math.min(snaps[snaps.length - 1], drag.h0 - (e.clientY - drag.y0))));
+  });
+  const finish = () => {
+    if (!drag) return;
+    const snaps = snapsFn();
+    const h = sheet.getBoundingClientRect().height;
+    let target;
+    if (drag.moved < 6) {
+      // a tap on the handle steps the sheet up (full taps back to half)
+      const cur = snaps.reduce((a, b) => (Math.abs(b - h) < Math.abs(a - h) ? b : a));
+      const i = snaps.indexOf(cur);
+      target = i >= snaps.length - 1 ? snaps[1] : snaps[i + 1];
+    } else if (Math.abs(drag.v) > 0.45) {
+      // flick: one step in the flick's direction from wherever we are
+      const sorted = [...snaps];
+      target = drag.v < 0
+        ? sorted.find((s) => s > h + 8) ?? sorted[sorted.length - 1]
+        : [...sorted].reverse().find((s) => s < h - 8) ?? sorted[0];
+    } else {
+      target = snaps.reduce((a, b) => (Math.abs(b - h) < Math.abs(a - h) ? b : a));
+    }
+    sheet.classList.remove("dragging");
+    snapTo(target, snaps);
+    drag = null;
+  };
+  strip.addEventListener("pointerup", finish);
+  strip.addEventListener("pointercancel", finish);
+  return {
+    toSnap(i) {
+      if (!isShell()) { sheet.style.removeProperty("--sheet-h"); sheet.classList.remove("peek"); return; }
+      const snaps = snapsFn();
+      snapTo(snaps[Math.max(0, Math.min(i, snaps.length - 1))], snaps);
+    },
+  };
+}
+
+let revealSheetCtl = null, exSheetCtl = null;
+function shellOnScreen(name) {
+  // fresh plan → the sheet presents at half; explore opens at half too
+  if (name === "reveal") revealSheetCtl?.toSnap(1);
+  if (name === "explore") exSheetCtl?.toSnap(1);
+}
+
+function initShell() {
+  $$("#tabbar .tb").forEach((b) => b.onclick = () => {
+    const t = b.dataset.tab;
+    const nights = $("#nights");
+    if (t === "book") { if (!nights.open) openNights(); }
+    else {
+      if (nights.open) nights.close();
+      if (S.view !== t) setView(t);
+    }
+    syncTabbar();
+  });
+  $("#nights").addEventListener("close", syncTabbar);
+
+  const vh = () => window.innerHeight;
+  const barSpace = () => 62 + 22; // tab bar + breathing room
+  revealSheetCtl = makeSheetDraggable($("#screen-reveal .sheet"),
+    () => [128 + barSpace(), Math.round(vh() * 0.58), vh() - 84]);
+  exSheetCtl = makeSheetDraggable($("#ex-sheet"),
+    () => [96 + barSpace(), Math.round(vh() * 0.47), Math.round(vh() * 0.86)]);
+  // leaving the shell (rotate, resize to desktop) clears the inline sizing
+  window.addEventListener("resize", () => {
+    if (!isShell()) for (const s of [$("#screen-reveal .sheet"), $("#ex-sheet")]) {
+      s.style.removeProperty("--sheet-h"); s.classList.remove("peek", "snapping", "dragging");
+    }
+  });
+  syncTabbar();
+}
+
+/* --------------------------- the installed app -----------------------------
+ * The manifest + service worker make ChiLocal installable straight from the
+ * browser: home-screen icon, full screen, and an offline copy for the L. */
+let deferredInstall = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); // no drive-by banner — the offer lives in Settings
+  deferredInstall = e;
+});
+const isStandalone = () =>
+  matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function renderInstallRow() {
+  const row = $("#set-install-row");
+  if (!row) return;
+  if (isStandalone()) { row.hidden = true; return; }
+  const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (deferredInstall) {
+    row.hidden = false;
+    $("#set-install").onclick = async () => {
+      const p = deferredInstall; deferredInstall = null;
+      p.prompt();
+      const choice = await p.userChoice.catch(() => null);
+      if (choice?.outcome === "accepted") { toast("ChiLocal is on your home screen."); row.hidden = true; }
+    };
+  } else if (iOS) {
+    // Safari never fires the prompt event — hand people the two taps instead
+    row.hidden = false;
+    $("#set-install-hint").textContent = "in Safari: tap Share, then “Add to Home Screen”";
+    $("#set-install").onclick = () => toast("Tap Share, then “Add to Home Screen.”");
+  } else row.hidden = true;
+}
+function registerSW() {
+  const local = ["localhost", "127.0.0.1"].includes(location.hostname);
+  if (!("serviceWorker" in navigator) || (location.protocol !== "https:" && !local)) return;
+  // registered only once someone is through the door — before that, nginx
+  // answers /sw.js with the gate and the registration would just fail
+  navigator.serviceWorker.register("/sw.js").catch(() => { /* not fatal, ever */ });
 }
 
 start();

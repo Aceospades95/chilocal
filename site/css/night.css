@@ -1010,7 +1010,8 @@ dialog h3 { font-family: var(--serif); font-size: 22px; margin: 0 0 8px; }
 dialog .x {
   position: sticky; top: -12px; float: right; margin: -14px -10px 0 0; z-index: 2;
   width: 44px; height: 44px; display: grid; place-items: center;
-  background: none; border: 0;
+  background: radial-gradient(circle, rgba(13,21,36,.92) 45%, transparent 72%);
+  border: 0; border-radius: 50%;
   color: var(--muted); font-size: 22px; line-height: 1;
 }
 dialog .x:hover { color: var(--text); }
@@ -1249,6 +1250,91 @@ body:not([data-screen="ask"]) footer { display: none; }
 @media (max-height: 520px) {
   .sheet { max-height: 74%; }
 }
+
+/* ----------------------- the phone shell (≤700px) -------------------------
+ * Same app, chrome rebuilt around the thumb: navigation drops to a bottom
+ * tab bar, sheets ride above it, and the funnel anchors low. Desktop and
+ * landscape keep the layout exactly as it was. */
+#tabbar { display: none; }
+.drag-strip { display: none; }
+
+@media (max-width: 700px) and (orientation: portrait) {
+  :root { --tabbar-h: 62px; }
+  #tabbar {
+    position: fixed; left: 10px; right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    z-index: 40; display: flex; padding: 6px; border-radius: 20px;
+    background: rgba(10, 16, 29, .92); border: 1px solid var(--line);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .55);
+  }
+  #tabbar .tb {
+    flex: 1; border: 0; background: none; border-radius: 15px;
+    padding: 6px 0 5px; color: var(--muted); text-align: center;
+    transition: background .18s, color .18s;
+  }
+  #tabbar .tb .tb-ic { display: block; font-size: 17px; line-height: 1.15; }
+  #tabbar .tb .tb-l { display: block; font-size: 9.5px; letter-spacing: .08em; margin-top: 1px; }
+  #tabbar .tb.on { color: var(--text); background: var(--panel-2); box-shadow: inset 0 0 0 1px rgba(255, 180, 92, .55); }
+  #tabbar .tb.on .tb-l { color: var(--amber); }
+
+  /* the tab bar replaces the header toggle and the header book chip */
+  #mode-seg { display: none; }
+  #nights-chip { display: none !important; }
+  footer { display: none; } /* credits live in Settings; tile attribution stays on the map */
+
+  /* the funnel anchors low — the thumb owns the bottom, the headline the top */
+  #screen-ask { align-items: safe flex-end; }
+  .ask-inner { padding-bottom: calc(var(--tabbar-h) + 26px + env(safe-area-inset-bottom)); }
+  .ask-foot { margin-top: 16px; }
+
+  /* everything bottom-fixed rides above the bar */
+  .sheet { max-height: none; padding-bottom: calc(16px + var(--tabbar-h) + env(safe-area-inset-bottom)); }
+  .ex-sheet { max-height: none; padding-bottom: calc(14px + var(--tabbar-h) + env(safe-area-inset-bottom)); }
+  #toast { bottom: calc(var(--tabbar-h) + 22px + env(safe-area-inset-bottom)); }
+  /* the dock rides the map's top-right, clear of the draggable catalog —
+   * pinch and drag do the heavy lifting on a phone anyway */
+  #cam-dock { top: calc(64px + env(safe-area-inset-top)); bottom: auto; right: 10px; }
+  #cam-dock .seg button { padding: 8px 9px; min-width: 36px; font-size: 12px; }
+  .panel { padding-bottom: calc(30px + var(--tabbar-h) + env(safe-area-inset-bottom)); }
+  .deciding-hud { margin-bottom: calc(10vh + var(--tabbar-h)); }
+
+  /* draggable sheets: JS sets --sheet-h between snap points. The grab
+   * visual is a ::before (it survives innerHTML re-renders); the actual
+   * drag surface is an overlaid .drag-strip the shell re-appends. */
+  .sheet, .ex-sheet { position: relative; height: var(--sheet-h, auto); }
+  .sheet { max-height: var(--sheet-h, 58%); }
+  .ex-sheet { max-height: var(--sheet-h, 47%); }
+  .ex-sheet::before {
+    content: ""; display: block; flex: none;
+    width: 44px; height: 4px; border-radius: 4px;
+    background: var(--line); margin: 0 auto 10px;
+  }
+  .sheet.dragging, .ex-sheet.dragging { transition: none !important; }
+  .sheet.snapping, .ex-sheet.snapping { transition: max-height .28s cubic-bezier(.3,.8,.3,1), height .28s cubic-bezier(.3,.8,.3,1); }
+  .drag-strip {
+    display: block; position: absolute; top: 0; left: 0; right: 0; height: 30px;
+    z-index: 5; touch-action: none; cursor: grab; background: none; border: 0; padding: 0;
+  }
+  .drag-strip:active { cursor: grabbing; }
+  /* peek state: only the handle + first lines show */
+  .sheet.peek, .ex-sheet.peek { overflow: hidden; }
+
+  /* the night book opens as a full sheet, not a floating card — non-modal
+   * (dlg.show()), sitting UNDER the tab bar so the tabs stay one tap away */
+  dialog#nights {
+    width: 100vw; max-width: none; margin: 0; z-index: 35;
+    top: auto; bottom: 0; position: fixed;
+    max-height: calc(100dvh - 46px - env(safe-area-inset-top));
+    border-radius: 22px 22px 0 0; border-bottom: 0;
+    padding-bottom: calc(16px + var(--tabbar-h) + env(safe-area-inset-bottom));
+    box-shadow: 0 -30px 80px rgba(0, 0, 0, .65);
+  }
+}
+
+#settings .set-credits { font-size: 11px; margin-top: 16px; line-height: 1.6; }
+#settings .set-credits a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+#set-install-row .btn { width: 100%; }
 
 @media (prefers-reduced-motion: reduce) {
   * {

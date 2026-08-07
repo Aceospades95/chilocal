@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://c.basemaps.cartocdn.com" crossorigin/>
 <link rel="preconnect" href="https://d.basemaps.cartocdn.com" crossorigin/>
 <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin/>
-<link rel="stylesheet" href="css/night.css?v=n24"/>
+<link rel="stylesheet" href="css/night.css?v=n25"/>
 <!-- the Chicago star, six points, in night coral — the city on the tab -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23070c16'/%3E%3Cpath fill='%23ff4b5c' d='M12 3.2 13.3 8.5 17.9 5.6 15 10.2 20.3 11.5 15 12.8 17.9 17.4 13.3 14.5 12 19.8 10.7 14.5 6.1 17.4 9 12.8 3.7 11.5 9 10.2 6.1 5.6 10.7 8.5Z'/%3E%3C/svg%3E"/>
 </head>
@@ -361,6 +361,11 @@
       </div>
     </div>
     <button class="btn ghost" id="set-reset">Reset to ChiLocal night</button>
+    <div class="set-row col" id="set-install-row" hidden>
+      <label>ChiLocal on your home screen <span class="set-hint" id="set-install-hint">full screen, its own icon — the app without an app store</span></label>
+      <button class="btn ghost" id="set-install">Install the app</button>
+    </div>
+    <p class="mutep set-credits">Facts from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) &amp; <a href="https://data.cityofchicago.org" target="_blank" rel="noopener">Chicago open data</a> · weather by <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> · opinions ours</p>
     <div class="set-acct" id="set-acct" hidden>
       <h4 class="set-acct-h">Your account</h4>
       <label class="digest-row">
@@ -392,14 +397,21 @@
     <button id="stayin-out" class="cta slim"><span class="cta-big">No — take us out 🎲</span></button>
   </dialog>
 
+  <!-- the phone shell: bottom tabs, one thumb-tap from anything (≤700px only) -->
+  <nav id="tabbar" aria-label="ChiLocal">
+    <button data-tab="tonight" class="tb on"><span class="tb-ic" aria-hidden="true">🎲</span><span class="tb-l">Tonight</span></button>
+    <button data-tab="explore" class="tb"><span class="tb-ic" aria-hidden="true">🗺️</span><span class="tb-l">Explore</span></button>
+    <button data-tab="book" class="tb"><span class="tb-ic" aria-hidden="true">📖</span><span class="tb-l">Book</span></button>
+  </nav>
+
   <div id="toast" popover="manual" role="status" aria-live="polite"></div>
 
   <footer>
     <span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) · <a href="https://data.cityofchicago.org" target="_blank" rel="noopener">Chicago open data</a> · <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> · opinions ours</span>
-    <span class="ft-chi">made in Chicago <b class="ft-stars" aria-hidden="true">★★★★</b> <i class="build">build n24</i></span>
+    <span class="ft-chi">made in Chicago <b class="ft-stars" aria-hidden="true">★★★★</b> <i class="build">build n25</i></span>
   </footer>
 </div>
 
-<script type="module" src="js/night/app.js?v=n24"></script>
+<script type="module" src="js/night/app.js?v=n25"></script>
 </body>
 </html>
